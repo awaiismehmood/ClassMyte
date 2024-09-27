@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "179413512790",
+    "project_id": "classmyte-f2f90",
+    "storage_bucket": "classmyte-f2f90.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:179413512790:android:b07d934f8a1481a6db01f7",
+        "android_client_info": {
+          "package_name": "com.example.classmyte"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-LD6fJnUR8TimuU5kEAWKTNX-KmZk1H0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
