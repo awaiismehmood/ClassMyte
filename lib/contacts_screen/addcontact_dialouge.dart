@@ -1,4 +1,4 @@
-// add_contact_dialog.dart
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:classmyte/data_management/add_contacts.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
@@ -15,36 +15,53 @@ class StudentDialogNotifier {
   ValueNotifier<String> typedClass = ValueNotifier('');
 }
 
-void showAddContactDialog(BuildContext context, {Map<String, String>? student}) {
-  final notifier = StudentDialogNotifier();
+  void selectDate(
+      BuildContext context, ValueNotifier<String> dateNotifier) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      dateNotifier.value = "${picked.toLocal()}".split(' ')[0];
+    }
+  }
 
+void showAddContactDialog(BuildContext context, Function refreshContacts,
+    {Map<String, String>? student}) {
+  final notifier = StudentDialogNotifier();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController fatherController = TextEditingController();
+  final TextEditingController altNumberController = TextEditingController();
+
+  // Initialize controllers if editing an existing student
   if (student != null) {
-    notifier.name.value = student['name'] ?? '';
-    notifier.phoneNumber.value = student['phoneNumber'] ?? '';
-    notifier.fatherName.value = student['fatherName'] ?? '';
+    nameController.text = student['name'] ?? '';
+    phoneController.text = student['phoneNumber'] ?? '';
+    fatherController.text = student['fatherName'] ?? '';
     notifier.dob.value = student['DOB'] ?? '';
     notifier.admissionDate.value = student['Admission Date'] ?? '';
-    notifier.altNumber.value = student['altNumber'] ?? '';
+    altNumberController.text = student['altNumber'] ?? '';
     notifier.selectedClass.value = student['class'] ?? '';
   }
 
+  // Show the dialog
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return FutureBuilder<List<Map<String, String>>>( 
+      return FutureBuilder<List<Map<String, String>>>( // FutureBuilder handles loading
         future: StudentData.getStudentData(),
         builder: (context, snapshot) {
+          // Handle loading state
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const AlertDialog(
               title: Text('Loading....'),
               content: SizedBox(
                 width: 150,
                 height: 150,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 4.0,
-                  ),
-                ),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 4.0)),
               ),
             );
           } else if (snapshot.hasError) {
@@ -53,9 +70,7 @@ void showAddContactDialog(BuildContext context, {Map<String, String>? student}) 
               content: Text('Failed to load classes: ${snapshot.error}'),
               actions: <Widget>[
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   child: const Text('OK'),
                 ),
               ],
@@ -73,17 +88,12 @@ void showAddContactDialog(BuildContext context, {Map<String, String>? student}) 
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ValueListenableBuilder<String>(
-                      valueListenable: notifier.name,
-                      builder: (context, value, child) {
-                        return TextField(
-                          onChanged: (newValue) {
-                            notifier.name.value = newValue;
-                          },
-                          decoration: const InputDecoration(labelText: 'Name'),
-                        );
-                      },
+                    // Name input
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Name'),
                     ),
+                    // Class selection and new class input
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -92,14 +102,11 @@ void showAddContactDialog(BuildContext context, {Map<String, String>? student}) 
                             valueListenable: notifier.selectedClass,
                             builder: (context, selectedClassValue, child) {
                               return DropdownButtonFormField<String>(
-                                value: selectedClassValue.isNotEmpty
-                                    ? selectedClassValue
-                                    : null,
+                                value: selectedClassValue.isNotEmpty ? selectedClassValue : null,
                                 onChanged: (String? newValue) {
                                   if (newValue != null) {
                                     notifier.selectedClass.value = newValue;
-                                    notifier.typedClass.value =
-                                        ''; // Clear typed class
+                                    notifier.typedClass.value = ''; // Clear typed class
                                   }
                                 },
                                 items: allClasses.map((classItem) {
@@ -108,9 +115,7 @@ void showAddContactDialog(BuildContext context, {Map<String, String>? student}) 
                                     child: Text(classItem),
                                   );
                                 }).toList(),
-                                decoration: const InputDecoration(
-                                  labelText: 'Class',
-                                ),
+                                decoration: const InputDecoration(labelText: 'Class'),
                                 isExpanded: true,
                               );
                             },
@@ -125,77 +130,51 @@ void showAddContactDialog(BuildContext context, {Map<String, String>? student}) 
                               return TextFormField(
                                 onChanged: (value) {
                                   notifier.typedClass.value = value;
-                                  notifier.selectedClass.value =
-                                      ''; // Clear selected class
+                                  notifier.selectedClass.value = ''; // Clear selected class
                                 },
-                                decoration: const InputDecoration(
-                                  labelText: 'New Class',
-                                ),
+                                decoration: const InputDecoration(labelText: 'New Class'),
                               );
                             },
                           ),
                         ),
                       ],
                     ),
-                    ValueListenableBuilder<String>(
-                      valueListenable: notifier.phoneNumber,
-                      builder: (context, value, child) {
-                        return TextField(
-                          onChanged: (newValue) {
-                            notifier.phoneNumber.value = newValue;
-                          },
-                          decoration:
-                              const InputDecoration(labelText: 'Phone Number'),
-                        );
-                      },
+                    // Phone number input
+                    TextField(
+                      controller: phoneController,
+                      decoration: const InputDecoration(labelText: 'Phone Number'),
+                      keyboardType: TextInputType.phone,
                     ),
-                    ValueListenableBuilder<String>(
-                      valueListenable: notifier.fatherName,
-                      builder: (context, value, child) {
-                        return TextField(
-                          onChanged: (newValue) {
-                            notifier.fatherName.value = newValue;
-                          },
-                          decoration:
-                              const InputDecoration(labelText: 'Father Name'),
-                        );
-                      },
+                    // Father's name input
+                    TextField(
+                      controller: fatherController,
+                      decoration: const InputDecoration(labelText: 'Father Name'),
                     ),
-                    ValueListenableBuilder<String>(
-                      valueListenable: notifier.dob,
-                      builder: (context, value, child) {
-                        return TextField(
-                          onChanged: (newValue) {
-                            notifier.dob.value = newValue;
-                          },
-                          decoration:
-                              const InputDecoration(labelText: 'Date of Birth'),
-                        );
-                      },
+                    // Date of birth input
+                    TextField(
+                      onTap: () => selectDate(context, notifier.dob),
+                      readOnly: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Date of Birth',
+                        suffixIcon: Icon(Icons.calendar_today),
+                      ),
+                      controller: TextEditingController(text: notifier.dob.value),
                     ),
-                    ValueListenableBuilder<String>(
-                      valueListenable: notifier.admissionDate,
-                      builder: (context, value, child) {
-                        return TextField(
-                          onChanged: (newValue) {
-                            notifier.admissionDate.value = newValue;
-                          },
-                          decoration: const InputDecoration(
-                              labelText: 'Admission Date'),
-                        );
-                      },
+                    // Admission date input
+                    TextField(
+                      onTap: () => selectDate(context, notifier.admissionDate),
+                      readOnly: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Admission Date',
+                        suffixIcon: Icon(Icons.calendar_today),
+                      ),
+                      controller: TextEditingController(text: notifier.admissionDate.value),
                     ),
-                    ValueListenableBuilder<String>(
-                      valueListenable: notifier.altNumber,
-                      builder: (context, value, child) {
-                        return TextField(
-                          onChanged: (newValue) {
-                            notifier.altNumber.value = newValue;
-                          },
-                          decoration:
-                              const InputDecoration(labelText: 'Alt Number'),
-                        );
-                      },
+                    // Alternate number input
+                    TextField(
+                      controller: altNumberController,
+                      decoration: const InputDecoration(labelText: 'Alt Number'),
+                      keyboardType: TextInputType.phone,
                     ),
                   ],
                 ),
@@ -203,26 +182,43 @@ void showAddContactDialog(BuildContext context, {Map<String, String>? student}) 
               actions: [
                 ElevatedButton(
                   onPressed: () {
-                    // Determine final class value
+                    // Validate input
+                    if (nameController.text.isEmpty || phoneController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Name and Phone Number cannot be empty')),
+                      );
+                      return; // Prevent dialog from closing
+                    }
+
                     String finalClass = notifier.typedClass.value.isNotEmpty
                         ? notifier.typedClass.value
                         : notifier.selectedClass.value;
 
+                    // Call to add contact service
                     AddContactService.addContact(
-                      notifier.name.value,
+                      nameController.text,
                       finalClass,
-                      notifier.phoneNumber.value,
-                      notifier.fatherName.value,
+                      phoneController.text,
+                      fatherController.text,
                       notifier.dob.value,
                       notifier.admissionDate.value,
-                      notifier.altNumber.value,
-                    );
-                    Navigator.pop(context);
+                      altNumberController.text,
+                    ).then((_) {
+                      refreshContacts(); // Refresh the contacts list
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Contact added successfully')),
+                      );
+                      Navigator.of(context).pop();
+                    }).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to add contact: $error')),
+                      );
+                    });
                   },
                   child: const Text('Save'),
                 ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
               ],

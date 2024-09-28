@@ -15,7 +15,6 @@ class AddContactService {
     try {
       // Get the currently authenticated user
       User? currentUser = FirebaseAuth.instance.currentUser;
-
       if (currentUser != null) {
         String uid = currentUser.uid;
 

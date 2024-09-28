@@ -1,7 +1,7 @@
 import 'package:classmyte/contacts_screen/addcontact_dialouge.dart';
 import 'package:classmyte/contacts_screen/filter_dialouge.dart';
-import 'package:classmyte/contacts_screen/functional.dart';
-import 'package:classmyte/contacts_screen/student_details.dart';
+import 'package:classmyte/services/functional.dart';
+import 'package:classmyte/student%20details/student_details.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +9,7 @@ class StudentContactsScreen extends StatefulWidget {
   const StudentContactsScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _StudentContactsScreenState createState() => _StudentContactsScreenState();
 }
 
@@ -27,6 +28,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
     super.initState();
     getStudentData();
   }
+
 
   Future<void> getStudentData() async {
     isLoadingNotifier.value = true;
@@ -76,7 +78,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
               },
             ),
             IconButton(
-              onPressed: () => showAddContactDialog(context),
+              onPressed: () => showAddContactDialog(context, getStudentData),
               icon: const Icon(Icons.add),
             ),
           ],
@@ -109,7 +111,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                         prefixIcon: const Icon(Icons.search),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
-                          borderSide: BorderSide(color: Colors.grey),
+                          borderSide: const BorderSide(color: Colors.grey),
                         ),
                       ),
                       onChanged: _searchStudents,
@@ -131,11 +133,8 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                           itemCount: studentList.length,
                           itemBuilder: (context, index) {
                             final student = studentList[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 4.0),
-                              elevation: 4,
-                              child: ListTile(
-                                onTap: () async {
+                            return GestureDetector(
+                              onTap: () async {
                                   await Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -146,26 +145,61 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                                   );
                                   await getStudentData();
                                 },
-                                title: Text(student['name'] ?? '',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                        'Father: ${student['fatherName'] ?? ''}'),
-                                    Text('Class: ${student['class'] ?? ''}'),
-                                    Text(
-                                        'Phone: ${student['phoneNumber'] ?? ''}'),
-                                    Text(
-                                        'Alternate: ${student['altNumber'] ?? ''}'),
-                                  ],
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.phone),
-                                  onPressed: () {
-                                    makeCall(student['phoneNumber']!);
-                                  },
+                              child: Card(
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 16.0),
+                                elevation: 4,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      // CircleAvatar in the center
+                                      Center(
+                                        child: CircleAvatar(
+                                          radius: 30,
+                                          backgroundColor: Colors.blue,
+                                          child: Text(
+                                            student['name']![0],
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 24),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12), // Spacing
+
+                                      // Student details
+                                      Text(
+                                        student['name'] ?? '',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                          'Father: ${student['fatherName'] ?? ''}'),
+                                      Text('Class: ${student['class'] ?? ''}'),
+                                      Text(
+                                          'Phone: ${student['phoneNumber'] ?? ''}'),
+                                      Text(
+                                          'Alternate: ${student['altNumber'] ?? ''}'),
+
+                                      // Call Icon Button on bottom-right
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.phone,
+                                              color: Colors.blue),
+                                          onPressed: () {
+                                            makeCall(student['phoneNumber']!);
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );

@@ -1,3 +1,4 @@
+import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:classmyte/data_management/edit_contacts.dart';
 import 'package:flutter/material.dart';
 
@@ -11,7 +12,7 @@ class StudentDetailsScreen extends StatefulWidget {
 }
 
 class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
-  // ValueNotifiers to manage student data
+  // ValueNotifiers for student data
   late final ValueNotifier<String> nameNotifier;
   late final ValueNotifier<String> fatherNameNotifier;
   late final ValueNotifier<String> classNotifier;
@@ -19,8 +20,9 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
   late final ValueNotifier<String> altNumberNotifier;
   late final ValueNotifier<String> dobNotifier;
   late final ValueNotifier<String> admissionNotifier;
+
   final ValueNotifier<bool> isLoadingNotifier = ValueNotifier(true);
-  final ValueNotifier<bool> isEditableNotifier = ValueNotifier(false); // Manage edit state
+  final ValueNotifier<bool> isEditableNotifier = ValueNotifier(false);
 
   @override
   void initState() {
@@ -35,13 +37,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
     getStudentData();
   }
 
-  Future<void> getStudentData() async {
-    // Mocking fetching student data
-    await Future.delayed(Duration(seconds: 1));
-    isLoadingNotifier.value = false;
-  }
-
-  void deleteStudent() {
+ void deleteStudent() {
     EditContactService.deleteContact(widget.student['id'] ?? '');
     Navigator.pop(context);
   }
@@ -57,9 +53,26 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
       admissionNotifier.value,
       altNumberNotifier.value,
     );
-    isEditableNotifier.value = false; // Set to non-editable after saving
-    getStudentData(); // Refresh data
-    Navigator.pop(context); // Navigate back if needed
+    isEditableNotifier.value = false;
+    getStudentData(); 
+    Navigator.pop(context); 
+  }
+
+  Future<void> getStudentData() async {
+    await Future.delayed(const Duration(seconds: 1));
+    isLoadingNotifier.value = false;
+  }
+
+  void _selectDate(BuildContext context, ValueNotifier<String> dateNotifier) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      dateNotifier.value = "${picked.toLocal()}".split(' ')[0];
+    }
   }
 
   @override
@@ -71,12 +84,12 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              isEditableNotifier.value = true; // Enable editing on button press
+              isEditableNotifier.value = true; // Enable editing
             },
           ),
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: saveChanges,
+            onPressed: () => saveChanges(),
           ),
         ],
       ),
@@ -105,17 +118,17 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                       children: [
                         _buildEditableTile('Father Name', fatherNameNotifier),
                         _buildEditableTile('Class', classNotifier),
-                        _buildEditableTile('Phone#', phoneNumberNotifier),
-                        _buildEditableTile('Alternate#', altNumberNotifier),
-                        _buildEditableTile('Date of Birth', dobNotifier),
-                        _buildEditableTile('Admission Date', admissionNotifier),
+                        _buildEditableTile('Phone#', phoneNumberNotifier, isPhone: true),
+                        _buildEditableTile('Alternate#', altNumberNotifier, isPhone: true),
+                        _buildDateTile('Date of Birth', dobNotifier),
+                        _buildDateTile('Admission Date', admissionNotifier),
                       ],
                     ),
                   ),
                   ElevatedButton(
                     onPressed: deleteStudent,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red, // Change button color for delete
+                      backgroundColor: Colors.red,
                     ),
                     child: const Text('Delete'),
                   ),
@@ -128,7 +141,8 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
     );
   }
 
-  Widget _buildEditableTile(String title, ValueNotifier<String> valueNotifier) {
+
+  Widget _buildEditableTile(String title, ValueNotifier<String> valueNotifier, {bool isPhone = false}) {
     return ValueListenableBuilder<bool>(
       valueListenable: isEditableNotifier,
       builder: (context, isEditable, child) {
@@ -140,14 +154,38 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
               subtitle: isEditable
                   ? TextField(
                       onChanged: (newValue) {
-                        valueNotifier.value = newValue; // Update notifier value on change
+                        valueNotifier.value = newValue;
                       },
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
                         hintText: 'Enter $title',
                       ),
+                      keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
                     )
-                  : Text(value, style: const TextStyle(fontSize: 16)), // Display normal text
+                  : Text(value, style: const TextStyle(fontSize: 16)),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDateTile(String title, ValueNotifier<String> dateNotifier) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: isEditableNotifier,
+      builder: (context, isEditable, child) {
+        return ValueListenableBuilder<String>(
+          valueListenable: dateNotifier,
+          builder: (context, value, child) {
+            return ListTile(
+              title: Text(title),
+              subtitle: GestureDetector(
+                onTap: isEditable ? () => _selectDate(context, dateNotifier) : null,
+                child: Text(
+                  value.isNotEmpty ? value : 'Select $title',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
             );
           },
         );
