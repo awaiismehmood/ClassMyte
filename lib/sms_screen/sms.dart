@@ -4,12 +4,12 @@ import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NewMessageScreen extends StatefulWidget {
   const NewMessageScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _NewMessageScreenState createState() => _NewMessageScreenState();
 }
 
@@ -23,12 +23,36 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
   int successfulSends = 0;
   int unsuccessfulSends = 0;
   int _selectedDelay = 15; // Variable to store the selected delay
+  final String ongoingProcessKey = 'ongoingProcess';
+  final String logsKey = 'logs'; // Key for logs in SharedPreferences
 
   @override
   void initState() {
     super.initState();
     // Fetch contact list when the screen initializes
     getContactList();
+  // _checkOngoingProcess(); // Check ongoing process
+  // _loadLogs(); // Load logs on startup
+  }
+
+  Future<void> _loadLogs() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  logMessages = prefs.getStringList(logsKey) ?? [];
+  setState(() {}); // Update UI
+}
+
+  Future<void> _checkOngoingProcess() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool ongoingProcess = prefs.getBool(ongoingProcessKey) ?? false;
+    if (ongoingProcess) {
+      setState(() {
+        sendingMessage = true;
+        messageStatus = 'Sending messages...';
+      });
+      // Load the logs if necessary
+      logMessages = prefs.getStringList(logsKey) ?? [];
+      setState(() {}); // Update UI with loaded logs
+    }
   }
 
   @override
@@ -234,8 +258,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
       final PermissionStatus permissionStatus = await Permission.sms.request();
       if (!permissionStatus.isGranted) {
         setState(() {
-          messageStatus =
-              'SMS permission denied. Please enable it to send messages.';
+          messageStatus = 'SMS permission denied. Please enable it to send messages.';
         });
         return;
       }
@@ -246,8 +269,12 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
 
     setState(() {
       sendingMessage = true;
-      messageStatus = 'Sending message...';
+      messageStatus = 'Starting to send messages...';
     });
+
+    // Persist sending state
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(ongoingProcessKey, true);
 
     successfulSends = 0;
     unsuccessfulSends = 0;
@@ -261,41 +288,48 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
 
     if (allPhoneNumbers.isNotEmpty) {
       try {
-        // Send messages asynchronously
-        await Future.forEach<String>(allPhoneNumbers, (phoneNumber) async {
-          try {
-            final bool sent = await _sendSMSUsingPlatformChannel(
-                phoneNumber, messageController.text);
-            if (mounted) {
-              setState(() {
-                if (sent) {
-                  logMessages.add('Message sent to $phoneNumber');
-                  successfulSends++;
-                } else {
-                  logMessages.add('Could not send message to $phoneNumber');
-                  unsuccessfulSends++;
-                }
-                messageStatus = 'Sending message to $phoneNumber...';
-              });
-            }
-            if (_selectedDelay != 15) {
-              await Future.delayed(Duration(seconds: _selectedDelay));
-            }
-          } catch (error) {
-            if (mounted) {
-              setState(() {
-                logMessages.add('Could not send message to $phoneNumber');
-                unsuccessfulSends++;
-              });
-            }
-          }
-        });
+        // Start foreground service with all phone numbers
+        await _startForegroundService(allPhoneNumbers, messageController.text);
 
+        // Send messages asynchronously
+     await Future.forEach<String>(allPhoneNumbers, (phoneNumber) async {
+  try {
+    final bool sent = await _sendSMSUsingPlatformChannel(phoneNumber, messageController.text);
+    if (mounted) {
+      setState(() {
+        if (sent) {
+          logMessages.add('Message sent to $phoneNumber');
+          successfulSends++;
+        } else {
+          logMessages.add('Failed to send message to $phoneNumber');
+          unsuccessfulSends++;
+        }
+      });
+      // Persist logs after updating
+      await prefs.setStringList(logsKey, logMessages);
+    }
+    // Update notification
+    await _updateNotification(phoneNumber);
+  } catch (error) {
+    if (mounted) {
+      setState(() {
+        logMessages.add('Could not send message to $phoneNumber');
+        unsuccessfulSends++;
+      });
+    }
+  }
+  // Implement delay
+  await Future.delayed(Duration(seconds: _selectedDelay));
+});
+
+
+        // After all messages have been processed
         if (mounted) {
           setState(() {
             sendingMessage = false;
-            messageStatus = 'Operation Completed!!';
+            messageStatus = 'Operation Completed!';
           });
+          await _completeNotification(); // Mark the notification as complete
         }
       } catch (error) {
         if (mounted) {
@@ -304,6 +338,9 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
             messageStatus = 'Failed to send messages: $error';
           });
         }
+      } finally {
+        // Clean up sending state
+        await prefs.setBool(ongoingProcessKey, false);
       }
     } else {
       if (mounted) {
@@ -315,11 +352,30 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     }
   }
 
-  Future<bool> _sendSMSUsingPlatformChannel(
-      String phoneNumber, String message) async {
+  Future<void> _startForegroundService(List<String> phoneNumbers, String message) async {
+    const platform = MethodChannel('com.example.sms/sendSMS');
     try {
-      final bool result = await platform.invokeMethod(
-          'sendSMS', {'phoneNumber': phoneNumber, 'message': message});
+      final result = await platform.invokeMethod('sendSMS', {
+        'phoneNumbers': phoneNumbers, // Pass the list of phone numbers
+        'message': message,
+      });
+      print('Service started: $result');
+    } on PlatformException catch (e) {
+      print("Failed to start service: '${e.message}'.");
+    }
+  }
+
+  Future<void> _updateNotification(String phoneNumber) async {
+    await platform.invokeMethod('updateNotification', {'phoneNumber': phoneNumber});
+  }
+
+  Future<void> _completeNotification() async {
+    await platform.invokeMethod('completeNotification');
+  }
+
+  Future<bool> _sendSMSUsingPlatformChannel(String phoneNumber, String message) async {
+    try {
+      final bool result = await platform.invokeMethod('sendSMS', {'phoneNumber': phoneNumber, 'message': message});
       return result;
     } on PlatformException catch (e) {
       print("Failed to send SMS: '${e.message}'.");
