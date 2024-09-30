@@ -45,6 +45,7 @@ dependencies:
   path_provider: ^2.1.4
   workmanager: ^0.5.2
   flutter_local_notifications: ^17.2.3
+  google_mobile_ads: ^5.1.0
 
 
 dev_dependencies:

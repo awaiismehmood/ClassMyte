@@ -1,9 +1,10 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // ignore: depend_on_referenced_packages
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/services.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'homepage/home_screen.dart';
 import 'login/login.dart';
 
@@ -17,6 +18,7 @@ void main() async {
     print("Error initializing app: $e");
     // Optionally show a message to the user or navigate to an error screen
   }
+  MobileAds.instance.initialize();
 }
 
 class MyApp extends StatelessWidget {

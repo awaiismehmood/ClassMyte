@@ -8,6 +8,7 @@ import 'package:classmyte/classes/dialouge_test.dart';
 import 'package:classmyte/contacts_screen/addcontact_dialouge.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -24,13 +25,34 @@ class _ClassScreenState extends State<ClassScreen> {
   List<Map<String, String>> allStudents = [];
   List<String> allClasses = [];
   List<String> selectedClasses = [];
+    BannerAd? _bannerAd;
 
   @override
   void initState() {
     super.initState();
     getStudentData();
     requestPermissions();
+        _loadBannerAd(); // Load the banner ad
   }
+
+ void _loadBannerAd() {
+  _bannerAd = BannerAd(
+    size: AdSize.banner, // Use the desired size here
+    adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Replace with your ad unit ID
+    request: const AdRequest(),
+    listener: BannerAdListener(
+      onAdLoaded: (ad) {
+        setState(() {}); // Update the state to show the ad
+      },
+      onAdFailedToLoad: (ad, error) {
+        ad.dispose(); // Dispose of the ad if it fails to load
+      },
+    ),
+  );
+  _bannerAd!.load(); // Load the ad
+}
+
+
 
   Future<void> getStudentData() async {
     List<Map<String, String>> students = await StudentData.getStudentData();
@@ -40,6 +62,12 @@ class _ClassScreenState extends State<ClassScreen> {
       allClasses =
           allStudents.map((student) => student['class'] ?? '').toSet().toList();
     });
+  }
+
+    @override
+  void dispose() {
+    _bannerAd?.dispose(); // Dispose of the banner ad
+    super.dispose();
   }
 
   @override
@@ -164,6 +192,15 @@ class _ClassScreenState extends State<ClassScreen> {
                 ),
               ),
             ),
+            if (_bannerAd != null) // Check if the banner ad is loaded
+              Positioned(
+                bottom: 0,
+                child: SizedBox(
+                  height: 50,
+                  width: MediaQuery.of(context).size.width,
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
           ],
         ),
       ),
