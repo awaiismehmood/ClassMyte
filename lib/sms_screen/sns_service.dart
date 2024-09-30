@@ -22,7 +22,8 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
   List<String> logMessages = []; // List to store log messages
   int successfulSends = 0;
   int unsuccessfulSends = 0;
-  int _selectedDelay = 15; // Variable to store the selected delay
+
+  int _selectedDelay = 0; // Variable to store the selected delay
 
   @override
   void initState() {
@@ -128,31 +129,22 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                     ),
                     const SizedBox(height: 15),
                     DropdownButtonFormField<String>(
-                      value:
-                          selectedClasses.isEmpty ? null : selectedClasses[0],
+                      value: selectedClasses.isEmpty ? null : selectedClasses[0],
                       hint: const Text('Select Class'),
                       onChanged: (String? value) {
                         setState(() {
                           selectedClasses.clear();
-                          if (value != null && value != "All") {
-                            selectedClasses.add(value);
-                          }
+                          if (value != null) selectedClasses.add(value);
                         });
                       },
-                      items: [
-                        const DropdownMenuItem<String>(
-                          value: "All",
-                          child: Text("All Classes"),
-                        ),
-                        ...contactList!
-                            .map((contact) => contact['class']!)
-                            .toSet()
-                            .map((className) => DropdownMenuItem<String>(
-                                  value: className,
-                                  child: Text("Class $className"),
-                                ))
-                            .toList(),
-                      ],
+                      items: contactList!
+                          .map((contact) => contact['class']!)
+                          .toSet()
+                          .map((className) => DropdownMenuItem<String>(
+                                value: className,
+                                child: Text("Class $className"),
+                              ))
+                          .toList(),
                     ),
                     const SizedBox(height: 15),
                     DropdownButtonFormField<int>(
@@ -163,7 +155,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                           _selectedDelay = value!;
                         });
                       },
-                      items: [0, 15, 30, 40].map((int delay) {
+                      items: [0, 15, 30].map((int delay) {
                         return DropdownMenuItem<int>(
                           value: delay,
                           child: Text('$delay seconds delay'),
@@ -234,15 +226,14 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
       final PermissionStatus permissionStatus = await Permission.sms.request();
       if (!permissionStatus.isGranted) {
         setState(() {
-          messageStatus =
-              'SMS permission denied. Please enable it to send messages.';
+          messageStatus = 'SMS permission denied. Please enable it to send messages.';
         });
         return;
       }
     }
 
-    // Proceed if SMS permission is granted
-    if (sendingMessage) return; // Prevent starting another sending process
+    // Prevent starting another sending process
+    if (sendingMessage) return;
 
     setState(() {
       sendingMessage = true;
@@ -254,8 +245,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
 
     List<String> allPhoneNumbers = contactList!
         .where((contact) =>
-            selectedClasses.isEmpty ||
-            selectedClasses.contains(contact['class']))
+            selectedClasses.isEmpty || selectedClasses.contains(contact['class']))
         .map((contact) => contact['phoneNumber']!)
         .toList();
 
@@ -278,7 +268,8 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                 messageStatus = 'Sending message to $phoneNumber...';
               });
             }
-            if (_selectedDelay != 15) {
+            // Apply the selected delay between messages
+            if (_selectedDelay > 0) {
               await Future.delayed(Duration(seconds: _selectedDelay));
             }
           } catch (error) {
@@ -329,4 +320,4 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
 }
 
 // Define the method channel
-const platform = MethodChannel('com.example.sms/sendSMS');
+const platform = MethodChannel('com.example.classmyte/sms');

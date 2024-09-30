@@ -15,7 +15,7 @@ class Routes {
   static void navigateToSms(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const NewMessageScreen()),
+      MaterialPageRoute(builder: (context) =>  NewMessageScreen()),
     );
   }
 

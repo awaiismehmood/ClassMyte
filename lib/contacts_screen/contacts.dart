@@ -29,7 +29,6 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
     getStudentData();
   }
 
-
   Future<void> getStudentData() async {
     isLoadingNotifier.value = true;
     List<Map<String, String>> students = await StudentData.getStudentData();
@@ -117,6 +116,50 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                       onChanged: _searchStudents,
                     ),
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                            border: Border.all(color: Colors.red),
+                            borderRadius: BorderRadius.circular(25)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0, vertical: 3),
+                          child: Text(
+                            'Total Students: ${allStudentsNotifier.value.length}',
+                            style: const TextStyle(
+                                fontSize: 15,
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(25)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0, vertical: 3),
+                          child:
+                              ValueListenableBuilder<List<Map<String, String>>>(
+                            valueListenable: studentListNotifier,
+                            builder: (context, filteredList, child) {
+                              return Text(
+                                'Filtered Students: ${filteredList.length}',
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                       const SizedBox(height: 5),
                   Expanded(
                     child: ValueListenableBuilder<List<Map<String, String>>>(
                       valueListenable: studentListNotifier,
@@ -129,22 +172,22 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                             ),
                           );
                         }
+
                         return ListView.builder(
                           itemCount: studentList.length,
                           itemBuilder: (context, index) {
                             final student = studentList[index];
                             return GestureDetector(
                               onTap: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          StudentDetailsScreen(
-                                              student: student),
-                                    ),
-                                  );
-                                  await getStudentData();
-                                },
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        StudentDetailsScreen(student: student),
+                                  ),
+                                );
+                                await getStudentData();
+                              },
                               child: Card(
                                 margin: const EdgeInsets.symmetric(
                                     vertical: 8.0, horizontal: 16.0),

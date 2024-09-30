@@ -11,7 +11,7 @@ Widget buildHomeScreen(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildHeader(),
-        const SizedBox(height: 40),
+        const SizedBox(height: 80),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: buildCard(
@@ -106,6 +106,13 @@ Widget _buildHeader() {
         ),
       ],
     ),
+    child: Center(
+              child: Image.asset(
+                'assets/pencil_white.png',
+                height: 140,
+              ),
+            ),
+          
   );
 }
 
@@ -116,7 +123,7 @@ Widget getPage(int index, BuildContext context) {
     case 1:
       return const StudentContactsScreen();
     case 2:
-      return const NewMessageScreen();
+      return  const NewMessageScreen();
     default:
       return buildHomeScreen(context);
   }

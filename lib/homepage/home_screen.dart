@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
       body: ValueListenableBuilder<int>(
         valueListenable: _selectedIndex,
         builder: (context, index, child) {
-          return getPage(index, context); // Fetches the appropriate page from the UI part
+          return getPage(index, context); 
         },
       ),
       bottomNavigationBar: ValueListenableBuilder<int>(

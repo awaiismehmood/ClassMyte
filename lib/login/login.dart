@@ -63,32 +63,14 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Form(
               key: _formKey,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 30),
-                  Center(
-                    child: Text(
-                      'ClassMyte',
-                      style: TextStyle(
-                        color: Colors.blue.shade800,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        shadows: const [
-                          Shadow(
-                            offset: Offset(2, 2),
-                            blurRadius: 3,
-                            color: Colors.black12,
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 30.0),
                     child: Image.asset(
-                      'assets/l.png',
+                      'assets/pencil_white.png',
                       height: 100,
                     ),
                   ),
@@ -143,19 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 16.0),
-                  TextButton(
-                    onPressed: () {
-                      // Add Forget Password logic here
-                    },
-                    child: const Text(
-                      'Forget Password?',
-                      style: TextStyle(
-                        color: Colors.blueAccent,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+           
                   const SizedBox(height: 16.0),
                   ValueListenableBuilder<bool>(
                     valueListenable: isLoading,
@@ -187,6 +157,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(
                         color: Colors.blueAccent,
                         fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // Add Forget Password logic here
+                    },
+                    child: const Text(
+                      'Forget Password?',
+                      style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 14,
                       ),
                     ),
                   ),
