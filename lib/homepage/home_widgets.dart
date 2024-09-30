@@ -1,7 +1,8 @@
+
+import 'package:classmyte/sms_screen/sms.dart';
 import 'package:flutter/material.dart';
 import 'package:classmyte/components/routes.dart';
 import 'package:classmyte/contacts_screen/contacts.dart';
-import 'package:classmyte/sms_screen/sms.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:classmyte/main.dart';
 

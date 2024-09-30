@@ -9,14 +9,12 @@ import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class SmsForegroundService : LifecycleService() {
 
     private val CHANNEL_ID = "sms_channel_id"
+    private var smsJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -39,7 +37,7 @@ class SmsForegroundService : LifecycleService() {
 
     private fun createNotification(content: String): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Sending SMS")
+            .setContentTitle("ClassMyte SMS service")
             .setContentText(content)
             .setSmallIcon(R.drawable.ic_sms) // Ensure this drawable exists
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -48,45 +46,68 @@ class SmsForegroundService : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val phoneNumbers = intent?.getStringArrayListExtra("phoneNumbers") ?: emptyList()
-        val message = intent?.getStringExtra("message")
+    val action = intent?.action
 
-        if (message != null) {
-            Log.d("SmsForegroundService", "Sending SMS to: $phoneNumbers")
-            sendSms(phoneNumbers, message)
-        } else {
-            Log.e("SmsForegroundService", "Message is null")
-        }
+    when (action) {
+        "ACTION_START_SENDING" -> {
+            val phoneNumbers = intent.getStringArrayListExtra("phoneNumbers") ?: emptyList()
+            val message = intent.getStringExtra("message")
+            val delay = intent.getIntExtra("delay", 15) // Use default delay of 15 seconds if none is provided
 
-        return START_NOT_STICKY
-    }
-
-    private fun sendSms(phoneNumbers: List<String>, message: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            for (phoneNumber in phoneNumbers) {
-                try {
-                    val smsManager = SmsManager.getDefault()
-                    smsManager.sendTextMessage(phoneNumber, null, message, null, null)
-                    Log.d("SmsForegroundService", "Message sent to $phoneNumber")
-                    updateNotification("Message sent to $phoneNumber")
-                } catch (e: Exception) {
-                    Log.e("SmsForegroundService", "Failed to send message to $phoneNumber: ${e.message}")
-                    updateNotification("Failed to send message to $phoneNumber")
-                }
-                // Delay before sending the next message
-                delay(15000) // Delay for 15 seconds (or any user-selected delay)
+            if (message != null) {
+                Log.d("SmsForegroundService", "Sending SMS to: $phoneNumbers with delay of $delay seconds")
+                startSendingSms(phoneNumbers, message, delay)
+            } else {
+                Log.e("SmsForegroundService", "Message is null")
             }
-            completeNotification()
         }
+        "ACTION_CANCEL_SENDING" -> {
+            cancelSmsSending()
+        }
+        else -> Log.d("SmsForegroundService", "Unknown action: $action")
     }
 
+  return START_STICKY  // Keeps the service running until explicitly stopped
+}
+
+private fun startSendingSms(phoneNumbers: List<String>, message: String, delay: Int) {
+    smsJob = CoroutineScope(Dispatchers.IO).launch {
+        for (phoneNumber in phoneNumbers) {
+            try {
+                val smsManager = SmsManager.getDefault()
+                smsManager.sendTextMessage(phoneNumber, null, message, null, null)
+                Log.d("SmsForegroundService", "Message sent to $phoneNumber")
+                updateNotification("Message sent to $phoneNumber")
+            } catch (e: Exception) {
+                Log.e("SmsForegroundService", "Failed to send message to $phoneNumber: ${e.message}")
+                updateNotification("Failed to send message to $phoneNumber")
+            }
+            // Delay before sending the next message
+            delay(delay * 1000L)  // Delay for user-selected time or default 15 seconds
+        }
+        completeNotification()
+    }
+}
+
+
+    // Cancel the ongoing SMS sending process
+    private fun cancelSmsSending() {
+        smsJob?.cancel()
+        updateNotification("Message sending canceled")
+        stopForeground(true)
+        stopSelf()
+        Log.d("SmsForegroundService", "Message sending canceled, service stopped")
+    }
+
+    // Update notification content
     private fun updateNotification(content: String) {
         val notification = createNotification(content)
         val manager = getSystemService(NotificationManager::class.java) as NotificationManager
         manager.notify(1, notification)
-        Log.d("SmsForegroundService", "Notification updated: $content")
+        Log.d("SmsForegroundService", "Updated status: $content")
     }
 
+    // Complete notification when all messages are sent
     private fun completeNotification() {
         val notification = createNotification("All messages sent successfully!")
         val manager = getSystemService(NotificationManager::class.java) as NotificationManager
@@ -94,5 +115,10 @@ class SmsForegroundService : LifecycleService() {
         stopForeground(true)
         stopSelf() // Stop the service after completion
         Log.d("SmsForegroundService", "Notification completed and service stopped")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        smsJob?.cancel() // Ensure any ongoing SMS sending is stopped if the service is destroyed
     }
 }
