@@ -60,13 +60,13 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
         appBar: AppBar(
           title: const Text(
             'STUDENTS',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           backgroundColor: Colors.blue,
           elevation: 5,
           actions: [
             IconButton(
-              icon: const Icon(Icons.filter_list),
+              icon: const Icon(Icons.filter_list, color: Colors.white),
               onPressed: () {
                 FilterDialog.show(
                   context,
@@ -78,7 +78,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
             ),
             IconButton(
               onPressed: () => showAddContactDialog(context, getStudentData),
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add, color: Colors.white),
             ),
           ],
         ),
@@ -201,6 +201,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                                       // CircleAvatar in the center
                                       Center(
                                         child: CircleAvatar(
+                                          
                                           radius: 30,
                                           backgroundColor: Colors.blue,
                                           child: Text(
