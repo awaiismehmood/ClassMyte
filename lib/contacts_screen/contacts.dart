@@ -55,208 +55,206 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'STUDENTS',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          backgroundColor: Colors.blue,
-          elevation: 5,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.filter_list, color: Colors.white),
-              onPressed: () {
-                FilterDialog.show(
-                  context,
-                  allClasses: getUniqueClasses(allStudentsNotifier.value),
-                  selectedClasses: selectedClassesNotifier.value,
-                  onApply: _applyFiltering,
-                );
-              },
-            ),
-            IconButton(
-              onPressed: () => showAddContactDialog(context, getStudentData),
-              icon: const Icon(Icons.add, color: Colors.white),
-            ),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'STUDENTS',
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        body: ValueListenableBuilder<bool>(
-          valueListenable: isLoadingNotifier,
-          builder: (context, isLoading, child) {
-            if (isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            return Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue, Colors.lightBlue],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+        backgroundColor: Colors.blue,
+        elevation: 5,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            onPressed: () {
+              FilterDialog.show(
+                context,
+                allClasses: getUniqueClasses(allStudentsNotifier.value),
+                selectedClasses: selectedClassesNotifier.value,
+                onApply: _applyFiltering,
+              );
+            },
+          ),
+          IconButton(
+            onPressed: () => showAddContactDialog(context, getStudentData),
+            icon: const Icon(Icons.add, color: Colors.white),
+          ),
+        ],
+      ),
+      body: ValueListenableBuilder<bool>(
+        valueListenable: isLoadingNotifier,
+        builder: (context, isLoading, child) {
+          if (isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+    
+          return Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue, Colors.lightBlue],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(color: Colors.grey),
-                        ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      labelText: 'Search',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: const BorderSide(color: Colors.grey),
                       ),
-                      onChanged: _searchStudents,
                     ),
+                    onChanged: _searchStudents,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                            border: Border.all(color: Colors.red),
-                            borderRadius: BorderRadius.circular(25)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0, vertical: 3),
-                          child: Text(
-                            'Total Students: ${allStudentsNotifier.value.length}',
-                            style: const TextStyle(
-                                fontSize: 15,
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold),
-                          ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.red),
+                          borderRadius: BorderRadius.circular(25)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 3),
+                        child: Text(
+                          'Total Students: ${allStudentsNotifier.value.length}',
+                          style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(25)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0, vertical: 3),
-                          child:
-                              ValueListenableBuilder<List<Map<String, String>>>(
-                            valueListenable: studentListNotifier,
-                            builder: (context, filteredList, child) {
-                              return Text(
-                                'Filtered Students: ${filteredList.length}',
-                                style: const TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                       const SizedBox(height: 5),
-                  Expanded(
-                    child: ValueListenableBuilder<List<Map<String, String>>>(
-                      valueListenable: studentListNotifier,
-                      builder: (context, studentList, child) {
-                        if (studentList.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'No contacts available!',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          itemCount: studentList.length,
-                          itemBuilder: (context, index) {
-                            final student = studentList[index];
-                            return GestureDetector(
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        StudentDetailsScreen(student: student),
-                                  ),
-                                );
-                                await getStudentData();
-                              },
-                              child: Card(
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 8.0, horizontal: 16.0),
-                                elevation: 4,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      // CircleAvatar in the center
-                                      Center(
-                                        child: CircleAvatar(
-                                          
-                                          radius: 30,
-                                          backgroundColor: Colors.blue,
-                                          child: Text(
-                                            student['name']![0],
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 24),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12), // Spacing
-
-                                      // Student details
-                                      Text(
-                                        student['name'] ?? '',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                          'Father: ${student['fatherName'] ?? ''}'),
-                                      Text('Class: ${student['class'] ?? ''}'),
-                                      Text(
-                                          'Phone: ${student['phoneNumber'] ?? ''}'),
-                                      Text(
-                                          'Alternate: ${student['altNumber'] ?? ''}'),
-
-                                      // Call Icon Button on bottom-right
-                                      Align(
-                                        alignment: Alignment.bottomRight,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.phone,
-                                              color: Colors.blue),
-                                          onPressed: () {
-                                            makeCall(student['phoneNumber']!);
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                          borderRadius: BorderRadius.circular(25)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 3),
+                        child:
+                            ValueListenableBuilder<List<Map<String, String>>>(
+                          valueListenable: studentListNotifier,
+                          builder: (context, filteredList, child) {
+                            return Text(
+                              'Filtered Students: ${filteredList.length}',
+                              style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold),
                             );
                           },
-                        );
-                      },
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+                     const SizedBox(height: 5),
+                Expanded(
+                  child: ValueListenableBuilder<List<Map<String, String>>>(
+                    valueListenable: studentListNotifier,
+                    builder: (context, studentList, child) {
+                      if (studentList.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No contacts available!',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      }
+    
+                      return ListView.builder(
+                        itemCount: studentList.length,
+                        itemBuilder: (context, index) {
+                          final student = studentList[index];
+                          return GestureDetector(
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      StudentDetailsScreen(student: student),
+                                ),
+                              );
+                              await getStudentData();
+                            },
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 16.0),
+                              elevation: 4,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.center,
+                                  children: [
+                                    // CircleAvatar in the center
+                                    Center(
+                                      child: CircleAvatar(
+                                        
+                                        radius: 30,
+                                        backgroundColor: Colors.blue,
+                                        child: Text(
+                                          student['name']![0],
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 24),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12), // Spacing
+    
+                                    // Student details
+                                    Text(
+                                      student['name'] ?? '',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                        'Father: ${student['fatherName'] ?? ''}'),
+                                    Text('Class: ${student['class'] ?? ''}'),
+                                    Text(
+                                        'Phone: ${student['phoneNumber'] ?? ''}'),
+                                    Text(
+                                        'Alternate: ${student['altNumber'] ?? ''}'),
+    
+                                    // Call Icon Button on bottom-right
+                                    Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.phone,
+                                            color: Colors.blue),
+                                        onPressed: () {
+                                          makeCall(student['phoneNumber']!);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 content: Text('Please verify your email before logging in.')),
           );
           FirebaseAuth.instance.signOut(); // Sign out the user
-          return; // Stop further processing
+          return;
         }
 
         // Continue with your app's login logic if verified
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
               builder: (context) =>
-                  const HomePage()), // Replace with your main screen
+                  const HomePage()),
         );
       } catch (error) {
         errorMessage.value = 'Incorrect email or password';

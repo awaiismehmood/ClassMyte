@@ -24,21 +24,24 @@ class _HomePageState extends State<HomePage> {
       body: ValueListenableBuilder<int>(
         valueListenable: _selectedIndex,
         builder: (context, index, child) {
-          return getPage(index, context); 
+          return getPage(index, context); // Get the page based on index
         },
       ),
       bottomNavigationBar: ValueListenableBuilder<int>(
         valueListenable: _selectedIndex,
         builder: (context, index, child) {
           return BottomNavigationBar(
-            backgroundColor: Colors.lightBlue,
-            elevation: 1,
-            selectedFontSize: 17,
-            selectedIconTheme: const IconThemeData(color: Colors.white, size: 25),
-            selectedItemColor: Colors.white,
+            backgroundColor: Colors.blue.shade600, // Updated background color
+            elevation: 4, // Added slight elevation for a modern effect
+            selectedFontSize: 15,
+            unselectedFontSize: 13,
+            selectedIconTheme: const IconThemeData(color: Colors.white, size: 30),
+            unselectedIconTheme: const IconThemeData(color: Colors.white70, size: 24), // Styling unselected icons
+            selectedItemColor: Colors.white, // White color for selected items
+            unselectedItemColor: Colors.white70, // Light white for unselected items
             currentIndex: index,
-            onTap: (int index) {
-              _selectedIndex.value = index; // Update value on tap
+            onTap: (int newIndex) {
+              _selectedIndex.value = newIndex; // Update the selected index
             },
             items: const [
               BottomNavigationBarItem(
@@ -54,9 +57,11 @@ class _HomePageState extends State<HomePage> {
                 label: 'SMS',
               ),
             ],
+            type: BottomNavigationBarType.fixed, // Ensures fixed behavior
           );
         },
       ),
+    
     );
   }
 }
