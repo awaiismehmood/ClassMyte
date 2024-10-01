@@ -1,0 +1,262 @@
+import 'package:classmyte/authentication/email_verfication.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _SignupScreenState createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController contactController = TextEditingController(); // New controller
+  final ValueNotifier<bool> isObscure = ValueNotifier(true);
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
+  final ValueNotifier<bool> passwordError = ValueNotifier(false);
+  final ValueNotifier<bool> emailError = ValueNotifier(false);
+  final ValueNotifier<String> errorMessage = ValueNotifier('');
+  final _formKey = GlobalKey<FormState>();
+
+  Future<void> signUpWithEmailAndPassword(BuildContext context) async {
+  if (_formKey.currentState!.validate()) {
+    isLoading.value = true;
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      // Send email verification
+      await userCredential.user?.sendEmailVerification();
+
+      // Navigate to a new screen to inform the user
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const VerificationScreen(), // New verification screen
+        ),
+      );
+    } catch (error) {
+      errorMessage.value = 'Error occurred during signup';
+      emailError.value = true; // or passwordError.value = true depending on the error
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}
+
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      emailError.value = true;
+      return 'Email is required';
+    }
+    emailError.value = false;
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      passwordError.value = true;
+      return 'Password is required';
+    }
+    passwordError.value = false;
+    return null;
+  }
+
+  String? validateContact(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Contact number is required';
+    }
+    return null;
+  }
+
+  String? validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Name is required';
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/background.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/pencil_white.png',
+                  height: 100,
+                ),
+                Container(
+                  width: screenWidth * 0.9,
+                  height: screenHeight * 0.65, // Adjusted height to accommodate more fields
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white,
+                        Colors.grey[100]!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        offset: const Offset(0, 4),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                    border: Border.all(color: Colors.white.withOpacity(0.5)),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Name Field
+                          TextFormField(
+                            controller: nameController,
+                            validator: validateName,
+                            decoration: InputDecoration(
+                              labelText: 'Name',
+                              prefixIcon: const Icon(Icons.person),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16.0),
+                          // Contact Field
+                          TextFormField(
+                            controller: contactController,
+                            validator: validateContact,
+                            decoration: InputDecoration(
+                              labelText: 'Contact Number',
+                              prefixIcon: const Icon(Icons.phone),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16.0),
+                          // Email Field
+                          ValueListenableBuilder<bool>(
+                            valueListenable: emailError,
+                            builder: (context, hasError, child) {
+                              return TextFormField(
+                                controller: emailController,
+                                onChanged: validateEmail,
+                                decoration: InputDecoration(
+                                  labelText: 'Email',
+                                  prefixIcon: const Icon(Icons.email),
+                                  errorText: hasError ? 'Email is required' : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16.0),
+                          // Password Field
+                          ValueListenableBuilder<bool>(
+                            valueListenable: isObscure,
+                            builder: (context, obscure, child) {
+                              return ValueListenableBuilder<bool>(
+                                valueListenable: passwordError,
+                                builder: (context, hasError, _) {
+                                  return TextFormField(
+                                    controller: passwordController,
+                                    onChanged: validatePassword,
+                                    obscureText: obscure,
+                                    decoration: InputDecoration(
+                                      labelText: 'Password',
+                                      prefixIcon: const Icon(Icons.lock),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          obscure ? Icons.visibility_off : Icons.visibility,
+                                        ),
+                                        onPressed: () {
+                                          isObscure.value = !isObscure.value;
+                                        },
+                                      ),
+                                      errorText: hasError ? errorMessage.value : null,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          // Sign Up Button
+                          ValueListenableBuilder<bool>(
+                            valueListenable: isLoading,
+                            builder: (context, loading, child) {
+                              return loading
+                                  ? const Center(child: CircularProgressIndicator())
+                                  : ElevatedButton(
+                                      onPressed: () => signUpWithEmailAndPassword(context),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue.withOpacity(0.9),
+                                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10.0),
+                                        ),
+                                        textStyle: const TextStyle(fontSize: 18),
+                                      ),
+                                      child: const Text('Sign Up', style: TextStyle(color: Colors.white)),
+                                    );
+                            },
+                          ),
+                          const SizedBox(height: 16.0),
+                          // Already have an account
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Go back to login screen
+                            },
+                            child: const Text(
+                              "Already have an account? Login",
+                              style: TextStyle(
+                                color: Colors.blueAccent,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -69,6 +69,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/pencil_white.png
+    - assets/background.jpg
 
     
   # The following line ensures that the Material Icons font is
