@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
 }
 
@@ -23,7 +24,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     isLoading.value = true;
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text.trim());
-      message.value = 'Password reset email sent! Check your inbox.';
+      message.value = 'If an account exists with this email, a password reset email has been sent. Please check your inbox.';
     } catch (error) {
       message.value = 'Error occurred: ${error.toString()}';
     } finally {
@@ -108,7 +109,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       builder: (context, msg, child) {
                         return Text(
                           msg,
-                          style: const TextStyle(color: Colors.red),
+                          style:TextStyle(color: msg == "Password reset email sent if an account exists with this email! Check your inbox." ?Colors.green : Colors.red),
                         );
                       },
                     ),

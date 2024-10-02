@@ -8,6 +8,7 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LoginScreenState createState() => _LoginScreenState();
 }
 
@@ -40,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SnackBar(
                 content: Text('Please verify your email before logging in.')),
           );
-          FirebaseAuth.instance.signOut(); // Sign out the user
+          FirebaseAuth.instance.signOut(); 
           return;
         }
 

@@ -1,4 +1,5 @@
 import 'package:classmyte/contacts_screen/contacts.dart';
+import 'package:classmyte/settings/settings.dart';
 import 'package:classmyte/sms_screen/sms.dart';
 import 'package:flutter/material.dart';
 import 'package:classmyte/components/routes.dart';
@@ -22,13 +23,15 @@ Widget buildHomeScreen(BuildContext context) {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('ClassMyte', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text('ClassMyte', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              // Navigate to settings or profile page
-            },
-          ),
+             onPressed: () {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+  },
+),
         ],
       ),
     ),
@@ -61,7 +64,7 @@ Widget buildHomeScreen(BuildContext context) {
                   Routes.navigateToSms(context);
                 }),
                 _buildGridCard(context, 'Teachers', icon: Icons.person_outline, onPressed: () {
-                  // Add Teachers navigation logic here
+                  
                 }),
               ],
             ),
