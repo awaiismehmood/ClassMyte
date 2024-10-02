@@ -107,18 +107,28 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: const Text("Edit Details",  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text("Edit Details",
+            style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white)),
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: isEditableNotifier,
             builder: (context, isEditable, child) {
               return isEditable
                   ? IconButton(
-                      icon: const Icon(Icons.save, color: Colors.white,),
+                      icon: const Icon(
+                        Icons.save,
+                        color: Colors.white,
+                      ),
                       onPressed: () => saveChanges(),
                     )
                   : IconButton(
-                      icon: const Icon(Icons.edit,  color: Colors.white,),
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                      ),
                       onPressed: () {
                         isEditableNotifier.value = true; // Enable editing
                       },
@@ -136,37 +146,29 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                
                 children: [
-                  
                   Stack(
-                    
                     alignment: Alignment.center,
                     children: [
                       CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.blue,
-
-                            child:  Text(
-                                nameNotifier.value[0],
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 24),
-                              )
-                      ),
+                          radius: 30,
+                          backgroundColor: Colors.blue,
+                          child: Text(
+                            nameNotifier.value[0],
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 24),
+                          )),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    
                     child: Center(
                       child: ListView(
-                        
                         children: [
                           Container(
                               decoration: BoxDecoration(
                                   border: Border.all(color: Colors.black)),
                               child: Column(
-
                                 children: [
                                   _buildEditableTile('Name', nameNotifier),
                                   _buildEditableTile(
@@ -178,7 +180,8 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                                   _buildEditableTile(
                                       'Alternate#', altNumberNotifier,
                                       isPhone: true),
-                                  _buildDateTile('Date of Birth', dobNotifier),
+                                  _buildDateTile(
+                                      'Date of Birth', dobNotifier),
                                   _buildDateTile(
                                       'Admission Date', admissionNotifier),
                                 ],
@@ -192,7 +195,10 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                     ),
-                    child: const Icon(Icons.delete, color: Colors.white,),
+                    child: const Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -219,7 +225,10 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
               controller.value = TextEditingValue(text: value);
             }
             return ListTile(
-              title:Text(title, style: const TextStyle(fontWeight: FontWeight.bold),),
+              title: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: isEditable
                   ? TextField(
                       controller: controller,
@@ -232,7 +241,10 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                       keyboardType:
                           isPhone ? TextInputType.phone : TextInputType.text,
                     )
-                  : Text(value, style: const TextStyle(fontSize: 16), ),
+                  : Text(
+                      value,
+                      style: const TextStyle(fontSize: 16),
+                    ),
             );
           },
         );
@@ -248,7 +260,10 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
           valueListenable: dateNotifier,
           builder: (context, value, child) {
             return ListTile(
-              title: Text(title,  style: const TextStyle(fontWeight: FontWeight.bold),),
+              title: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: GestureDetector(
                 onTap: isEditable
                     ? () => _selectDate(context, dateNotifier)

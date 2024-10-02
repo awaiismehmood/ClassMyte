@@ -70,7 +70,9 @@ flutter:
   assets:
     - assets/pencil_white.png
     - assets/background.jpg
-
+    - assets/whatsapp.png
+    - assets/bg.jpg
+    - assets/bg2.jpg
     
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

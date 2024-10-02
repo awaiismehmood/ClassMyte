@@ -74,10 +74,19 @@ private fun startSendingSms(phoneNumbers: List<String>, message: String, delay: 
     smsJob = CoroutineScope(Dispatchers.IO).launch {
         for (phoneNumber in phoneNumbers) {
             try {
-                val smsManager = SmsManager.getDefault()
-                smsManager.sendTextMessage(phoneNumber, null, message, null, null)
-                Log.d("SmsForegroundService", "Message sent to $phoneNumber")
-                updateNotification("Message sent to $phoneNumber")
+                // Split the message if it exceeds 70 characters (for Unicode)
+                val messages = if (message.length > 70) {
+                    SmsManager.getDefault().divideMessage(message)
+                } else {
+                    listOf(message)
+                }
+
+                // Send each part of the split message
+                for (msg in messages) {
+                    SmsManager.getDefault().sendTextMessage(phoneNumber, null, msg, null, null)
+                    updateNotification("Message sent to $phoneNumber")
+                }
+
             } catch (e: Exception) {
                 Log.e("SmsForegroundService", "Failed to send message to $phoneNumber: ${e.message}")
                 updateNotification("Failed to send message to $phoneNumber")

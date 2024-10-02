@@ -1,6 +1,7 @@
-import 'package:classmyte/contacts_screen/addcontact_dialouge.dart';
-import 'package:classmyte/contacts_screen/filter_dialouge.dart';
+import 'package:classmyte/Students/addcontact_dialouge.dart';
+import 'package:classmyte/Students/filter_dialouge.dart';
 import 'package:classmyte/services/functional.dart';
+import 'package:classmyte/sms_screen/whatsapp_msg.dart';
 import 'package:classmyte/student%20details/student_details.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:flutter/material.dart';
@@ -58,11 +59,18 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'STUDENTS',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+          'Students',
+          
         ),
-        backgroundColor: Colors.blue,
-        elevation: 5,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade300, Colors.blue.shade800],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
@@ -87,10 +95,11 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
           if (isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-    
+
           return Container(
             padding: const EdgeInsets.all(8.0),
             decoration: const BoxDecoration(
+      
               gradient: LinearGradient(
                 colors: [Colors.blue, Colors.lightBlue],
                 begin: Alignment.topCenter,
@@ -107,10 +116,12 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                     decoration: InputDecoration(
                       labelText: 'Search',
                       prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
+                      border: OutlineInputBorder(   
+                        
                         borderRadius: BorderRadius.circular(12.0),
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
+                      
                     ),
                     onChanged: _searchStudents,
                   ),
@@ -158,7 +169,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                     ),
                   ],
                 ),
-                     const SizedBox(height: 5),
+                const SizedBox(height: 5),
                 Expanded(
                   child: ValueListenableBuilder<List<Map<String, String>>>(
                     valueListenable: studentListNotifier,
@@ -171,7 +182,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                           ),
                         );
                       }
-    
+
                       return ListView.builder(
                         itemCount: studentList.length,
                         itemBuilder: (context, index) {
@@ -200,7 +211,6 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                                     // CircleAvatar in the center
                                     Center(
                                       child: CircleAvatar(
-                                        
                                         radius: 30,
                                         backgroundColor: Colors.blue,
                                         child: Text(
@@ -212,7 +222,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 12), // Spacing
-    
+                              
                                     // Student details
                                     Text(
                                       student['name'] ?? '',
@@ -223,23 +233,38 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                        'Father: ${student['fatherName'] ?? ''}'),
+                                        'Father Name: ${student['fatherName'] ?? ''}'),
                                     Text('Class: ${student['class'] ?? ''}'),
                                     Text(
-                                        'Phone: ${student['phoneNumber'] ?? ''}'),
-                                    Text(
-                                        'Alternate: ${student['altNumber'] ?? ''}'),
-    
+                                        'Phone#: ${student['phoneNumber'] ?? ''}'),
                                     // Call Icon Button on bottom-right
-                                    Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.phone,
-                                            color: Colors.blue),
-                                        onPressed: () {
-                                          makeCall(student['phoneNumber']!);
-                                        },
-                                      ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Align(
+                                          alignment: Alignment.bottomRight,
+                                          child: IconButton(
+                                            icon: const Icon(Icons.phone,
+                                                color: Colors.blue),
+                                            onPressed: () {
+                                              makeCall(
+                                                  student['phoneNumber']!);
+                                            },
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Image.asset(
+                                              'assets/whatsapp.png',
+                                              width: 24,
+                                              height: 24),
+                                          onPressed: () {
+                                            WhatsAppMessaging()
+                                                .sendWhatsAppMessageIndividually(
+                                                    student['phoneNumber']!);
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),

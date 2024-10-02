@@ -1,3 +1,4 @@
+import 'package:classmyte/sms_screen/whatsapp_msg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -65,15 +66,17 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
       appBar: AppBar(
         title: const Text(
           "Messages",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
+        
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade300, Colors.blue.shade800],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
-        backgroundColor: Colors.blue,
-        elevation: 5,
       ),
       body: Container(
         alignment: Alignment.center,
@@ -187,6 +190,8 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                     : const Text('Send Message'),
               ),
               const SizedBox(height: 8),
+            
+
               if (sendingMessage)
                 ElevatedButton(
                   onPressed: _cancelMessageSending,

@@ -1,4 +1,4 @@
-import 'package:classmyte/contacts_screen/contacts.dart';
+import 'package:classmyte/Students/contacts.dart';
 import 'package:classmyte/settings/settings.dart';
 import 'package:classmyte/sms_screen/sms.dart';
 import 'package:flutter/material.dart';
@@ -9,29 +9,30 @@ import 'package:classmyte/main.dart';
 Widget buildHomeScreen(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade800],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+       flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade300, Colors.blue.shade800],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
-      ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('ClassMyte', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text('ClassMyte',
+              style: TextStyle(
+                  color: Colors.white,
+              )),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-             onPressed: () {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-    );
-  },
-),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
         ],
       ),
     ),
@@ -46,25 +47,40 @@ Widget buildHomeScreen(BuildContext context) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 70),
+          // const SizedBox(height: 70),
           Expanded(
             child: GridView.count(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              physics:
+                  const NeverScrollableScrollPhysics(), // Disable scrolling
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               children: [
-                _buildGridCard(context, 'Students', icon: Icons.people, onPressed: () {
+                _buildGridCard(context, 'Students', icon: Icons.people,
+                    onPressed: () {
                   Routes.navigateTocontacts(context);
                 }),
-                _buildGridCard(context, 'Classes', icon: Icons.class_, onPressed: () {
+                _buildGridCard(context, 'Classes', icon: Icons.class_,
+                    onPressed: () {
                   Routes.navigateToClasses(context);
                 }),
-                _buildGridCard(context, 'Send SMS', icon: Icons.sms, onPressed: () {
+                _buildGridCard(context, 'Send SMS', icon: Icons.sms,
+                    onPressed: () {
                   Routes.navigateToSms(context);
                 }),
-                _buildGridCard(context, 'Teachers', icon: Icons.person_outline, onPressed: () {
-                  
+                _buildGridCard(context, 'Teachers',
+                    icon: Icons.person_outline, onPressed: () {}),
+                _buildGridCard(context, 'Settings', icon: Icons.settings,
+                    onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => const SettingsScreen()),
+                  );
+                }),
+                _buildGridCard(context, 'Premium', icon: Icons.class_,
+                    onPressed: () {
+                  // Routes.navigateToClasses(context);
                 }),
               ],
             ),
@@ -85,14 +101,15 @@ Widget buildHomeScreen(BuildContext context) {
               color: Colors.red,
             ),
           ),
-           const SizedBox(height: 70),
+          const SizedBox(height: 20),
         ],
       ),
     ),
   );
 }
 
-Widget _buildGridCard(BuildContext context, String title, {IconData? icon, VoidCallback? onPressed, Color color = Colors.blue}) {
+Widget _buildGridCard(BuildContext context, String title,
+    {IconData? icon, VoidCallback? onPressed, Color color = Colors.blue}) {
   return GestureDetector(
     onTap: onPressed,
     child: Card(
@@ -111,11 +128,11 @@ Widget _buildGridCard(BuildContext context, String title, {IconData? icon, VoidC
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 50, color: Colors.white),
-              const SizedBox(height: 12),
+              Icon(icon, size: 30, color: Colors.white),
+              const SizedBox(height: 8),
               Text(
                 title,
-                style: const TextStyle(fontSize: 18, color: Colors.white),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
             ],
           ),
@@ -137,4 +154,3 @@ Widget getPage(int index, BuildContext context) {
       return buildHomeScreen(context);
   }
 }
-
