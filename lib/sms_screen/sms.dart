@@ -82,12 +82,9 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
         alignment: Alignment.center,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
+            colors: [Colors.white, Colors.blueAccent],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color.fromARGB(255, 78, 136, 207),
-              Color.fromARGB(255, 156, 184, 215)
-            ],
           ),
         ),
         child: Padding(

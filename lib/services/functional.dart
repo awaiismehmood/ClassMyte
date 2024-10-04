@@ -1,5 +1,4 @@
-// student_contacts_functions.dart
-
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -9,9 +8,7 @@ Future<void> makeCall(String phoneNumber) async {
     path: phoneNumber,
   );
 
-  // ignore: deprecated_member_use
   if (await canLaunch(call.toString())) {
-    // ignore: deprecated_member_use
     await launch(call.toString());
   }
 }

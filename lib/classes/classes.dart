@@ -65,11 +65,10 @@ class _ClassScreenState extends State<ClassScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-       title: const Text(
-        'Classes',
-        
-      ),
-       flexibleSpace: Container(
+        title: const Text(
+          'Classes',
+        ),
+        flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.blue.shade300, Colors.blue.shade800],
@@ -93,15 +92,17 @@ class _ClassScreenState extends State<ClassScreen> {
             alignment: Alignment.center,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
+                colors: [Colors.white, Colors.blueAccent],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.blue, Colors.lightBlueAccent],
               ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 10,),
+                const SizedBox(
+                  height: 10,
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15.0),
                   child: Text(
@@ -121,7 +122,7 @@ class _ClassScreenState extends State<ClassScreen> {
                       int studentCount = allStudents
                           .where((student) => student['class'] == className)
                           .length;
-    
+
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12.0,
@@ -178,7 +179,8 @@ class _ClassScreenState extends State<ClassScreen> {
                                     IconButton(
                                       icon: const Icon(Icons.delete),
                                       onPressed: () async {
-                                        showDeleteClassDialog(context, className);
+                                        showDeleteClassDialog(
+                                            context, className);
                                       },
                                     ),
                                   ],

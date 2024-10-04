@@ -1,4 +1,5 @@
 import 'package:classmyte/Students/contacts.dart';
+import 'package:classmyte/premium/subscription_screen.dart';
 import 'package:classmyte/settings/settings.dart';
 import 'package:classmyte/sms_screen/sms.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,10 @@ Widget buildHomeScreen(BuildContext context) {
                 }),
                 _buildGridCard(context, 'Premium', icon: Icons.class_,
                     onPressed: () {
-                  // Routes.navigateToClasses(context);
+                 Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => SubscriptionScreen()),
+                  );
                 }),
               ],
             ),

@@ -1,6 +1,7 @@
 // settings.dart
 import 'package:classmyte/main.dart';
 import 'package:classmyte/onboarding/term.dart';
+import 'package:classmyte/premium/subscription_screen.dart';
 import 'package:classmyte/settings/change_password.dart';
 import 'package:classmyte/settings/delete_account.dart'; // Ensure to import DeleteAccount
 import 'package:flutter/material.dart';
@@ -25,14 +26,13 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
       body: Container(
-         decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/bg.jpg'),
-          fit: BoxFit.cover,
-          opacity: 0.3
-          ,
+          decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.blueAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-      ),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -58,9 +58,12 @@ class SettingsScreen extends StatelessWidget {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.subscriptions),
-                title: const Text('Manage Subscription/Premium'),
+                title: const Text('My Subcription'),
                 onTap: () {
-                  // Navigate to Subscription Management Screen
+                 Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => const SubscriptionScreen()),
+                  );
                 },
               ),
               const Divider(),
@@ -78,10 +81,10 @@ class SettingsScreen extends StatelessWidget {
                 leading: const Icon(Icons.logout),
                 title: const Text('Logout'),
                 onTap: () {
-                  FirebaseAuth.instance.signOut();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => const MyApp()),
-                  );
+                   FirebaseAuth.instance.signOut();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const MyApp()),
+                );
                 },
               ),
             ],

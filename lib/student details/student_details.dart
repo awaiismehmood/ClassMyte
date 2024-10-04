@@ -143,64 +143,85 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
           if (isLoading) {
             return const Center(child: CircularProgressIndicator());
           } else {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.blue,
-                          child: Text(
-                            nameNotifier.value[0],
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 24),
-                          )),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Center(
-                      child: ListView(
-                        children: [
-                          Container(
-                              decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.black)),
-                              child: Column(
-                                children: [
-                                  _buildEditableTile('Name', nameNotifier),
-                                  _buildEditableTile(
-                                      'Father Name', fatherNameNotifier),
-                                  _buildEditableTile('Class', classNotifier),
-                                  _buildEditableTile(
-                                      'Phone#', phoneNumberNotifier,
-                                      isPhone: true),
-                                  _buildEditableTile(
-                                      'Alternate#', altNumberNotifier,
-                                      isPhone: true),
-                                  _buildDateTile(
-                                      'Date of Birth', dobNotifier),
-                                  _buildDateTile(
-                                      'Admission Date', admissionNotifier),
-                                ],
-                              )),
-                        ],
+            return Container(
+               decoration:  BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.blue.shade300],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircleAvatar(
+                            radius: 30,
+                            backgroundColor: Colors.blue,
+                            child: Text(
+                              nameNotifier.value[0],
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 24),
+                            )),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Center(
+                        child: ListView(
+                          children: [
+                            Container(
+                                decoration: BoxDecoration(
+                                    // gradient: LinearGradient(
+                                    //   colors: [
+                                    //     Colors.grey.shade100,
+                                    //     Colors.blue.shade100
+                                    //   ],
+                                    //   begin: Alignment.topLeft,
+                                    //   end: Alignment.bottomRight,
+                                    // ),
+
+                                    //  color: Colors.white,
+                                    border: Border.all(color: Colors.black)),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                        child: _buildEditableTile(
+                                            'Name', nameNotifier)),
+                                    _buildEditableTile(
+                                        'Father Name', fatherNameNotifier),
+                                    _buildEditableTile('Class', classNotifier),
+                                    _buildEditableTile(
+                                        'Phone#', phoneNumberNotifier,
+                                        isPhone: true),
+                                    _buildEditableTile(
+                                        'Alternate#', altNumberNotifier,
+                                        isPhone: true),
+                                    _buildDateTile(
+                                        'Date of Birth', dobNotifier),
+                                    _buildDateTile(
+                                        'Admission Date', admissionNotifier),
+                                  ],
+                                )),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  ElevatedButton(
-                    onPressed: deleteStudent,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                    ElevatedButton(
+                      onPressed: deleteStudent,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                      ),
+                      child: const Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }

@@ -99,13 +99,12 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
           return Container(
             padding: const EdgeInsets.all(8.0),
             decoration: const BoxDecoration(
-      
-              gradient: LinearGradient(
-                colors: [Colors.blue, Colors.lightBlue],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.blueAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
