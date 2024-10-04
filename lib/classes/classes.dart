@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:classmyte/classes/deletion.dart';
 import 'package:classmyte/classes/promotion.dart';
 import 'package:classmyte/Students/addcontact_dialouge.dart';

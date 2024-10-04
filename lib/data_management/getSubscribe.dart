@@ -38,16 +38,37 @@ class SubscriptionData {
   }
 
   Future<void> updateSubscription(String package, DateTime? expiryDate) async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'subscription': {
-          'package': package,
-          'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate) : null,
-        },
-      });
-    }
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    DocumentReference userDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    
+    // Use a transaction to safely update or create the subscription document
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      // Attempt to get the current document
+      DocumentSnapshot userDoc = await transaction.get(userDocRef);
+      
+      if (!userDoc.exists) {
+        // Document doesn't exist, create it
+        await transaction.set(userDocRef, {
+          'subscription': {
+            'package': package,
+            'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate) : null,
+          },
+          // Add other user fields here as necessary
+        });
+      } else {
+        // Document exists, update the subscription field
+        await transaction.update(userDocRef, {
+          'subscription': {
+            'package': package,
+            'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate) : null,
+          },
+        });
+      }
+    });
   }
+}
+
 
   void _checkExpiryDate() {
     if (expiryDate.value != null && expiryDate.value!.isBefore(DateTime.now())) {
