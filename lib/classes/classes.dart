@@ -2,6 +2,7 @@ import 'package:classmyte/classes/deletion.dart';
 import 'package:classmyte/classes/promotion.dart';
 import 'package:classmyte/Students/addcontact_dialouge.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
+import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -16,29 +17,34 @@ class _ClassScreenState extends State<ClassScreen> {
   ValueNotifier<List<String>> allClassesNotifier = ValueNotifier([]);
   List<Map<String, String>> allStudents = [];
   BannerAd? _bannerAd;
+  final SubscriptionData subscriptionData = SubscriptionData(); // Instance of SubscriptionData
 
   @override
   void initState() {
     super.initState();
     getStudentData();
+    subscriptionData.checkSubscriptionStatus(); // Check subscription status on init
     _loadBannerAd();
   }
 
   void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      size: AdSize.banner,
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {});
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    );
-    _bannerAd!.load();
+    // Load ad only if user is not premium
+    if (!subscriptionData.isPremiumUser.value) {
+      _bannerAd = BannerAd(
+        size: AdSize.banner,
+        adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            setState(() {});
+          },
+          onAdFailedToLoad: (ad, error) {
+            ad.dispose();
+          },
+        ),
+      );
+      _bannerAd!.load();
+    }
   }
 
   Future<void> getStudentData() async {
@@ -196,7 +202,8 @@ class _ClassScreenState extends State<ClassScreen> {
               ],
             ),
           ),
-          if (_bannerAd != null)
+          if (_bannerAd != null && !subscriptionData.isPremiumUser.value) // Only show ad if not premium
+         
             Positioned(
               bottom: 0,
               child: SizedBox(
@@ -205,6 +212,7 @@ class _ClassScreenState extends State<ClassScreen> {
                 child: AdWidget(ad: _bannerAd!),
               ),
             ),
+        
         ],
       ),
     );

@@ -80,7 +80,7 @@ class PaymentScreen extends StatelessWidget {
                               }
                             } catch (error) {
                               // Handle payment error
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                                 content: Text(
                                   'Payment failed. Please try again.',
                                   style: TextStyle(color: Colors.red),
