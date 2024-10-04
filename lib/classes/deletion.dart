@@ -3,7 +3,7 @@ import 'package:classmyte/data_management/edit_contacts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-void showDeleteClassDialog(BuildContext context, String className) {
+void showDeleteClassDialog(BuildContext context, String className, ValueNotifier<List<String>> allClassesNotifier) {
   TextEditingController passwordController = TextEditingController();
   bool isPasswordIncorrect = false;
 
@@ -62,10 +62,15 @@ void showDeleteClassDialog(BuildContext context, String className) {
                     // Delete the class and associated students
                     await EditContactService.deleteClassAndStudents(className);
 
-                    // Close all dialogs and refresh the class list
-                    Navigator.pop(context); // Close the loading indicator
-                    Navigator.pop(context); // Close the password confirmation dialog
-                    StudentData.getStudentData(); // Refresh class list
+                    // Close the loading indicator
+                    Navigator.pop(context);
+
+                    // Update the ValueNotifier to reflect deletion
+                    allClassesNotifier.value.remove(className);
+                    allClassesNotifier.notifyListeners();
+
+                    // Close the password confirmation dialog
+                    Navigator.pop(context);
 
                     // Show success message
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -91,6 +96,7 @@ void showDeleteClassDialog(BuildContext context, String className) {
     },
   );
 }
+
 
 /// Function to validate the user's password for re-authentication
 Future<bool> validateUserPassword(String password) async {

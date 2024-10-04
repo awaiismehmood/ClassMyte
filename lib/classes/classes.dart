@@ -1,7 +1,5 @@
-import 'dart:ffi';
-
 import 'package:classmyte/classes/deletion.dart';
-import 'package:classmyte/classes/dialouge_test.dart';
+import 'package:classmyte/classes/promotion.dart';
 import 'package:classmyte/Students/addcontact_dialouge.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:flutter/material.dart';
@@ -15,10 +13,8 @@ class ClassScreen extends StatefulWidget {
 }
 
 class _ClassScreenState extends State<ClassScreen> {
-  List<Map<String, String>> studentList = [];
+  ValueNotifier<List<String>> allClassesNotifier = ValueNotifier([]);
   List<Map<String, String>> allStudents = [];
-  List<String> allClasses = [];
-  List<String> selectedClasses = [];
   BannerAd? _bannerAd;
 
   @override
@@ -47,17 +43,14 @@ class _ClassScreenState extends State<ClassScreen> {
 
   Future<void> getStudentData() async {
     List<Map<String, String>> students = await StudentData.getStudentData();
-    setState(() {
-      studentList = students;
-      allStudents = List.from(students);
-      allClasses =
-          allStudents.map((student) => student['class'] ?? '').toSet().toList();
-    });
+    allStudents = students;
+    allClassesNotifier.value = students.map((student) => student['class'] ?? '').toSet().toList();
   }
 
   @override
   void dispose() {
     _bannerAd?.dispose();
+    allClassesNotifier.dispose();
     super.dispose();
   }
 
@@ -65,9 +58,7 @@ class _ClassScreenState extends State<ClassScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Classes',
-        ),
+        title: const Text('Classes'),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -100,95 +91,104 @@ class _ClassScreenState extends State<ClassScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: Text(
-                    'Total Classes: ${allClasses.length}',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: ValueListenableBuilder<List<String>>(
+                    valueListenable: allClassesNotifier,
+                    builder: (context, allClasses, child) {
+                      return Text(
+                        'Total Classes: ${allClasses.length}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: allClasses.length,
-                    itemBuilder: (context, index) {
-                      String className = allClasses[index];
-                      int studentCount = allStudents
-                          .where((student) => student['class'] == className)
-                          .length;
+                  child: ValueListenableBuilder<List<String>>(
+                    valueListenable: allClassesNotifier,
+                    builder: (context, allClasses, child) {
+                      return ListView.builder(
+                        itemCount: allClasses.length,
+                        itemBuilder: (context, index) {
+                          String className = allClasses[index];
+                          int studentCount = allStudents
+                              .where((student) => student['class'] == className)
+                              .length;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 4.0,
-                        ),
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8.0),
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: ListTile(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 4.0,
                             ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Class: $className',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                    color: Colors.blue,
-                                  ),
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              elevation: 8,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
                                 ),
-                                Text(
-                                  'Total students: $studentCount',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.normal,
-                                    fontSize: 16,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return UpdateClassDialog(
-                                              classes: allClasses,
-                                              existingClass: className,
-                                              allStudents: allStudents,
+                                    Text(
+                                      'Class: $className',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Total students: $studentCount',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.normal,
+                                        fontSize: 16,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return UpdateClassDialog(
+                                                  classes: allClasses,
+                                                  existingClass: className,
+                                                  allStudents: allStudents,
+                                                  allClassesNotifier: allClassesNotifier,
+                                                );
+                                              },
                                             );
                                           },
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () async {
-                                        showDeleteClassDialog(
-                                            context, className);
-                                      },
-                                    ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete),
+                                          onPressed: () async {
+                                            showDeleteClassDialog(
+                                                context, className, allClassesNotifier);
+                                          },
+                                        ),
+                                      ],
+                                    )
                                   ],
-                                )
-                              ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       );
                     },
                   ),
