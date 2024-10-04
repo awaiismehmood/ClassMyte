@@ -1,8 +1,6 @@
 import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:classmyte/payment/payment_Screen.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -12,61 +10,22 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  final SubscriptionData subscriptionData = SubscriptionData();
   final ValueNotifier<String> _selectedPlan = ValueNotifier<String>('Free');
-  final ValueNotifier<bool> _isPremiumUser = ValueNotifier<bool>(false);
-  final ValueNotifier<String> _subscribedPackage = ValueNotifier<String>('');
-  final ValueNotifier<DateTime?> _expiryDate = ValueNotifier<DateTime?>(null);
-  final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(true); // Loader state
 
   @override
   void initState() {
     super.initState();
-    _checkSubscriptionStatus();
-  }
-
-  Future<void> _checkSubscriptionStatus() async {
-    try {
-      final subscriptionData = await SubscriptionData.getSubscriptionStatus();
-
-      if (subscriptionData != null) {
-        var subscription = subscriptionData['subscription'];
-        if (subscription != null) {
-          _isPremiumUser.value = true;
-          _subscribedPackage.value = subscription['package'] ?? 'Free';
-          _expiryDate.value = subscription['expiryDate']?.toDate();
-          _checkExpiryDate(); // Check expiry date on load
-        }
-      }
-    } finally {
-      _isLoading.value = false; // Stop loading once the data is checked
-    }
-  }
-
-  void _checkExpiryDate() {
-
-    if (_expiryDate.value != null && _expiryDate.value!.isBefore(DateTime.now())) {
-      _isPremiumUser.value = false;
-      _subscribedPackage.value = 'Free';
-      _expiryDate.value = null;
-
-      // Update Firestore to reflect this change
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        SubscriptionData.updateSubscription('Free', null); // Set subscription to null
-      }
-    }
+    subscriptionData.checkSubscriptionStatus();
   }
 
   Future<void> _cancelSubscription() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await SubscriptionData.updateSubscription('Free', null); // Update Firestore to cancel subscription
+    await subscriptionData.updateSubscription('Free', null); // Ensure this is called on the instance
 
-      // Update local state
-      _isPremiumUser.value = false;
-      _subscribedPackage.value = 'Free';
-      _expiryDate.value = null;
-    }
+    // Update local state
+    subscriptionData.isPremiumUser.value = false;
+    subscriptionData.subscribedPackage.value = 'Free';
+    subscriptionData.expiryDate.value = null;
   }
 
   void _showCancelConfirmationDialog() {
@@ -100,20 +59,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
 
     if (result == true) {
-      _isPremiumUser.value = true;
-      _subscribedPackage.value = _selectedPlan.value;
-      if (_selectedPlan.value == 'Month') {
-        _expiryDate.value = DateTime.now().add(const Duration(days: 30));
-      } else if (_selectedPlan.value == 'Year') {
-        _expiryDate.value = DateTime.now().add(const Duration(days: 365));
-      } else {
-        _expiryDate.value = null; // Free plan doesn't have an expiry
-      }
-      // Update Firestore with new subscription data
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        SubscriptionData.updateSubscription(_subscribedPackage.value, _expiryDate.value);
-      }
+      subscriptionData.isPremiumUser.value = true;
+      subscriptionData.subscribedPackage.value = _selectedPlan.value;
+      subscriptionData.expiryDate.value = _selectedPlan.value == 'Month'
+          ? DateTime.now().add(const Duration(days: 30))
+          : DateTime.now().add(const Duration(days: 365));
+
+      // Update Firestore with new subscription data using the instance
+      await subscriptionData.updateSubscription(
+        subscriptionData.subscribedPackage.value,
+        subscriptionData.expiryDate.value,
+      );
     }
   }
 
@@ -142,13 +98,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           ),
         ),
         child: ValueListenableBuilder<bool>(
-          valueListenable: _isLoading,
+          valueListenable: subscriptionData.isLoading,
           builder: (context, isLoading, child) {
             if (isLoading) {
               return const CircularProgressIndicator(); // Show loader while checking subscription
             }
             return ValueListenableBuilder<bool>(
-              valueListenable: _isPremiumUser,
+              valueListenable: subscriptionData.isPremiumUser,
               builder: (context, isPremiumUser, child) {
                 return isPremiumUser ? _buildPremiumUserView() : _buildSubscriptionOptionsView();
               },
@@ -159,10 +115,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
-  // View for premium users showing their subscription details
   Widget _buildPremiumUserView() {
-    Duration remainingTime = _expiryDate.value!.difference(DateTime.now());
-    int remainingDays = remainingTime.inDays;
+    String formattedDate = subscriptionData.expiryDate.value != null
+        ? subscriptionData.expiryDate.value!.toLocal().toString().split(' ')[0]  // Get only the date part
+        : 'No active subscription';
+
+    int remainingDays = subscriptionData.expiryDate.value != null
+        ? subscriptionData.expiryDate.value!.difference(DateTime.now()).inDays
+        : 0;  // Default to 0 if there's no expiry date
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -170,13 +130,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         Image.asset('assets/pencil_white.png', height: 100), // App logo
         const SizedBox(height: 20),
         Text(
-          'You are subscribed to the ${_subscribedPackage.value} package.',
+          'You are subscribed to the ${subscriptionData.subscribedPackage.value} package.',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
         ),
         const SizedBox(height: 10),
-        const Text(
-          'Subscription expires on: ',
-          style: TextStyle(fontSize: 16, color: Colors.black),
+        Text(
+          'Subscription expires on: $formattedDate',
+          style: const TextStyle(fontSize: 16, color: Colors.black),
         ),
         const SizedBox(height: 10),
         Text(
@@ -199,7 +159,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
-  // Default view for non-subscribed users
   Widget _buildSubscriptionOptionsView() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -236,43 +195,41 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             );
           },
         ),
-        TextButton(
-          onPressed: () {
-            // Close or skip the screen
-          },
-          child: const Text('Terms and Condition | Privacy Policy'),
-        ),
       ],
     );
   }
 
-  // Subscription option button
-  Widget _buildSubscriptionOption(String plan, String price, String benefit) {
-    return ValueListenableBuilder<String>(
-      valueListenable: _selectedPlan,
-      builder: (context, selectedPlan, child) {
-        return RadioListTile<String>(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                plan,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                price,
-                style: const TextStyle(fontSize: 16, color: Colors.black),
-              ),
-            ],
-          ),
-          subtitle: Text(benefit),
-          value: plan,
-          groupValue: selectedPlan,
-          onChanged: (value) {
-            _selectedPlan.value = value!;
-          },
-        );
+  // Subscription option builder
+  Widget _buildSubscriptionOption(String planName, String price, String description) {
+    return GestureDetector(
+      onTap: () {
+        _selectedPlan.value = planName; // Update selected plan
       },
+      child: ValueListenableBuilder<String>(
+        valueListenable: _selectedPlan,
+        builder: (context, selectedPlan, child) {
+          return Container(
+            padding: const EdgeInsets.all(15),
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blueAccent, width: 1),
+              borderRadius: BorderRadius.circular(10),
+              color: selectedPlan == planName ? Colors.blueAccent.withOpacity(0.2) : Colors.white,
+            ),
+            child: SizedBox(
+              width: 300,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(planName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(price, style: const TextStyle(fontSize: 16)),
+                  Text(description, style: const TextStyle(fontSize: 14)),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

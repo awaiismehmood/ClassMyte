@@ -7,10 +7,13 @@ class PaymentScreen extends StatelessWidget {
   final String plan;
   final ValueNotifier<bool> _isProcessing = ValueNotifier<bool>(false);
 
-  PaymentScreen({required this.plan});
+  PaymentScreen({Key? key, required this.plan}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Create an instance of SubscriptionData
+    final SubscriptionData subscriptionData = SubscriptionData();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Payment for $plan Plan'),
@@ -50,40 +53,42 @@ class PaymentScreen extends StatelessWidget {
                         ? null
                         : () async {
                             _isProcessing.value = true; // Start processing
-                            // Simulate payment processing logic here
-                            await Future.delayed(
-                                const Duration(seconds: 2)); // Simulate a delay
-                            bool paymentSuccessful =
-                                true; // Simulate payment success
 
-                            if (paymentSuccessful) {
-                              // Calculate expiry date based on plan
-                              DateTime expiryDate;
-                              if (plan == 'Month') {
-                                expiryDate = DateTime.now()
-                                    .add(const Duration(days: 30));
-                              } else if (plan == 'Year') {
-                                expiryDate = DateTime.now()
-                                    .add(const Duration(days: 365));
-                              } else {
-                                expiryDate = DateTime.now();
+                            try {
+                              // Simulate payment processing logic here
+                              await Future.delayed(
+                                  const Duration(seconds: 2)); // Simulate a delay
+
+                              // Simulate payment success
+                              bool paymentSuccessful = true;
+
+                              if (paymentSuccessful) {
+                                // Calculate expiry date based on plan
+                                DateTime expiryDate = _calculateExpiryDate(plan);
+
+                                // Update subscription in the database
+                                await subscriptionData.updateSubscription(
+                                    plan, expiryDate);
+
+                                // Show success message
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(
+                                      'Payment successful for the $plan Plan!'),
+                                ));
+                                // Return payment status and navigate back
+                                Navigator.pop(context, paymentSuccessful);
                               }
-
-                              await SubscriptionData.updateSubscription(
-                                  plan, expiryDate);
-
-                              // Inside PaymentScreen class
-                              Navigator.pop(context,
-                                  paymentSuccessful); // Return payment status
-
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(
+                            } catch (error) {
+                              // Handle payment error
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text(
-                                    'Payment successful for the $plan Plan!'),
+                                  'Payment failed. Please try again.',
+                                  style: TextStyle(color: Colors.red),
+                                ),
                               ));
+                            } finally {
+                              _isProcessing.value = false; // Stop processing
                             }
-
-                            _isProcessing.value = false; // Stop processing
                           },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
@@ -107,5 +112,16 @@ class PaymentScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  DateTime _calculateExpiryDate(String plan) {
+    switch (plan) {
+      case 'Month':
+        return DateTime.now().add(const Duration(days: 30));
+      case 'Year':
+        return DateTime.now().add(const Duration(days: 365));
+      default:
+        return DateTime.now();
+    }
   }
 }
