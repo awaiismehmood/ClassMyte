@@ -8,15 +8,34 @@ class TermsAndConditionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Terms and Conditions'),
+       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Change the back button color to white
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade400, Colors.blue.shade900],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text(
+          'Terms and Conditions',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22, // Make the font size a bit larger
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/background.jpg'), 
-            fit: BoxFit.cover,
-            opacity: 0.5,
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.blueAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: Padding(

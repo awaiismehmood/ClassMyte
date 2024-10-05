@@ -77,14 +77,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choose Your Plan'),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Change the back button color to white
+        ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade300, Colors.blue.shade800],
+              colors: [Colors.blue.shade400, Colors.blue.shade900],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+          ),
+        ),
+        title: const Text(
+          'Choose Your Plan',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22, // Make the font size a bit larger
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

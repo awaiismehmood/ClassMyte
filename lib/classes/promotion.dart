@@ -17,12 +17,14 @@ class UpdateClassDialog extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _UpdateClassDialogState createState() => _UpdateClassDialogState();
 }
 
 class _UpdateClassDialogState extends State<UpdateClassDialog> {
   late String selectedClass; 
   final TextEditingController newClassController = TextEditingController();
+  bool isLoading = false; // Add loading state
 
   @override
   void initState() {
@@ -65,6 +67,9 @@ class _UpdateClassDialogState extends State<UpdateClassDialog> {
         ),
       ),
       actions: [
+        if (isLoading) // Show loading indicator if loading
+          const Center(child: CircularProgressIndicator()),
+
         ElevatedButton(
           onPressed: () async {
             String newClassName = newClassController.text.trim();
@@ -75,11 +80,21 @@ class _UpdateClassDialogState extends State<UpdateClassDialog> {
               return;
             }
 
+            setState(() {
+              isLoading = true; // Show loading indicator
+            });
+
             await promoteStudents(widget.existingClass, newClassName.isNotEmpty ? newClassName : selectedClass);
 
-            // Get updated student data and update the notifier
+            // Refresh the students and classes data
             widget.allClassesNotifier.value = await StudentData.getStudentData().then((students) {
+              widget.allStudents.clear(); // Clear old data
+              widget.allStudents.addAll(students); // Update the students list
               return students.map((student) => student['class'] ?? '').toSet().toList();
+            });
+
+            setState(() {
+              isLoading = false; // Hide loading indicator
             });
 
             Navigator.pop(context);

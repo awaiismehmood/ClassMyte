@@ -1,4 +1,4 @@
-import 'package:classmyte/Students/contacts.dart';
+import 'package:classmyte/Students/students.dart';
 import 'package:classmyte/premium/subscription_screen.dart';
 import 'package:classmyte/settings/settings.dart';
 import 'package:classmyte/sms_screen/sms.dart';
@@ -8,24 +8,41 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:classmyte/main.dart';
 
 Widget buildHomeScreen(BuildContext context) {
+  final mediaQuery = MediaQuery.of(context);
+  final screenHeight = mediaQuery.size.height;
+  final screenWidth = mediaQuery.size.width;
+
   return Scaffold(
     appBar: AppBar(
-       flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade300, Colors.blue.shade800],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.blue.shade900],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
+      ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('ClassMyte',
-              style: TextStyle(
+          Row(
+            children: [
+              Image.asset(
+                'assets/pencil_white.png', // Add your logo here
+                height: screenHeight * 0.04, // Adjust height dynamically
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'ClassMyte',
+                style: TextStyle(
                   color: Colors.white,
-              )),
+                  fontSize: 22, // Make the font size a bit larger
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
@@ -41,57 +58,68 @@ Widget buildHomeScreen(BuildContext context) {
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/background.jpg'),
-          fit: BoxFit.fill,
-          opacity: 0.6,
+          fit: BoxFit.cover,
+          opacity: 0.8,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // const SizedBox(height: 70),
           Expanded(
             child: GridView.count(
-              physics:
-                  const NeverScrollableScrollPhysics(), // Disable scrolling
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+              physics: const NeverScrollableScrollPhysics(), // Disable scrolling
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.05, 
+                vertical: screenHeight * 0.06,
+              ),
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: screenWidth * 0.04,
+              mainAxisSpacing: screenHeight * 0.03,
               children: [
-                _buildGridCard(context, 'Students', icon: Icons.people,
-                    onPressed: () {
-                  Routes.navigateTocontacts(context);
-                }),
-                _buildGridCard(context, 'Classes', icon: Icons.class_,
-                    onPressed: () {
-                  Routes.navigateToClasses(context);
-                }),
-                _buildGridCard(context, 'Send SMS', icon: Icons.sms,
-                    onPressed: () {
-                  Routes.navigateToSms(context);
-                }),
-                _buildGridCard(context, 'Teachers',
-                    icon: Icons.person_outline, onPressed: () {}),
-                _buildGridCard(context, 'Settings', icon: Icons.settings,
-                    onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (context) => const SettingsScreen()),
-                  );
-                }),
-                _buildGridCard(context, 'Premium', icon: Icons.class_,
-                    onPressed: () {
-                 Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (context) => SubscriptionScreen()),
-                  );
-                }),
+                _buildGridCard(
+                  context,
+                  'Students',
+                  icon: Icons.people,
+                  onPressed: () {
+                    Routes.navigateTocontacts(context);
+                  },
+                ),
+                _buildGridCard(
+                  context,
+                  'Classes',
+                  icon: Icons.class_,
+                  onPressed: () {
+                    Routes.navigateToClasses(context);
+                  },
+                ),
+                _buildGridCard(
+                  context,
+                  'Send SMS',
+                  icon: Icons.sms,
+                  onPressed: () {
+                    Routes.navigateToSms(context);
+                  },
+                ),
+                _buildGridCard(
+                  context,
+                  'Premium',
+                  icon: Icons.workspace_premium,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SubscriptionScreen(),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 10),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.15, // Centered using dynamic padding
+              vertical: screenHeight * 0.06,
+            ),
             child: _buildGridCard(
               context,
               'Signout',
@@ -105,7 +133,7 @@ Widget buildHomeScreen(BuildContext context) {
               color: Colors.red,
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: screenHeight * 0.015), // Adjust spacing dynamically
         ],
       ),
     ),
@@ -114,29 +142,43 @@ Widget buildHomeScreen(BuildContext context) {
 
 Widget _buildGridCard(BuildContext context, String title,
     {IconData? icon, VoidCallback? onPressed, Color color = Colors.blue}) {
+  final mediaQuery = MediaQuery.of(context);
+  final screenHeight = mediaQuery.size.height;
+  final screenWidth = mediaQuery.size.width;
+
   return GestureDetector(
     onTap: onPressed,
     child: Card(
-      elevation: 4,
-      shadowColor: Colors.black54,
+      elevation: 6, // Increased elevation for a more modern look
+      shadowColor: Colors.black38, // Softer shadow for better contrast
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
+        borderRadius: BorderRadius.circular(20.0), // Softer corners for modern look
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(15.0),
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.8), color],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20.0),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.symmetric(
+          vertical: screenHeight * 0.035, // Dynamically sized padding
+        ),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 30, color: Colors.white),
-              const SizedBox(height: 8),
+              Icon(icon, size: screenHeight * 0.05, color: Colors.white), // Larger icons for clarity
+              SizedBox(height: screenHeight * 0.01), // Dynamic spacing
               Text(
                 title,
-                style: const TextStyle(fontSize: 16, color: Colors.white),
+                style: TextStyle(
+                  fontSize: screenHeight * 0.02,
+                  fontWeight: FontWeight.w600, // Bolder text for more emphasis
+                  color: Colors.white,
+                ),
               ),
             ],
           ),

@@ -7,7 +7,7 @@ class PaymentScreen extends StatelessWidget {
   final String plan;
   final ValueNotifier<bool> _isProcessing = ValueNotifier<bool>(false);
 
-  PaymentScreen({Key? key, required this.plan}) : super(key: key);
+  PaymentScreen({super.key, required this.plan});
 
   @override
   Widget build(BuildContext context) {
@@ -15,15 +15,25 @@ class PaymentScreen extends StatelessWidget {
     final SubscriptionData subscriptionData = SubscriptionData();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Payment for $plan Plan'),
+       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Change the back button color to white
+        ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade300, Colors.blue.shade800],
+              colors: [Colors.blue.shade400, Colors.blue.shade900],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+          ),
+        ),
+        title: Text(
+          'Payment for $plan plan',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22, // Make the font size a bit larger
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

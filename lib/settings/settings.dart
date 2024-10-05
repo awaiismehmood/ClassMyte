@@ -1,4 +1,5 @@
 // settings.dart
+import 'package:classmyte/Contact%20Us/contact_us.dart';
 import 'package:classmyte/main.dart';
 import 'package:classmyte/onboarding/term.dart';
 import 'package:classmyte/premium/subscription_screen.dart';
@@ -14,19 +15,29 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Change the back button color to white
+        ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade300, Colors.blue.shade800],
+              colors: [Colors.blue.shade400, Colors.blue.shade900],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22, // Make the font size a bit larger
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Container(
-          decoration: const BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.white, Colors.blueAccent],
             begin: Alignment.topCenter,
@@ -43,7 +54,8 @@ class SettingsScreen extends StatelessWidget {
                 title: const Text('Change Password'),
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const ChangePasswordScreen()),
                   );
                 },
               ),
@@ -58,9 +70,9 @@ class SettingsScreen extends StatelessWidget {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.subscriptions),
-                title: const Text('My Subcription'),
+                title: const Text('My Subscription'),
                 onTap: () {
-                 Navigator.of(context).push(
+                  Navigator.of(context).push(
                     MaterialPageRoute(
                         builder: (context) => const SubscriptionScreen()),
                   );
@@ -71,8 +83,9 @@ class SettingsScreen extends StatelessWidget {
                 leading: const Icon(Icons.policy),
                 title: const Text('Terms and conditions'),
                 onTap: () {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const TermsAndConditionsScreen()),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => const TermsAndConditionsScreen()),
                   );
                 },
               ),
@@ -81,10 +94,21 @@ class SettingsScreen extends StatelessWidget {
                 leading: const Icon(Icons.logout),
                 title: const Text('Logout'),
                 onTap: () {
-                   FirebaseAuth.instance.signOut();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => const MyApp()),
-                );
+                  FirebaseAuth.instance.signOut();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const MyApp()),
+                  );
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.support_agent),
+                title: const Text('Help and Support'),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => const ContactUsScreen()),
+                  );
                 },
               ),
             ],

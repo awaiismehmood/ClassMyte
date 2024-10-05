@@ -102,17 +102,34 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
     }
   }
 
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text("Edit Details",
-            style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.white)),
-        actions: [
+       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Change the back button color to white
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade400, Colors.blue.shade900],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22, // Make the font size a bit larger
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+           actions: [
           ValueListenableBuilder<bool>(
             valueListenable: isEditableNotifier,
             builder: (context, isEditable, child) {
@@ -137,6 +154,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
           ),
         ],
       ),
+ 
       body: ValueListenableBuilder<bool>(
         valueListenable: isLoadingNotifier,
         builder: (context, isLoading, child) {
@@ -175,16 +193,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                           children: [
                             Container(
                                 decoration: BoxDecoration(
-                                    // gradient: LinearGradient(
-                                    //   colors: [
-                                    //     Colors.grey.shade100,
-                                    //     Colors.blue.shade100
-                                    //   ],
-                                    //   begin: Alignment.topLeft,
-                                    //   end: Alignment.bottomRight,
-                                    // ),
 
-                                    //  color: Colors.white,
                                     border: Border.all(color: Colors.black)),
                                 child: Column(
                                   children: [

@@ -31,7 +31,8 @@ class _HomePageState extends State<HomePage> {
         valueListenable: _selectedIndex,
         builder: (context, index, child) {
           return BottomNavigationBar(
-            backgroundColor: Colors.blue.shade600, // Updated background color
+            
+            backgroundColor: Colors.blue.shade500, // Updated background color
             elevation: 4, // Added slight elevation for a modern effect
             selectedFontSize: 15,
             unselectedFontSize: 13,

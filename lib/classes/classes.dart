@@ -21,6 +21,7 @@ class _ClassScreenState extends State<ClassScreen> {
   BannerAd? _bannerAd;
   final SubscriptionData subscriptionData = SubscriptionData(); // Instance of SubscriptionData
 
+
   @override
   void initState() {
     super.initState();
@@ -65,18 +66,28 @@ class _ClassScreenState extends State<ClassScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Classes'),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade300, Colors.blue.shade800],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+       appBar: AppBar(
+            iconTheme: const IconThemeData(
+    color: Colors.white, // Change the back button color to white
+  ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.blue.shade900],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        actions: [
+      ),
+      title: const Text(
+        'Settings',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 22, // Make the font size a bit larger
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+         actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
@@ -84,7 +95,8 @@ class _ClassScreenState extends State<ClassScreen> {
             },
           ),
         ],
-      ),
+    ),
+
       body: Stack(
         children: [
           Container(
@@ -178,6 +190,7 @@ class _ClassScreenState extends State<ClassScreen> {
                                                   allStudents: allStudents,
                                                   allClassesNotifier: allClassesNotifier,
                                                 );
+                                                
                                               },
                                             );
                                           },

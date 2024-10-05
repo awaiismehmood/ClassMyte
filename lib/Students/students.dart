@@ -1,10 +1,12 @@
 import 'package:classmyte/Students/addcontact_dialouge.dart';
 import 'package:classmyte/Students/filter_dialouge.dart';
+import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:classmyte/services/functional.dart';
 import 'package:classmyte/sms_screen/whatsapp_msg.dart';
 import 'package:classmyte/student%20details/student_details.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class StudentContactsScreen extends StatefulWidget {
   const StudentContactsScreen({super.key});
@@ -23,11 +25,37 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ValueNotifier<List<String>> selectedClassesNotifier = ValueNotifier([]);
   final ValueNotifier<bool> isLoadingNotifier = ValueNotifier(true);
+  BannerAd? _bannerAd;
+  final SubscriptionData subscriptionData =
+      SubscriptionData(); // Instance of SubscriptionData
 
   @override
   void initState() {
     super.initState();
     getStudentData();
+    subscriptionData
+        .checkSubscriptionStatus(); // Check subscription status on init
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    // Load ad only if user is not premium
+    if (!subscriptionData.isPremiumUser.value) {
+      _bannerAd = BannerAd(
+        size: AdSize.banner,
+        adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            setState(() {});
+          },
+          onAdFailedToLoad: (ad, error) {
+            ad.dispose();
+          },
+        ),
+      );
+      _bannerAd!.load();
+    }
   }
 
   Future<void> getStudentData() async {
@@ -58,17 +86,24 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Students',
-          
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Change the back button color to white
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade300, Colors.blue.shade800],
+              colors: [Colors.blue.shade400, Colors.blue.shade900],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+          ),
+        ),
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22, // Make the font size a bit larger
+            fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
@@ -99,12 +134,12 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
           return Container(
             padding: const EdgeInsets.all(8.0),
             decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.white, Colors.blueAccent],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+              gradient: LinearGradient(
+                colors: [Colors.white, Colors.blueAccent],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -115,12 +150,10 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                     decoration: InputDecoration(
                       labelText: 'Search',
                       prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(   
-                        
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12.0),
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
-                      
                     ),
                     onChanged: _searchStudents,
                   ),
@@ -169,6 +202,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                   ],
                 ),
                 const SizedBox(height: 5),
+                 
                 Expanded(
                   child: ValueListenableBuilder<List<Map<String, String>>>(
                     valueListenable: studentListNotifier,
@@ -181,6 +215,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                           ),
                         );
                       }
+                    
 
                       return ListView.builder(
                         itemCount: studentList.length,
@@ -204,8 +239,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     // CircleAvatar in the center
                                     Center(
@@ -221,7 +255,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 12), // Spacing
-                              
+
                                     // Student details
                                     Text(
                                       student['name'] ?? '',
@@ -247,8 +281,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                                             icon: const Icon(Icons.phone,
                                                 color: Colors.blue),
                                             onPressed: () {
-                                              makeCall(
-                                                  student['phoneNumber']!);
+                                              makeCall(student['phoneNumber']!);
                                             },
                                           ),
                                         ),
@@ -275,9 +308,19 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                     },
                   ),
                 ),
+                 if (_bannerAd != null &&
+                          !subscriptionData.isPremiumUser.value) 
+                        SizedBox(
+                          height: 50,
+                          width: MediaQuery.of(context).size.width,
+                          child: AdWidget(ad: _bannerAd!),
+                        ),   
               ],
+              
             ),
+            
           );
+          
         },
       ),
     );
