@@ -1,3 +1,4 @@
+import 'package:classmyte/onboarding/term.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int currentIndex = 0;
+  bool isAgreed = false; // Variable to track checkbox state
 
   List<Widget> _buildPages(BuildContext context) {
     return [
@@ -28,7 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         title: 'Bulk SMS Messaging',
         description: 'Send bulk SMS to your entire class in seconds.',
       ),
-      _buildOnboardingPage(
+      _buildOnboardingPageWithCheckbox(
         context,
         image: 'assets/pencil_white.png',
         title: 'Stay Organized',
@@ -38,9 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildOnboardingPage(BuildContext context,
-      {required String image,
-      required String title,
-      required String description}) {
+      {required String image, required String title, required String description}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -71,6 +71,79 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ],
     );
   }
+
+// Method to build the last page with checkbox
+Widget _buildOnboardingPageWithCheckbox(BuildContext context,
+    {required String image, required String title, required String description}) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Image.asset(
+        image,
+        height: 250,
+      ),
+      const SizedBox(height: 20),
+      Text(
+        title,
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: 12),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40.0),
+        child: Text(
+          description,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 16,
+          ),
+        ),
+      ),
+      const SizedBox(height: 20),
+      // Checkbox for agreeing to terms
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Checkbox(
+            value: isAgreed,
+            onChanged: (value) {
+              setState(() {
+                isAgreed = value ?? false;
+              });
+            },
+          ),
+          // Make the text clickable
+          GestureDetector(
+            onTap: () {
+              // Navigate to the Terms and Conditions screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TermsAndConditionsScreen(), // Replace with your Terms and Conditions screen widget
+                ),
+              );
+            },
+            child: const Text(
+              'I agree to the ',
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+          const Text(
+            'Terms and Conditions',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.blue, // Change color to indicate it's clickable
+              decoration: TextDecoration.underline, // Optional: underline to indicate it's a link
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -122,10 +195,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 currentIndex == _buildPages(context).length - 1
                     ? ElevatedButton(
-                        onPressed: () {
-                          // Call the onFinish callback to notify that onboarding is complete
-                          widget.onFinish();
-                        },
+                        onPressed: isAgreed
+                            ? () {
+                                // Call the onFinish callback to notify that onboarding is complete
+                                widget.onFinish();
+                              }
+                            : null, // Disable button if checkbox is not checked
                         child: const Text('Get Started'),
                       )
                     : TextButton(

@@ -1,5 +1,6 @@
 import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:classmyte/payment/payment_Screen.dart';
+import 'package:classmyte/payment/payment_UI.dart';
 import 'package:flutter/material.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -55,7 +56,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Future<void> _navigateToPaymentScreen() async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => PaymentScreen(plan: _selectedPlan.value)),
+      // MaterialPageRoute(builder: (context) => PaymentScreenTest(plan: _selectedPlan.value)),
+       MaterialPageRoute(builder: (context) => PaymentScreen(plan: _selectedPlan.value)),
     );
 
     if (result == true) {

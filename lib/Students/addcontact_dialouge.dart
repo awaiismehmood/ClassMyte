@@ -92,6 +92,7 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(labelText: 'Name'),
+                       textCapitalization: TextCapitalization.words,
                     ),
                     // Class selection and new class input
                     Row(
@@ -149,6 +150,7 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                     TextField(
                       controller: fatherController,
                       decoration: const InputDecoration(labelText: 'Father Name'),
+                      textCapitalization: TextCapitalization.words,
                     ),
                     // Date of birth input
                     TextField(

@@ -3,11 +3,11 @@
 import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:flutter/material.dart';
 
-class PaymentScreen extends StatelessWidget {
+class PaymentScreenTest extends StatelessWidget {
   final String plan;
   final ValueNotifier<bool> _isProcessing = ValueNotifier<bool>(false);
 
-  PaymentScreen({super.key, required this.plan});
+  PaymentScreenTest({super.key, required this.plan});
 
   @override
   Widget build(BuildContext context) {

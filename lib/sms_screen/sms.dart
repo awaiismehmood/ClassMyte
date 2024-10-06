@@ -27,13 +27,14 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     super.initState();
     getContactList();
     subscriptionData
-        .checkSubscriptionStatus(); // Check subscription status on init
+    .checkSubscriptionStatus(); // Check subscription status on init
     _loadInterstitialAd();
   }
 
   void _loadInterstitialAd() {
     InterstitialAd.load(
       adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ad unit ID
+      // adUnitId: 'ca-app-pub-6452085379535380/6875134840', // Real ad unit ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
