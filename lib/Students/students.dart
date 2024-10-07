@@ -26,15 +26,13 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
   final ValueNotifier<List<String>> selectedClassesNotifier = ValueNotifier([]);
   final ValueNotifier<bool> isLoadingNotifier = ValueNotifier(true);
   final adManager = AdManager();
-  final SubscriptionData subscriptionData =
-      SubscriptionData();
+  final SubscriptionData subscriptionData = SubscriptionData();
 
   @override
   void initState() {
     super.initState();
     getStudentData();
-    subscriptionData
-        .checkSubscriptionStatus();
+    subscriptionData.checkSubscriptionStatus();
     adManager.loadBannerAd();
   }
 
@@ -62,14 +60,18 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
     );
   }
 
-    @override
+  @override
   void dispose() {
-      adManager.dispose();
+    adManager.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(
@@ -85,7 +87,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
           ),
         ),
         title: const Text(
-          'Settings',
+          'Students',
           style: TextStyle(
             color: Colors.white,
             fontSize: 22,
@@ -141,6 +143,11 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
                     ),
+                    style: TextStyle(
+                      fontSize: screenWidth > 500
+                          ? screenHeight * 0.022
+                          : screenHeight * 0.018, // Responsive font size
+                    ),
                     onChanged: _searchStudents,
                   ),
                 ),
@@ -149,24 +156,27 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red),
-                          borderRadius: BorderRadius.circular(25)),
+                        border: Border.all(color: Colors.red),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 3),
                         child: Text(
                           'Total Students: ${allStudentsNotifier.value.length}',
-                          style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: screenHeight * 0.02,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                     Container(
                       decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black),
-                          borderRadius: BorderRadius.circular(25)),
+                        border: Border.all(color: Colors.black),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 3),
@@ -176,10 +186,11 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                           builder: (context, filteredList, child) {
                             return Text(
                               'Filtered Students: ${filteredList.length}',
-                              style: const TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: screenHeight * 0.02,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
                             );
                           },
                         ),
@@ -201,92 +212,179 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                         );
                       }
 
-                      return ListView.builder(
-                        itemCount: studentList.length,
-                        itemBuilder: (context, index) {
-                          final student = studentList[index];
-                          return GestureDetector(
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      StudentDetailsScreen(student: student),
-                                ),
-                              );
-                              await getStudentData();
-                            },
-                            child: Card(
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 8.0, horizontal: 16.0),
-                              elevation: 4,
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Center(
-                                      child: CircleAvatar(
-                                        radius: 30,
-                                        backgroundColor: Colors.blue,
-                                        child: Text(
-                                          student['name']![0],
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 24),
+                      if (screenWidth > 500) {
+                        // Display as GridView for wider screens
+                        return GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          itemCount: studentList.length,
+                          itemBuilder: (context, index) {
+                            final student = studentList[index];
+                            return GestureDetector(
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        StudentDetailsScreen(student: student),
+                                  ),
+                                );
+                                await getStudentData();
+                              },
+                              child: Card(
+                                elevation: 4,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Center(
+                                        child: CircleAvatar(
+                                          radius: 30,
+                                          backgroundColor: Colors.blue,
+                                          child: Text(
+                                            student['name']![0],
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 24),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 12),
-
-                                    // Student details
-                                    Text(
-                                      student['name'] ?? '',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                        'Father Name: ${student['fatherName'] ?? ''}'),
-                                    Text('Class: ${student['class'] ?? ''}'),
-                                    Text(
-                                        'Phone#: ${student['phoneNumber'] ?? ''}'),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: IconButton(
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        student['name'] ?? '',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                          'Father Name: ${student['fatherName'] ?? ''}'),
+                                      Text('Class: ${student['class'] ?? ''}'),
+                                      Text(
+                                          'Phone#: ${student['phoneNumber'] ?? ''}'),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          IconButton(
                                             icon: const Icon(Icons.phone,
                                                 color: Colors.blue),
                                             onPressed: () {
                                               makeCall(student['phoneNumber']!);
                                             },
                                           ),
-                                        ),
-                                        IconButton(
-                                          icon: Image.asset(
-                                              'assets/whatsapp.png',
-                                              width: 24,
-                                              height: 24),
-                                          onPressed: () {
-                                            WhatsAppMessaging()
-                                                .sendWhatsAppMessageIndividually(
-                                                    student['phoneNumber']!);
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                          IconButton(
+                                            icon: Image.asset(
+                                                'assets/whatsapp.png',
+                                                width: 24,
+                                                height: 24),
+                                            onPressed: () {
+                                              WhatsAppMessaging()
+                                                  .sendWhatsAppMessageIndividually(
+                                                      student['phoneNumber']!);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      );
+                            );
+                          },
+                        );
+                      } else {
+                        // Display as ListView for narrower screens
+                        return ListView.builder(
+                          itemCount: studentList.length,
+                          itemBuilder: (context, index) {
+                            final student = studentList[index];
+                            return GestureDetector(
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        StudentDetailsScreen(student: student),
+                                  ),
+                                );
+                                await getStudentData();
+                              },
+                              child: Card(
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 16.0),
+                                elevation: 4,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Center(
+                                        child: CircleAvatar(
+                                          radius: 30,
+                                          backgroundColor: Colors.blue,
+                                          child: Text(
+                                            student['name']![0],
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 24),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        student['name'] ?? '',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                          'Father Name: ${student['fatherName'] ?? ''}'),
+                                      Text('Class: ${student['class'] ?? ''}'),
+                                      Text(
+                                          'Phone#: ${student['phoneNumber'] ?? ''}'),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.phone,
+                                                color: Colors.blue),
+                                            onPressed: () {
+                                              makeCall(student['phoneNumber']!);
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: Image.asset(
+                                                'assets/whatsapp.png',
+                                                width: 24,
+                                                height: 24),
+                                            onPressed: () {
+                                              WhatsAppMessaging()
+                                                  .sendWhatsAppMessageIndividually(
+                                                      student['phoneNumber']!);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }
                     },
                   ),
                 ),

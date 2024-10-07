@@ -1,11 +1,9 @@
 // ignore_for_file: library_private_types_in_public_api
 
-import 'package:classmyte/ads/ads.dart';
 import 'package:classmyte/classes/deletion.dart';
 import 'package:classmyte/classes/promotion.dart';
 import 'package:classmyte/Students/addcontact_dialouge.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
-import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:flutter/material.dart';
 
 class ClassScreen extends StatefulWidget {
@@ -18,56 +16,52 @@ class ClassScreen extends StatefulWidget {
 class _ClassScreenState extends State<ClassScreen> {
   ValueNotifier<List<String>> allClassesNotifier = ValueNotifier([]);
   List<Map<String, String>> allStudents = [];
-  final adManager = AdManager(); // Instantiate AdManager
-  final SubscriptionData subscriptionData = SubscriptionData(); // Instance of SubscriptionData
 
 
   @override
   void initState() {
     super.initState();
     getStudentData();
-    subscriptionData.checkSubscriptionStatus(); // Check subscription status on init
-    adManager.loadBannerAd(); // Load banner ad
   }
 
   Future<void> getStudentData() async {
     List<Map<String, String>> students = await StudentData.getStudentData();
     allStudents = students;
-    allClassesNotifier.value = students.map((student) => student['class'] ?? '').toSet().toList();
+    allClassesNotifier.value =
+        students.map((student) => student['class'] ?? '').toSet().toList();
   }
 
   @override
   void dispose() {
     allClassesNotifier.dispose();
-     adManager.dispose(); // Load banner ad
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       appBar: AppBar(
-            iconTheme: const IconThemeData(
-    color: Colors.white, // Change the back button color to white
-  ),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade400, Colors.blue.shade900],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Change the back button color to white
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade400, Colors.blue.shade900],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
-      ),
-      title: const Text(
-        'Settings',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 22, // Make the font size a bit larger
-          fontWeight: FontWeight.bold,
+        title: const Text(
+          'Classes',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22, // Make the font size a bit larger
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-         actions: [
+        actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
@@ -75,8 +69,7 @@ class _ClassScreenState extends State<ClassScreen> {
             },
           ),
         ],
-    ),
-
+      ),
       body: Stack(
         children: [
           Container(
@@ -168,9 +161,9 @@ class _ClassScreenState extends State<ClassScreen> {
                                                   classes: allClasses,
                                                   existingClass: className,
                                                   allStudents: allStudents,
-                                                  allClassesNotifier: allClassesNotifier,
+                                                  allClassesNotifier:
+                                                      allClassesNotifier,
                                                 );
-                                                
                                               },
                                             );
                                           },
@@ -178,8 +171,8 @@ class _ClassScreenState extends State<ClassScreen> {
                                         IconButton(
                                           icon: const Icon(Icons.delete),
                                           onPressed: () async {
-                                            showDeleteClassDialog(
-                                                context, className, allClassesNotifier);
+                                            showDeleteClassDialog(context,
+                                                className, allClassesNotifier);
                                           },
                                         ),
                                       ],
@@ -197,13 +190,7 @@ class _ClassScreenState extends State<ClassScreen> {
               ],
             ),
           ),
-         if (!subscriptionData.isPremiumUser.value) 
-                  SizedBox(
-                    height: 50,
-                    width: MediaQuery.of(context).size.width,
-                    child: adManager.displayBannerAd(),
-                  ),
-        
+          
         ],
       ),
     );

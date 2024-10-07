@@ -35,7 +35,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Cancel Subscription'),
-          content: const Text('This will cancel your current subscription. Do you want to proceed?'),
+          content: const Text(
+              'This will cancel your current subscription. Do you want to proceed?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -56,7 +57,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Future<void> _navigateToPaymentScreen() async {
     final result = await Navigator.of(context).push(
-       MaterialPageRoute(builder: (context) => PaymentScreen(plan: _selectedPlan.value)),
+      MaterialPageRoute(
+          builder: (context) => PaymentScreen(plan: _selectedPlan.value)),
     );
 
     if (result == true) {
@@ -116,7 +118,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             return ValueListenableBuilder<bool>(
               valueListenable: subscriptionData.isPremiumUser,
               builder: (context, isPremiumUser, child) {
-                return isPremiumUser ? _buildPremiumUserView() : _buildSubscriptionOptionsView();
+                return isPremiumUser
+                    ? _buildPremiumUserView()
+                    : _buildSubscriptionOptionsView();
               },
             );
           },
@@ -134,83 +138,94 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         ? subscriptionData.expiryDate.value!.difference(DateTime.now()).inDays
         : 0;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset('assets/pencil_white.png', height: 100),
-        const SizedBox(height: 20),
-        Text(
-          'You are subscribed to the ${subscriptionData.subscribedPackage.value} package.',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'Subscription expires on: $formattedDate',
-          style: const TextStyle(fontSize: 16, color: Colors.black),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'Days remaining: $remainingDays',
-          style: const TextStyle(fontSize: 16, color: Colors.black),
-        ),
-        const SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: _showCancelConfirmationDialog,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-            backgroundColor: Colors.blue[800],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/pencil_white.png', height: 100),
+          const SizedBox(height: 20),
+          Text(
+            'You are subscribed to the ${subscriptionData.subscribedPackage.value} package.',
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
           ),
-          child: const Text(
-            'Cancel Subscription',
-            style: TextStyle(fontSize: 18, color: Colors.white),
+          const SizedBox(height: 10),
+          Text(
+            'Subscription expires on: $formattedDate',
+            style: const TextStyle(fontSize: 16, color: Colors.black),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          Text(
+            'Days remaining: $remainingDays',
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton(
+            onPressed: _showCancelConfirmationDialog,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+              backgroundColor: Colors.blue[800],
+            ),
+            child: const Text(
+              'Cancel Subscription',
+              style: TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildSubscriptionOptionsView() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset('assets/pencil_white.png', height: 100), // App logo
-        const SizedBox(height: 20),
-        const Text(
-          'Select a plan that suits your needs:',
-          style: TextStyle(fontSize: 16, color: Colors.black),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-        Column(
-          children: [
-            _buildSubscriptionOption('Free', 'Free', 'Ads included, Limited features and storage'),
-            _buildSubscriptionOption('Month', 'PKR 1,000', 'No ads, No limitations, All features'),
-            _buildSubscriptionOption('Year', 'PKR 10,000', 'No ads, No limitations, All features, save 20%'),
-          ],
-        ),
-        const SizedBox(height: 30),
-        ValueListenableBuilder<String>(
-          valueListenable: _selectedPlan,
-          builder: (context, selectedPlan, child) {
-            return ElevatedButton(
-              onPressed: selectedPlan == 'Free' ? null : _navigateToPaymentScreen,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                backgroundColor: Colors.blue[800],
-              ),
-              child: const Text(
-                'Subscribe Now',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            );
-          },
-        ),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/pencil_white.png', height: 100), // App logo
+          const SizedBox(height: 20),
+          const Text(
+            'Select a plan that suits your needs:',
+            style: TextStyle(fontSize: 16, color: Colors.black),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Column(
+            children: [
+              _buildSubscriptionOption(
+                  'Free', 'Free', 'Ads included, Limited features and storage'),
+              _buildSubscriptionOption(
+                  'Month', 'PKR 1,000', 'No ads, No limitations, All features'),
+              _buildSubscriptionOption('Year', 'PKR 10,000',
+                  'No ads, No limitations, All features, save 20%'),
+            ],
+          ),
+          const SizedBox(height: 30),
+          ValueListenableBuilder<String>(
+            valueListenable: _selectedPlan,
+            builder: (context, selectedPlan, child) {
+              return ElevatedButton(
+                onPressed:
+                    selectedPlan == 'Free' ? null : _navigateToPaymentScreen,
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                  backgroundColor: Colors.blue[800],
+                ),
+                child: const Text(
+                  'Subscribe Now',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
   // Subscription option builder
-  Widget _buildSubscriptionOption(String planName, String price, String description) {
+  Widget _buildSubscriptionOption(
+      String planName, String price, String description) {
     return GestureDetector(
       onTap: () {
         _selectedPlan.value = planName;
@@ -224,14 +239,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             decoration: BoxDecoration(
               border: Border.all(color: Colors.blueAccent, width: 1),
               borderRadius: BorderRadius.circular(10),
-              color: selectedPlan == planName ? Colors.blueAccent.withOpacity(0.2) : Colors.white,
+              color: selectedPlan == planName
+                  ? Colors.blueAccent.withOpacity(0.2)
+                  : Colors.white,
             ),
             child: SizedBox(
               width: 300,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(planName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(planName,
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold)),
                   Text(price, style: const TextStyle(fontSize: 16)),
                   Text(description, style: const TextStyle(fontSize: 14)),
                 ],

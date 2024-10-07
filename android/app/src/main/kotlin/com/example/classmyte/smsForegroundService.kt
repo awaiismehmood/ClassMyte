@@ -10,6 +10,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import kotlinx.coroutines.*
+import android.app.PendingIntent
 
 class SmsForegroundService : LifecycleService() {
 
@@ -35,15 +36,25 @@ class SmsForegroundService : LifecycleService() {
         }
     }
 
-    private fun createNotification(content: String): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ClassMyte SMS service")
-            .setContentText(content)
-            .setSmallIcon(R.drawable.ic_sms) // Ensure this drawable exists
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .build()
+   private fun createNotification(content: String): Notification {
+    // Create an intent that will trigger the cancellation of the service
+    val cancelIntent = Intent(this, SmsForegroundService::class.java).apply {
+        action = "ACTION_CANCEL_SENDING"
     }
+    val cancelPendingIntent = PendingIntent.getService(
+        this, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
+    return NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("ClassMyte SMS service")
+        .setContentText(content)
+        .setSmallIcon(R.drawable.ic_sms) // Ensure this drawable exists
+        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setOngoing(true)
+        .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel", cancelPendingIntent)
+        .build()
+}
+
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     val action = intent?.action

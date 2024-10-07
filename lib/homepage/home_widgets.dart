@@ -11,6 +11,7 @@ Widget buildHomeScreen(BuildContext context) {
   final mediaQuery = MediaQuery.of(context);
   final screenHeight = mediaQuery.size.height;
   final screenWidth = mediaQuery.size.width;
+  final isLandscape = screenWidth > screenHeight; // Check if in landscape mode
 
   return Scaffold(
     appBar: AppBar(
@@ -63,16 +64,14 @@ Widget buildHomeScreen(BuildContext context) {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: GridView.count(
-              physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.05, 
-                vertical: screenHeight * 0.06,
+                horizontal: screenWidth * 0.05,
+                vertical: screenHeight * (isLandscape ? 0.04 : 0.08), // Adjust vertical padding for landscape
               ),
-              crossAxisCount: 2,
+              crossAxisCount: isLandscape ? 3 : 2, // Adjust number of columns based on orientation
               crossAxisSpacing: screenWidth * 0.04,
               mainAxisSpacing: screenHeight * 0.03,
               children: [
@@ -116,10 +115,7 @@ Widget buildHomeScreen(BuildContext context) {
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.13, // Centered using dynamic padding
-              vertical: screenHeight * 0.03,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: _buildGridCard(
               context,
               'Signout',
@@ -133,7 +129,7 @@ Widget buildHomeScreen(BuildContext context) {
               color: Colors.redAccent.shade200,
             ),
           ),
-          SizedBox(height: screenHeight * 0.015),
+          const SizedBox(height: 30), // Adjust the size as needed
         ],
       ),
     ),

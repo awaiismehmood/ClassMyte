@@ -31,8 +31,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     super.initState();
     getContactList();
     _requestNotificationPermission();
-    subscriptionData
-        .checkSubscriptionStatus();
+    subscriptionData.checkSubscriptionStatus();
     adManager.loadBannerAd();
   }
 
@@ -159,7 +158,7 @@ Future<void> _initializeNotifications() async {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
+                // physics: const NeverScrollableScrollPhysics(),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -390,27 +389,24 @@ Future<void> _initializeNotifications() async {
               ),
             ),
             // Cancel Sending Button (if message is being sent)
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: ValueListenableBuilder<bool>(
-                valueListenable: sendingMessage,
-                builder: (context, isSending, _) {
-                  if (isSending) {
-                    return ElevatedButton(
-                      onPressed: () async {
-                        await MessageSender.cancelMessageSending(
-                          sendingMessage,
-                          messageStatus,
-                        );
-                      },
-                      style:
-                          ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('Cancel Sending'),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+            ValueListenableBuilder<bool>(
+              valueListenable: sendingMessage,
+              builder: (context, isSending, _) {
+                if (isSending) {
+                  return ElevatedButton(
+                    onPressed: () async {
+                      await MessageSender.cancelMessageSending(
+                        sendingMessage,
+                        messageStatus,
+                      );
+                    },
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    child: const Text('Cancel Sending'),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
           ],
         ),
