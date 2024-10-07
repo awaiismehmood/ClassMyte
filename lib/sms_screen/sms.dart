@@ -1,10 +1,12 @@
 // ignore_for_file: library_private_types_in_public_api
-
+import 'package:classmyte/ads/ads.dart';
 import 'package:classmyte/data_management/getSubscribe.dart';
+import 'package:classmyte/main.dart';
 import 'package:classmyte/sms_screen/sendingLogic.dart';
 import 'package:flutter/material.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NewMessageScreen extends StatefulWidget {
   const NewMessageScreen({super.key});
@@ -21,54 +23,17 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
   ValueNotifier<String?> warningMessage = ValueNotifier(null);
   ValueNotifier<int> selectedDelay = ValueNotifier(30); // Default delay
   List<Map<String, String>>? contactList;
-  InterstitialAd? _interstitialAd;
   final SubscriptionData subscriptionData = SubscriptionData();
+  final adManager = AdManager(); // Instantiate AdManager
 
   @override
   void initState() {
     super.initState();
     getContactList();
+    _requestNotificationPermission();
     subscriptionData
-        .checkSubscriptionStatus(); // Check subscription status on init
-    _loadInterstitialAd();
-  }
-
-  void _loadInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ad unit ID
-      // adUnitId: 'ca-app-pub-6452085379535380/6875134840', // Real ad unit ID
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _interstitialAd = ad;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          print('Interstitial ad failed to load: $error');
-        },
-      ),
-    );
-  }
-
-  void _showInterstitialAd(Function onAdShowComplete) {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _loadInterstitialAd(); // Load a new ad for the next time
-          onAdShowComplete();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          print('Interstitial ad failed to show: $error');
-          onAdShowComplete(); // Proceed even if ad fails to show
-        },
-      );
-
-      _interstitialAd!.show();
-    } else {
-      print('Interstitial ad is not ready yet.');
-      onAdShowComplete(); // Proceed if ad is not ready
-    }
+        .checkSubscriptionStatus();
+    adManager.loadBannerAd();
   }
 
   @override
@@ -79,8 +44,30 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     selectedClasses.dispose();
     selectedDelay.dispose();
     warningMessage.dispose();
+    adManager.dispose(); // Load banner ad
     super.dispose();
   }
+
+
+Future<void> _requestNotificationPermission() async {
+  PermissionStatus status = await Permission.notification.request();
+
+  if (status.isGranted) {
+    _initializeNotifications();
+  } else if (status.isDenied) {
+    print("Notification permission denied");
+  }
+}
+
+Future<void> _initializeNotifications() async {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+}
 
   Future<void> getContactList() async {
     contactList = await StudentData.getStudentData();
@@ -93,7 +80,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
       return;
     }
 
-     if (messageController.text.isEmpty) {
+    if (messageController.text.isEmpty) {
       warningMessage.value = 'Please enter a message';
       return;
     }
@@ -172,12 +159,13 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 20),
                       ValueListenableBuilder<String?>(
                         valueListenable: warningMessage,
                         builder: (context, warning, _) {
@@ -200,8 +188,8 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                           );
                         },
                       ),
-              
-                       const SizedBox(height: 25),
+
+                      const SizedBox(height: 25),
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
                           contentPadding:
@@ -214,12 +202,10 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                             ),
                           ),
                           filled: true,
-                          fillColor: Colors.grey
-                              .shade50,
+                          fillColor: Colors.grey.shade50,
                         ),
-                        dropdownColor: Colors.grey
-                              .shade50,
-                               // Background color of the dropdown items list
+                        dropdownColor: Colors.grey.shade50,
+                        // Background color of the dropdown items list
                         style: const TextStyle(
                           color: Colors.black,
                           fontSize: 16,
@@ -241,7 +227,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                             warningMessage.value = null;
                           }
                         },
-                        items: [      
+                        items: [
                           const DropdownMenuItem<String>(
                             value: "All",
                             child: Center(child: Text("All")),
@@ -280,7 +266,8 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                           SizedBox(height: 40),
                           Text(
                             'Select Delay',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
                           ),
                         ],
                       ),
@@ -329,6 +316,13 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                                   }
                                 },
                               ),
+                              const SizedBox(height: 20),
+                              if (!subscriptionData.isPremiumUser.value)
+                                SizedBox(
+                                  height: 80,
+                                  width: MediaQuery.of(context).size.width,
+                                  child: adManager.displayBannerAd(),
+                                ),
                             ],
                           );
                         },
@@ -378,7 +372,10 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                                   height: 20,
                                   child: CircularProgressIndicator(),
                                 )
-                              : const Icon(Icons.send, color: Colors.black,),
+                              : const Icon(
+                                  Icons.send,
+                                  color: Colors.black,
+                                ),
                           padding:
                               EdgeInsets.zero, // Remove padding for the icon
                           constraints:

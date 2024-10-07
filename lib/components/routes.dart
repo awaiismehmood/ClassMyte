@@ -1,4 +1,3 @@
-// routes.dart
 import 'package:classmyte/classes/classes.dart';
 import 'package:classmyte/Students/students.dart';
 import 'package:classmyte/sms_screen/sms.dart';
@@ -15,7 +14,7 @@ class Routes {
   static void navigateToSms(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  NewMessageScreen()),
+      MaterialPageRoute(builder: (context) =>  const NewMessageScreen()),
     );
   }
 

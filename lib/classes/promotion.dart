@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:classmyte/data_management/edit_contacts.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +26,7 @@ class UpdateClassDialog extends StatefulWidget {
 class _UpdateClassDialogState extends State<UpdateClassDialog> {
   late String selectedClass; 
   final TextEditingController newClassController = TextEditingController();
-  bool isLoading = false; // Add loading state
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -67,7 +69,7 @@ class _UpdateClassDialogState extends State<UpdateClassDialog> {
         ),
       ),
       actions: [
-        if (isLoading) // Show loading indicator if loading
+        if (isLoading)
           const Center(child: CircularProgressIndicator()),
 
         ElevatedButton(
@@ -81,20 +83,18 @@ class _UpdateClassDialogState extends State<UpdateClassDialog> {
             }
 
             setState(() {
-              isLoading = true; // Show loading indicator
+              isLoading = true; 
             });
 
             await promoteStudents(widget.existingClass, newClassName.isNotEmpty ? newClassName : selectedClass);
-
-            // Refresh the students and classes data
             widget.allClassesNotifier.value = await StudentData.getStudentData().then((students) {
-              widget.allStudents.clear(); // Clear old data
-              widget.allStudents.addAll(students); // Update the students list
+              widget.allStudents.clear();
+              widget.allStudents.addAll(students);
               return students.map((student) => student['class'] ?? '').toSet().toList();
             });
 
             setState(() {
-              isLoading = false; // Hide loading indicator
+              isLoading = false; 
             });
 
             Navigator.pop(context);

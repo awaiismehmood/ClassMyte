@@ -36,7 +36,6 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
   final TextEditingController fatherController = TextEditingController();
   final TextEditingController altNumberController = TextEditingController();
 
-  // Initialize controllers if editing an existing student
   if (student != null) {
     nameController.text = student['name'] ?? '';
     phoneController.text = student['phoneNumber'] ?? '';
@@ -47,11 +46,10 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
     notifier.selectedClass.value = student['class'] ?? '';
   }
 
-  // Show the dialog
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return FutureBuilder<List<Map<String, String>>>( // FutureBuilder handles loading
+      return FutureBuilder<List<Map<String, String>>>(
         future: StudentData.getStudentData(),
         builder: (context, snapshot) {
           // Handle loading state
@@ -81,7 +79,6 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                 .map((student) => student['class'] ?? '')
                 .toSet()
                 .toList();
-
             return AlertDialog(
               title: const Text('Add Contact'),
               content: SingleChildScrollView(
@@ -94,7 +91,6 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                       decoration: const InputDecoration(labelText: 'Name'),
                        textCapitalization: TextCapitalization.words,
                     ),
-                    // Class selection and new class input
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -107,7 +103,7 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                                 onChanged: (String? newValue) {
                                   if (newValue != null) {
                                     notifier.selectedClass.value = newValue;
-                                    notifier.typedClass.value = ''; // Clear typed class
+                                    notifier.typedClass.value = '';
                                   }
                                 },
                                 items: allClasses.map((classItem) {
@@ -131,7 +127,7 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                               return TextFormField(
                                 onChanged: (value) {
                                   notifier.typedClass.value = value;
-                                  notifier.selectedClass.value = ''; // Clear selected class
+                                  notifier.selectedClass.value = '';
                                 },
                                 decoration: const InputDecoration(labelText: 'New Class'),
                               );
@@ -140,19 +136,16 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                         ),
                       ],
                     ),
-                    // Phone number input
                     TextField(
                       controller: phoneController,
                       decoration: const InputDecoration(labelText: 'Phone Number'),
                       keyboardType: TextInputType.phone,
                     ),
-                    // Father's name input
                     TextField(
                       controller: fatherController,
                       decoration: const InputDecoration(labelText: 'Father Name'),
                       textCapitalization: TextCapitalization.words,
                     ),
-                    // Date of birth input
                     TextField(
                       onTap: () => selectDate(context, notifier.dob),
                       readOnly: true,
@@ -162,7 +155,6 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                       ),
                       controller: TextEditingController(text: notifier.dob.value),
                     ),
-                    // Admission date input
                     TextField(
                       onTap: () => selectDate(context, notifier.admissionDate),
                       readOnly: true,
@@ -172,7 +164,6 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                       ),
                       controller: TextEditingController(text: notifier.admissionDate.value),
                     ),
-                    // Alternate number input
                     TextField(
                       controller: altNumberController,
                       decoration: const InputDecoration(labelText: 'Alt Number'),
@@ -184,19 +175,16 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
               actions: [
                 ElevatedButton(
                   onPressed: () {
-                    // Validate input
                     if (nameController.text.isEmpty || phoneController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Name and Phone Number cannot be empty')),
                       );
-                      return; // Prevent dialog from closing
+                      return;
                     }
 
                     String finalClass = notifier.typedClass.value.isNotEmpty
                         ? notifier.typedClass.value
                         : notifier.selectedClass.value;
-
-                    // Call to add contact service
                     AddContactService.addContact(
                       nameController.text,
                       finalClass,
@@ -206,7 +194,7 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                       notifier.admissionDate.value,
                       altNumberController.text,
                     ).then((_) {
-                      refreshContacts(); // Refresh the contacts list
+                      refreshContacts();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Contact added successfully')),
                       );

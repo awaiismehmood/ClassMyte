@@ -11,7 +11,6 @@ class DeleteAccount {
       String? password = await _showPasswordDialog(context);
       if (password != null) {
         try {
-          // Show loading dialog
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -22,7 +21,7 @@ class DeleteAccount {
 
           User? user = FirebaseAuth.instance.currentUser;
           if (user == null) {
-            Navigator.of(context).pop(); // Dismiss loading dialog
+            Navigator.of(context).pop(); 
             _showErrorDialog(context, 'No user is currently logged in.');
             return;
           }

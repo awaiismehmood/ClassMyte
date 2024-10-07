@@ -1,4 +1,4 @@
-import 'package:classmyte/onboarding/term.dart';
+import 'package:classmyte/onboarding/terms_and_conditions.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -14,7 +14,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int currentIndex = 0;
-  bool isAgreed = false; // Variable to track checkbox state
+  bool isAgreed = false;
 
   List<Widget> _buildPages(BuildContext context) {
     return [
@@ -72,7 +72,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-// Method to build the last page with checkbox
 Widget _buildOnboardingPageWithCheckbox(BuildContext context,
     {required String image, required String title, required String description}) {
   return Column(
@@ -103,7 +102,6 @@ Widget _buildOnboardingPageWithCheckbox(BuildContext context,
         ),
       ),
       const SizedBox(height: 20),
-      // Checkbox for agreeing to terms
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -115,29 +113,27 @@ Widget _buildOnboardingPageWithCheckbox(BuildContext context,
               });
             },
           ),
-          // Make the text clickable
+          const Text(
+              'I agree to the ',
+
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
           GestureDetector(
             onTap: () {
-              // Navigate to the Terms and Conditions screen
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const TermsAndConditionsScreen(), // Replace with your Terms and Conditions screen widget
+                  builder: (context) => const TermsAndConditionsScreen(),
                 ),
               );
             },
             child: const Text(
-              'I agree to the ',
-              style: TextStyle(fontSize: 14),
+             'Terms and Conditions',
+              style: TextStyle(fontSize: 14, color: Colors.blue,),
             ),
           ),
-          const Text(
-            'Terms and Conditions',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.blue, // Change color to indicate it's clickable
-              decoration: TextDecoration.underline, // Optional: underline to indicate it's a link
-            ),
-          ),
+         
         ],
       ),
     ],
@@ -197,10 +193,9 @@ Widget _buildOnboardingPageWithCheckbox(BuildContext context,
                     ? ElevatedButton(
                         onPressed: isAgreed
                             ? () {
-                                // Call the onFinish callback to notify that onboarding is complete
                                 widget.onFinish();
                               }
-                            : null, // Disable button if checkbox is not checked
+                            : null,
                         child: const Text('Get Started'),
                       )
                     : TextButton(

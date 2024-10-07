@@ -160,6 +160,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   Widget _buildPasswordField({required TextEditingController controller, required String labelText, required FocusNode focusNode}) {
+    
     return TextField(
       controller: controller,
       focusNode: focusNode,
@@ -175,6 +176,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(color: Colors.blue, width: 2),
         ),
+        
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),

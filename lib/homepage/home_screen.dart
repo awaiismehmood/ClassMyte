@@ -14,7 +14,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _selectedIndex.dispose(); // Dispose ValueNotifier when not needed
+    _selectedIndex.dispose();
     super.dispose();
   }
 
@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
       body: ValueListenableBuilder<int>(
         valueListenable: _selectedIndex,
         builder: (context, index, child) {
-          return getPage(index, context); // Get the page based on index
+          return getPage(index, context);
         },
       ),
       bottomNavigationBar: ValueListenableBuilder<int>(
@@ -32,17 +32,17 @@ class _HomePageState extends State<HomePage> {
         builder: (context, index, child) {
           return BottomNavigationBar(
             
-            backgroundColor: Colors.blue.shade500, // Updated background color
-            elevation: 4, // Added slight elevation for a modern effect
+            backgroundColor: Colors.blue.shade500,
+            elevation: 4, 
             selectedFontSize: 15,
             unselectedFontSize: 13,
             selectedIconTheme: const IconThemeData(color: Colors.white, size: 30),
-            unselectedIconTheme: const IconThemeData(color: Colors.white70, size: 24), // Styling unselected icons
-            selectedItemColor: Colors.white, // White color for selected items
-            unselectedItemColor: Colors.white70, // Light white for unselected items
+            unselectedIconTheme: const IconThemeData(color: Colors.white70, size: 24),
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.white70,
             currentIndex: index,
             onTap: (int newIndex) {
-              _selectedIndex.value = newIndex; // Update the selected index
+              _selectedIndex.value = newIndex;
             },
             items: const [
               BottomNavigationBarItem(
@@ -50,15 +50,15 @@ class _HomePageState extends State<HomePage> {
                 label: 'Home',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.contacts),
+                icon: Icon(Icons.person_pin),
                 label: 'Contacts',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.message),
+                icon: Icon(Icons.sms),
                 label: 'SMS',
               ),
             ],
-            type: BottomNavigationBarType.fixed, // Ensures fixed behavior
+            type: BottomNavigationBarType.fixed,
           );
         },
       ),

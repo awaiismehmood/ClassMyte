@@ -4,13 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 class StudentData {
   static Future<List<Map<String, String>>> getStudentData() async {
     try {
-      // Get the currently authenticated user
       User? currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser != null) {
         String uid = currentUser.uid;
 
-        // Reference the Firestore collection specific to this user
         CollectionReference<Map<String, dynamic>> collectionRef =
             FirebaseFirestore.instance.collection('users').doc(uid).collection('contacts');
 

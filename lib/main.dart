@@ -6,7 +6,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'homepage/home_screen.dart';
 import 'authentication/login.dart';
 
@@ -18,7 +17,7 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
-    await _requestNotificationPermission(); // Request notification permission
+
     runApp(const MyApp());
   } catch (e) {
     print("Error initializing app: $e");
@@ -26,31 +25,14 @@ void main() async {
   MobileAds.instance.initialize();
 }
 
-Future<void> _requestNotificationPermission() async {
-  PermissionStatus status = await Permission.notification.request();
 
-  if (status.isGranted) {
-    _initializeNotifications();
-  } else if (status.isDenied) {
-    print("Notification permission denied");
-  }
-}
-
-Future<void> _initializeNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
-
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-}
 
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MyAppState createState() => _MyAppState();
 }
 

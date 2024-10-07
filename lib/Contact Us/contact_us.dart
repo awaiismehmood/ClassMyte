@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // Import to handle launching of WhatsApp and Email
+import 'package:url_launcher/url_launcher.dart';
 
 class ContactUsScreen extends StatelessWidget {
   const ContactUsScreen({super.key});
 
-  // Function to launch WhatsApp with pre-filled number
   void _launchWhatsApp() async {
-    final Uri whatsappUri = Uri.parse("https://wa.me/923185444845"); // Change the number as needed
+    final Uri whatsappUri = Uri.parse("https://wa.me/923185444845");
     if (await canLaunchUrl(whatsappUri)) {
       await launchUrl(whatsappUri);
     } else {

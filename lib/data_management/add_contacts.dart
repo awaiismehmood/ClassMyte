@@ -1,28 +1,26 @@
+// ignore_for_file: avoid_print
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AddContactService {
-  /// Adds a contact to the authenticated user's contacts collection
   static Future<void> addContact(
     String name,
     String classValue,
     String phoneNumber,
     String fatherName,
+    // ignore: non_constant_identifier_names
     String DOB,
     String admission,
     String altNumber,
   ) async {
     try {
-      // Get the currently authenticated user
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         String uid = currentUser.uid;
 
-        // Reference the Firestore collection specific to this user
         CollectionReference<Map<String, dynamic>> collectionRef =
             FirebaseFirestore.instance.collection('users').doc(uid).collection('contacts');
-
-        // Add the contact to the user's collection
+            
         await collectionRef
             .add({
               'Name': name,

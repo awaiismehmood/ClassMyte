@@ -1,5 +1,4 @@
 import 'package:classmyte/data_management/getSubscribe.dart';
-import 'package:classmyte/payment/payment_Screen.dart';
 import 'package:classmyte/payment/payment_UI.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +6,7 @@ class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SubscriptionScreenState createState() => _SubscriptionScreenState();
 }
 
@@ -21,7 +21,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Future<void> _cancelSubscription() async {
-    await subscriptionData.updateSubscription('Free', null); // Ensure this is called on the instance
+    await subscriptionData.updateSubscription('Free', null);
 
     // Update local state
     subscriptionData.isPremiumUser.value = false;
@@ -56,7 +56,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Future<void> _navigateToPaymentScreen() async {
     final result = await Navigator.of(context).push(
-      // MaterialPageRoute(builder: (context) => PaymentScreenTest(plan: _selectedPlan.value)),
        MaterialPageRoute(builder: (context) => PaymentScreen(plan: _selectedPlan.value)),
     );
 
@@ -67,7 +66,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           ? DateTime.now().add(const Duration(days: 30))
           : DateTime.now().add(const Duration(days: 365));
 
-      // Update Firestore with new subscription data using the instance
       await subscriptionData.updateSubscription(
         subscriptionData.subscribedPackage.value,
         subscriptionData.expiryDate.value,
@@ -80,7 +78,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(
-          color: Colors.white, // Change the back button color to white
+          color: Colors.white,
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -95,7 +93,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           'Choose Your Plan',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 22, // Make the font size a bit larger
+            fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -113,7 +111,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           valueListenable: subscriptionData.isLoading,
           builder: (context, isLoading, child) {
             if (isLoading) {
-              return const CircularProgressIndicator(); // Show loader while checking subscription
+              return const CircularProgressIndicator();
             }
             return ValueListenableBuilder<bool>(
               valueListenable: subscriptionData.isPremiumUser,
@@ -129,17 +127,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Widget _buildPremiumUserView() {
     String formattedDate = subscriptionData.expiryDate.value != null
-        ? subscriptionData.expiryDate.value!.toLocal().toString().split(' ')[0]  // Get only the date part
+        ? subscriptionData.expiryDate.value!.toLocal().toString().split(' ')[0]
         : 'No active subscription';
 
     int remainingDays = subscriptionData.expiryDate.value != null
         ? subscriptionData.expiryDate.value!.difference(DateTime.now()).inDays
-        : 0;  // Default to 0 if there's no expiry date
+        : 0;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset('assets/pencil_white.png', height: 100), // App logo
+        Image.asset('assets/pencil_white.png', height: 100),
         const SizedBox(height: 20),
         Text(
           'You are subscribed to the ${subscriptionData.subscribedPackage.value} package.',
@@ -195,7 +193,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           valueListenable: _selectedPlan,
           builder: (context, selectedPlan, child) {
             return ElevatedButton(
-              onPressed: selectedPlan == 'Free' ? null : _navigateToPaymentScreen, // Disable if Free is selected
+              onPressed: selectedPlan == 'Free' ? null : _navigateToPaymentScreen,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                 backgroundColor: Colors.blue[800],
@@ -215,7 +213,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget _buildSubscriptionOption(String planName, String price, String description) {
     return GestureDetector(
       onTap: () {
-        _selectedPlan.value = planName; // Update selected plan
+        _selectedPlan.value = planName;
       },
       child: ValueListenableBuilder<String>(
         valueListenable: _selectedPlan,

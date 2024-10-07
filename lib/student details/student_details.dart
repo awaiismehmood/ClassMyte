@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:classmyte/data_management/edit_contacts.dart';
 import 'package:flutter/material.dart';
 
@@ -110,7 +112,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
     return Scaffold(
        appBar: AppBar(
         iconTheme: const IconThemeData(
-          color: Colors.white, // Change the back button color to white
+          color: Colors.white,
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -125,7 +127,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 22, // Make the font size a bit larger
+            fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -147,7 +149,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
                         color: Colors.white,
                       ),
                       onPressed: () {
-                        isEditableNotifier.value = true; // Enable editing
+                        isEditableNotifier.value = true;
                       },
                     );
             },
@@ -243,8 +245,7 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
       {bool isPhone = false}) {
     TextEditingController controller = TextEditingController(
         text: valueNotifier
-            .value); // Initialize controller with the current value
-
+            .value);
     return ValueListenableBuilder<bool>(
       valueListenable: isEditableNotifier,
       builder: (context, isEditable, child) {

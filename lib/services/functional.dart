@@ -15,11 +15,11 @@ Future<void> makeCall(String phoneNumber) async {
 
 List<String> getUniqueClasses(List<Map<String, String>> allStudents) {
   return allStudents
-      .map((student) => student['class']) // Get the class from each student
-      .where((className) => className != null && className.isNotEmpty) // Filter out null or empty classes
-      .toSet() // Convert to a Set to ensure uniqueness
-      .map((className) => className!) // Convert back to non-nullable
-      .toList(); // Convert back to List
+      .map((student) => student['class'])
+      .where((className) => className != null && className.isNotEmpty)
+      .toSet()
+      .map((className) => className!) 
+      .toList();
 }
 
 

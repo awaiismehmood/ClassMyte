@@ -13,7 +13,6 @@ class SearchService {
           FilteringService.filterByClasses(students, selectedClasses);
     }
 
-    // Search within the filtered list
     if (query.isNotEmpty) {
       return filteredStudents.where((student) {
         return student['name']!.toLowerCase().contains(query.toLowerCase());

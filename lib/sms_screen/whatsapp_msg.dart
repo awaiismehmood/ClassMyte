@@ -1,11 +1,8 @@
-// whatsapp_messaging.dart
-import 'package:flutter/material.dart';
+// ignore_for_file: deprecated_member_use
 import 'package:url_launcher/url_launcher.dart';
 
 class WhatsAppMessaging {
-  // Function to send WhatsApp messages individually
   Future<void> sendWhatsAppMessageIndividually(String phoneNumber) async {
-      // String url = "https://wa.me/$phoneNumber?text=${Uri.encodeFull(message)}";
       String url = "https://wa.me/$phoneNumber";
 
       if (await canLaunch(url)) {

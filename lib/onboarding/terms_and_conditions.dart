@@ -10,7 +10,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
     return Scaffold(
        appBar: AppBar(
         iconTheme: const IconThemeData(
-          color: Colors.white, // Change the back button color to white
+          color: Colors.white,
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -25,7 +25,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
           'Terms and Conditions',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 22, // Make the font size a bit larger
+            fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -45,8 +45,8 @@ class TermsAndConditionsScreen extends StatelessWidget {
             children: [
               Center(
                 child: Image.asset(
-                  'assets/pencil_white.png', // Your app logo
-                  height: 100, // Adjust height as needed
+                  'assets/pencil_white.png',
+                  height: 100,
                 ),
               ),
               const SizedBox(height: 20),
@@ -55,7 +55,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black, // Change color as needed
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 20),
@@ -92,17 +92,13 @@ class TermsAndConditionsScreen extends StatelessWidget {
                               style: TextStyle(fontSize: 16,    color: Colors.black, ),
                             ),
                             TextSpan(
-                              text: 'PTA Bulk SMS policies',
+                              text: 'PTA Bulk SMS policies.',
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.blueAccent,
                                 decoration: TextDecoration.underline,
                               ),
                                recognizer: TapGestureRecognizer()..onTap = _launchURL,
-                            ),
-                            const TextSpan(
-                              text: ' document for more details.',
-                              style: TextStyle(fontSize: 16,    color: Colors.black, ),
                             ),
                           ],
                         ),
@@ -126,7 +122,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
 
   // Function to launch the PTA terms URL
   void _launchURL() async {
-    const url = 'https://www.pta.gov.pk/assets/media/cons_paper_spam_msgs_calls_241019.pdf'; // Replace with the actual URL
+    const url = 'https://www.pta.gov.pk/assets/media/cons_paper_spam_msgs_calls_241019.pdf';
     if (await canLaunch(url)) {
       await launch(url);
     } else {

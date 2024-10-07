@@ -29,15 +29,15 @@ Widget buildHomeScreen(BuildContext context) {
           Row(
             children: [
               Image.asset(
-                'assets/pencil_white.png', // Add your logo here
-                height: screenHeight * 0.04, // Adjust height dynamically
+                'assets/pencil_white.png',
+                height: screenHeight * 0.04,
               ),
               const SizedBox(width: 8),
               const Text(
                 'ClassMyte',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 22, // Make the font size a bit larger
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -67,7 +67,7 @@ Widget buildHomeScreen(BuildContext context) {
         children: [
           Expanded(
             child: GridView.count(
-              physics: const NeverScrollableScrollPhysics(), // Disable scrolling
+              physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.symmetric(
                 horizontal: screenWidth * 0.05, 
                 vertical: screenHeight * 0.06,
@@ -79,7 +79,7 @@ Widget buildHomeScreen(BuildContext context) {
                 _buildGridCard(
                   context,
                   'Students',
-                  icon: Icons.people,
+                  icon: Icons.person_pin,
                   onPressed: () {
                     Routes.navigateTocontacts(context);
                   },
@@ -87,7 +87,7 @@ Widget buildHomeScreen(BuildContext context) {
                 _buildGridCard(
                   context,
                   'Classes',
-                  icon: Icons.class_,
+                  icon: Icons.groups_rounded,
                   onPressed: () {
                     Routes.navigateToClasses(context);
                   },
@@ -117,8 +117,8 @@ Widget buildHomeScreen(BuildContext context) {
           ),
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.15, // Centered using dynamic padding
-              vertical: screenHeight * 0.06,
+              horizontal: screenWidth * 0.13, // Centered using dynamic padding
+              vertical: screenHeight * 0.03,
             ),
             child: _buildGridCard(
               context,
@@ -130,10 +130,10 @@ Widget buildHomeScreen(BuildContext context) {
                   MaterialPageRoute(builder: (context) => const MyApp()),
                 );
               },
-              color: Colors.red,
+              color: Colors.redAccent.shade200,
             ),
           ),
-          SizedBox(height: screenHeight * 0.015), // Adjust spacing dynamically
+          SizedBox(height: screenHeight * 0.015),
         ],
       ),
     ),
@@ -144,15 +144,14 @@ Widget _buildGridCard(BuildContext context, String title,
     {IconData? icon, VoidCallback? onPressed, Color color = Colors.blue}) {
   final mediaQuery = MediaQuery.of(context);
   final screenHeight = mediaQuery.size.height;
-  final screenWidth = mediaQuery.size.width;
 
   return GestureDetector(
     onTap: onPressed,
     child: Card(
-      elevation: 6, // Increased elevation for a more modern look
-      shadowColor: Colors.black38, // Softer shadow for better contrast
+      elevation: 6,
+      shadowColor: Colors.black38,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0), // Softer corners for modern look
+        borderRadius: BorderRadius.circular(20.0),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -164,19 +163,19 @@ Widget _buildGridCard(BuildContext context, String title,
           borderRadius: BorderRadius.circular(20.0),
         ),
         padding: EdgeInsets.symmetric(
-          vertical: screenHeight * 0.035, // Dynamically sized padding
+          vertical: screenHeight * 0.035,
         ),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: screenHeight * 0.05, color: Colors.white), // Larger icons for clarity
-              SizedBox(height: screenHeight * 0.01), // Dynamic spacing
+              Icon(icon, size: screenHeight * 0.05, color: Colors.white),
+              SizedBox(height: screenHeight * 0.01),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: screenHeight * 0.02,
-                  fontWeight: FontWeight.w600, // Bolder text for more emphasis
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),

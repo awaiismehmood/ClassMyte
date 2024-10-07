@@ -1,4 +1,4 @@
-import 'package:classmyte/data_management/data_retrieval.dart';
+// ignore_for_file: use_build_context_synchronously
 import 'package:classmyte/data_management/edit_contacts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -41,12 +41,9 @@ void showDeleteClassDialog(BuildContext context, String className, ValueNotifier
               ElevatedButton(
                 onPressed: () async {
                   String enteredPassword = passwordController.text;
-
-                  // Validate the entered password using Firebase authentication
                   bool isPasswordValid = await validateUserPassword(enteredPassword);
 
                   if (isPasswordValid) {
-                    // Show loading indicator
                     showDialog(
                       context: context,
                       barrierDismissible: false,
@@ -58,26 +55,16 @@ void showDeleteClassDialog(BuildContext context, String className, ValueNotifier
                         ),
                       ),
                     );
-
-                    // Delete the class and associated students
                     await EditContactService.deleteClassAndStudents(className);
-
-                    // Close the loading indicator
                     Navigator.pop(context);
-
-                    // Update the ValueNotifier to reflect deletion
                     allClassesNotifier.value.remove(className);
+                    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
                     allClassesNotifier.notifyListeners();
-
-                    // Close the password confirmation dialog
                     Navigator.pop(context);
-
-                    // Show success message
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Class deleted successfully')),
                     );
                   } else {
-                    // Display incorrect password message
                     setState(() {
                       isPasswordIncorrect = true;
                     });
@@ -98,22 +85,17 @@ void showDeleteClassDialog(BuildContext context, String className, ValueNotifier
 }
 
 
-/// Function to validate the user's password for re-authentication
 Future<bool> validateUserPassword(String password) async {
   try {
-    // Get the current authenticated user
     var currentUser = FirebaseAuth.instance.currentUser;
-
-    // Create credentials using the entered email and password
     var credential = EmailAuthProvider.credential(
       email: currentUser!.email!,
       password: password,
     );
 
-    // Re-authenticate the user with the entered credentials
     await currentUser.reauthenticateWithCredential(credential);
-    return true; // Password is correct
+    return true;
   } catch (e) {
-    return false; // Password is incorrect
+    return false;
   }
 }

@@ -45,7 +45,6 @@ class EditContactService {
     }
   }
 
-  /// Updates the class of a specific student in the authenticated user's collection
   static Future<void> updateClass(String studentId, String newClassName) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
@@ -70,7 +69,6 @@ class EditContactService {
     }
   }
 
-  /// Deletes a class and all students associated with it in the authenticated user's collection
   static Future<void> deleteClassAndStudents(String className) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
@@ -81,12 +79,10 @@ class EditContactService {
         CollectionReference<Map<String, dynamic>> collectionRef =
             FirebaseFirestore.instance.collection('users').doc(uid).collection('contacts');
 
-        // Get all students in the class to be deleted
         QuerySnapshot<Map<String, dynamic>> studentsInClass = await collectionRef
             .where('Class', isEqualTo: className)
             .get();
 
-        // Delete each student in the class
         for (QueryDocumentSnapshot<Map<String, dynamic>> student in studentsInClass.docs) {
           await student.reference.delete();
         }
