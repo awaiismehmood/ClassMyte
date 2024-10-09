@@ -29,10 +29,17 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
   @override
   void initState() {
     super.initState();
-    getContactList();
+    _initializeData();
+    // getContactList();
     _requestNotificationPermission();
-    subscriptionData.checkSubscriptionStatus();
-    adManager.loadBannerAd();
+  }
+
+   Future<void> _initializeData() async {
+    await  getContactList();
+    await subscriptionData.checkSubscriptionStatus();
+    if (!subscriptionData.isPremiumUser.value) {
+      adManager.loadBannerAd(); // Load ads only if not premium
+    }
   }
 
   @override
@@ -43,30 +50,29 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     selectedClasses.dispose();
     selectedDelay.dispose();
     warningMessage.dispose();
-    adManager.dispose(); // Load banner ad
+    adManager.dispose(); // Ensure the AdManager is also disposed
     super.dispose();
   }
 
+  Future<void> _requestNotificationPermission() async {
+    PermissionStatus status = await Permission.notification.request();
 
-Future<void> _requestNotificationPermission() async {
-  PermissionStatus status = await Permission.notification.request();
-
-  if (status.isGranted) {
-    _initializeNotifications();
-  } else if (status.isDenied) {
-    print("Notification permission denied");
+    if (status.isGranted) {
+      _initializeNotifications();
+    } else if (status.isDenied) {
+      print("Notification permission denied");
+    }
   }
-}
 
-Future<void> _initializeNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+  Future<void> _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-}
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
 
   Future<void> getContactList() async {
     contactList = await StudentData.getStudentData();
@@ -316,12 +322,6 @@ Future<void> _initializeNotifications() async {
                                 },
                               ),
                               const SizedBox(height: 20),
-                              if (!subscriptionData.isPremiumUser.value)
-                                SizedBox(
-                                  height: 80,
-                                  width: MediaQuery.of(context).size.width,
-                                  child: adManager.displayBannerAd(),
-                                ),
                             ],
                           );
                         },
@@ -364,6 +364,9 @@ Future<void> _initializeNotifications() async {
                               ? null
                               : () {
                                   sendMessage();
+                                  if (!subscriptionData.isPremiumUser.value) {
+                                    adManager.showInterstitialAd();
+                                  }
                                 },
                           icon: isSending
                               ? const SizedBox(

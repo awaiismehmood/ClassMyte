@@ -28,12 +28,18 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
   final adManager = AdManager();
   final SubscriptionData subscriptionData = SubscriptionData();
 
-  @override
+   @override
   void initState() {
     super.initState();
-    getStudentData();
-    subscriptionData.checkSubscriptionStatus();
-    adManager.loadBannerAd();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await getStudentData();
+    await subscriptionData.checkSubscriptionStatus();
+    if (!subscriptionData.isPremiumUser.value) {
+      adManager.loadBannerAd(); // Load ads only if not premium
+    }
   }
 
   Future<void> getStudentData() async {
@@ -389,11 +395,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                   ),
                 ),
                 if (!subscriptionData.isPremiumUser.value)
-                  SizedBox(
-                    height: 50,
-                    width: MediaQuery.of(context).size.width,
-                    child: adManager.displayBannerAd(),
-                  ),
+                  adManager.displayBannerAd(),
               ],
             ),
           );

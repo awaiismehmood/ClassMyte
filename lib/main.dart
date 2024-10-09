@@ -1,4 +1,6 @@
 // ignore_for_file: avoid_print
+import 'package:classmyte/ads/ads.dart';
+import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:classmyte/onboarding/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +16,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+    MobileAds.instance.initialize(); // Initialize Google Mobile Ads SDK
 
   try {
     await Firebase.initializeApp();
@@ -26,8 +29,6 @@ void main() async {
 }
 
 
-
-
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -36,15 +37,42 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool _isLoading = true;
   bool _hasSeenOnboarding = false;
+   final AdManager _adManager = AdManager(); // Create an instance of AdManager
+    final SubscriptionData subscriptionData = SubscriptionData();
 
   @override
-  void initState() {
-    super.initState();
-    _checkOnboardingStatus();
+void initState() {
+  super.initState();
+  _checkOnboardingStatus();
+  WidgetsBinding.instance.addObserver(this);
+
+  // Wait for the subscription status to be checked before loading the ad
+  _checkSubscriptionAndLoadAd();
+}
+
+Future<void> _checkSubscriptionAndLoadAd() async {
+  await subscriptionData.checkSubscriptionStatus();
+  if (!subscriptionData.isPremiumUser.value) {
+    _adManager.loadAppOpenAd(); // Load ads only if not premium
   }
+}
+
+
+ @override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  if (state == AppLifecycleState.resumed) {
+    // Check the subscription status before showing the ad
+    subscriptionData.checkSubscriptionStatus().then((_) {
+      if (!subscriptionData.isPremiumUser.value) {
+        _adManager.showAppOpenAd(); // Show ads only if not premium
+      }
+    });
+  }
+}
+
 
   Future<void> _checkOnboardingStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -63,7 +91,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const CircularProgressIndicator(); // Show a loader while checking preferences
+      return const CircularProgressIndicator();
     }
 
     return MaterialApp(
@@ -94,5 +122,12 @@ class _MyAppState extends State<MyApp> {
         }
       },
     );
+  }
+
+   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _adManager.dispose();
+    super.dispose();
   }
 }

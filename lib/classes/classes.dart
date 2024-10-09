@@ -1,9 +1,11 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:classmyte/ads/ads.dart';
 import 'package:classmyte/classes/deletion.dart';
 import 'package:classmyte/classes/promotion.dart';
 import 'package:classmyte/Students/addcontact_dialouge.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
+import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:flutter/material.dart';
 
 class ClassScreen extends StatefulWidget {
@@ -16,14 +18,22 @@ class ClassScreen extends StatefulWidget {
 class _ClassScreenState extends State<ClassScreen> {
   ValueNotifier<List<String>> allClassesNotifier = ValueNotifier([]);
   List<Map<String, String>> allStudents = [];
-
+  final adManager = AdManager();
+  final SubscriptionData subscriptionData = SubscriptionData();
 
   @override
   void initState() {
     super.initState();
-    getStudentData();
+  _initializeData();
   }
 
+  Future<void> _initializeData() async {
+    await getStudentData();
+    await subscriptionData.checkSubscriptionStatus();
+    if (!subscriptionData.isPremiumUser.value) {
+      adManager.loadBannerAd(); // Load ads only if not premium
+    }
+  }
   Future<void> getStudentData() async {
     List<Map<String, String>> students = await StudentData.getStudentData();
     allStudents = students;
@@ -187,7 +197,16 @@ class _ClassScreenState extends State<ClassScreen> {
                     },
                   ),
                 ),
+                
+                 if (!subscriptionData.isPremiumUser.value)
+                  Positioned(
+                    bottom: 1,
+                    child:  SizedBox(
+                      height: 50,
+                      child: adManager.displayBannerAd()),)
+                
               ],
+              
             ),
           ),
           
