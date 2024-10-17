@@ -16,6 +16,7 @@ class AddContactService {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
+          print('User ID: ${currentUser.uid}');
         String uid = currentUser.uid;
 
         CollectionReference<Map<String, dynamic>> collectionRef =

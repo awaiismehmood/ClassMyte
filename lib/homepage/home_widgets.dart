@@ -1,4 +1,5 @@
 import 'package:classmyte/Students/students.dart';
+import 'package:classmyte/download/screen_dn.dart';
 import 'package:classmyte/premium/subscription_screen.dart';
 import 'package:classmyte/settings/settings.dart';
 import 'package:classmyte/sms_screen/sms.dart';
@@ -44,14 +45,6 @@ Widget buildHomeScreen(BuildContext context) {
               ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
         ],
       ),
     ),
@@ -69,11 +62,11 @@ Widget buildHomeScreen(BuildContext context) {
             child: GridView.count(
               padding: EdgeInsets.symmetric(
                 horizontal: screenWidth * 0.05,
-                vertical: screenHeight * (isLandscape ? 0.04 : 0.08), // Adjust vertical padding for landscape
+                vertical: screenHeight * (isLandscape ? 0.04 : 0.035), // Adjust vertical padding for landscape
               ),
               crossAxisCount: isLandscape ? 3 : 2, // Adjust number of columns based on orientation
-              crossAxisSpacing: screenWidth * 0.04,
-              mainAxisSpacing: screenHeight * 0.03,
+              crossAxisSpacing: screenWidth * 0.06,
+              mainAxisSpacing: screenHeight * 0.01,
               children: [
                 _buildGridCard(
                   context,
@@ -99,6 +92,18 @@ Widget buildHomeScreen(BuildContext context) {
                     Routes.navigateToSms(context);
                   },
                 ),
+                  _buildGridCard(
+                  context,
+                  'Sync Data',
+                  icon: Icons.sync,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const UploadDownloadScreen(),
+                      ),
+                    );
+                  },
+                ),
                 _buildGridCard(
                   context,
                   'Premium',
@@ -109,6 +114,17 @@ Widget buildHomeScreen(BuildContext context) {
                         builder: (context) => const SubscriptionScreen(),
                       ),
                     );
+                  },
+                ),
+              
+                      _buildGridCard(
+                  context,
+                  'Settings',
+                  icon: Icons.settings,
+                  onPressed: () {
+                     Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
                   },
                 ),
               ],

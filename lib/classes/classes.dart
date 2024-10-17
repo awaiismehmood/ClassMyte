@@ -196,17 +196,14 @@ class _ClassScreenState extends State<ClassScreen> {
                       );
                     },
                   ),
-                ),
-                
+                ), 
                  if (!subscriptionData.isPremiumUser.value)
                   Positioned(
                     bottom: 1,
                     child:  SizedBox(
                       height: 50,
                       child: adManager.displayBannerAd()),)
-                
               ],
-              
             ),
           ),
           

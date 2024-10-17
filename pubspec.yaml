@@ -38,7 +38,6 @@ dependencies:
   cloud_firestore:
   url_launcher: ^6.2.6
   icons_launcher: ^3.0.0
-  csv: ^6.0.0
   shared_preferences: ^2.2.3
   firebase_auth: ^5.3.1
   permission_handler: ^11.3.1
@@ -47,6 +46,8 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   google_mobile_ads: ^5.1.0
   firebase_core: ^3.6.0
+  file_picker: ^8.1.2
+  excel: ^4.0.6
 
 
 dev_dependencies:
