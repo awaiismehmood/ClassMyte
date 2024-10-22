@@ -60,7 +60,7 @@ class MessageSender {
     
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool(ongoingProcessKey, false);
-    await _stopForegroundService(); // Stop the service immediately
+    await _stopForegroundService();
   }
 }
 

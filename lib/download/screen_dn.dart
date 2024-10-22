@@ -8,19 +8,19 @@ class UploadDownloadScreen extends StatefulWidget {
   const UploadDownloadScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _UploadDownloadScreenState createState() => _UploadDownloadScreenState();
 }
 
 class _UploadDownloadScreenState extends State<UploadDownloadScreen> {
   final SubscriptionData subscriptionData = SubscriptionData();
+  final ValueNotifier<bool> isLoading = ValueNotifier(false); // Notifier for loading state
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(
-          color: Colors.white, // Change the back button color to white
+          color: Colors.white,
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -46,23 +46,30 @@ class _UploadDownloadScreenState extends State<UploadDownloadScreen> {
           ),
         ],
       ),
-      body: Container(
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.white, Colors.blueAccent],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildDownloadCard(context),
-            _buildUploadCard(context),
-          ],
-        ),
+      body: ValueListenableBuilder<bool>(
+        valueListenable: isLoading,
+        builder: (context, loading, child) {
+          return Container(
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.white, Colors.blueAccent],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: loading
+                ? const CircularProgressIndicator() // Show loading indicator when true
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _buildDownloadCard(context),
+                      _buildUploadCard(context),
+                    ],
+                  ),
+          );
+        },
       ),
     );
   }
@@ -111,54 +118,59 @@ class _UploadDownloadScreenState extends State<UploadDownloadScreen> {
         borderRadius: BorderRadius.circular(20),
         color: Colors.white38,
       ),
-     child: IconButton(
-          onPressed: () async {
-            await subscriptionData.checkSubscriptionStatus();
-            if (!subscriptionData.isPremiumUser.value) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SubscriptionScreen(),
-                ),
-              );
-            } else {
-              ExcelImport().importFromExcel();
-            }
-          },
-          icon: const Icon(
-            Icons.cloud_upload_outlined,
-            size: 100,
-            color: Colors.blue,
-          ),
-        ));
-    
+      child: IconButton(
+        onPressed: () async {
+          await subscriptionData.checkSubscriptionStatus();
+          if (!subscriptionData.isPremiumUser.value) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SubscriptionScreen(),
+              ),
+            );
+          } else {
+            isLoading.value = true; // Start loading
+            await ExcelImport().importFromExcel();
+            isLoading.value = false; // End loading
+          }
+        },
+        icon: const Icon(
+          Icons.cloud_upload_outlined,
+          size: 100,
+          color: Colors.blue,
+        ),
+      ),
+    );
   }
 
   Widget _buildDownloadIcon() {
     return Container(
-        height: 150,
-        width: 150,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white38,
+      height: 150,
+      width: 150,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white38,
+      ),
+      child: IconButton(
+        onPressed: () async {
+          await subscriptionData.checkSubscriptionStatus();
+          if (!subscriptionData.isPremiumUser.value) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SubscriptionScreen(),
+              ),
+            );
+          } else {
+            isLoading.value = true; // Start loading
+            await ExcelExport().exportToExcel();
+            isLoading.value = false; // End loading
+          }
+        },
+        icon: const Icon(
+          Icons.cloud_download_outlined,
+          size: 100,
+          color: Colors.blue,
         ),
-        child: IconButton(
-          onPressed: () async {
-            await subscriptionData.checkSubscriptionStatus();
-            if (!subscriptionData.isPremiumUser.value) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SubscriptionScreen(),
-                ),
-              );
-            } else {
-              ExcelExport().exportToExcel();
-            }
-          },
-          icon: const Icon(
-            Icons.cloud_download_outlined,
-            size: 100,
-            color: Colors.blue,
-          ),
-        ));
+      ),
+    );
   }
 }

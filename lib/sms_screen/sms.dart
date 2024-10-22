@@ -2,10 +2,12 @@
 import 'package:classmyte/ads/ads.dart';
 import 'package:classmyte/data_management/getSubscribe.dart';
 import 'package:classmyte/main.dart';
+import 'package:classmyte/premium/subscription_screen.dart';
 import 'package:classmyte/sms_screen/sendingLogic.dart';
 import 'package:flutter/material.dart';
 import 'package:classmyte/data_management/data_retrieval.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class NewMessageScreen extends StatefulWidget {
@@ -34,12 +36,9 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     _requestNotificationPermission();
   }
 
-   Future<void> _initializeData() async {
-    await  getContactList();
+  Future<void> _initializeData() async {
+    await getContactList();
     await subscriptionData.checkSubscriptionStatus();
-    if (!subscriptionData.isPremiumUser.value) {
-      adManager.loadBannerAd(); // Load ads only if not premium
-    }
   }
 
   @override
@@ -116,6 +115,103 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
       sendingMessage.value = false;
       messageStatus.value = "Permission denied.";
     }
+  }
+
+  void _showPremiumDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text(
+            'Send Message',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          ),
+          content: const Text(
+            'To send a message, you can either watch an ad or upgrade to premium for uninterrupted access.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Close the dialog
+                Navigator.of(context).pop();
+
+                // Check if the ad is already loaded
+                if (adManager.reward != null) {
+                  // Ad is loaded, show it
+                  bool adCompleted = await adManager.showRewardedAd();
+                  if (adCompleted) {
+                    sendMessage();
+                  } else {
+                    Fluttertoast.showToast(
+                      msg: "Ad not completed. Please watch the full ad.",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      timeInSecForIosWeb: 2,
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                      fontSize: 16.0,
+                    );
+                  }
+                } else {
+                  // Load a new ad first
+                  adManager.loadRewardedAd(); // Load a new rewarded ad
+
+                  // Show loading toast
+                  Fluttertoast.showToast(
+                    msg: "Loading ad, please wait...",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    timeInSecForIosWeb: 2,
+                    backgroundColor: Colors.blue,
+                    textColor: Colors.white,
+                    fontSize: 16.0,
+                  );
+
+                  // After loading, try to show the ad
+                  bool adCompleted = await adManager.showRewardedAd();
+                  if (adCompleted) {
+                    sendMessage();
+                  } else {
+                    Fluttertoast.showToast(
+                      msg: "Ad not completed. Please try again.",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      timeInSecForIosWeb: 2,
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                      fontSize: 16.0,
+                    );
+                  }
+                }
+              },
+              child: const Text(
+                'Watch Ad',
+                style: TextStyle(color: Colors.blue, fontSize: 16),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                // Navigate to Subscription screen
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const SubscriptionScreen(),
+                ));
+              },
+              child: const Text('Go Premium'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -347,7 +443,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                         child: TextField(
                           controller: messageController,
                           decoration: const InputDecoration(
-                            hintStyle: TextStyle(color: Colors.black38),
+                            hintStyle: TextStyle(color: Colors.white54),
                             hintText: "Enter your message",
                             border: InputBorder.none,
                           ),
@@ -363,27 +459,29 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                           onPressed: isSending
                               ? null
                               : () {
-                                  sendMessage();
-                                  if (!subscriptionData.isPremiumUser.value) {
-                                    adManager.showInterstitialAd();
+                                  if (subscriptionData.isPremiumUser.value) {
+                                    // Premium user sends message directly
+                                    sendMessage();
+                                  } else {
+                                    if (selectedClasses.value.isEmpty) {
+                                      warningMessage.value =
+                                          'Please select at least one recipient';
+                                      return;
+                                    }
+
+                                    if (messageController.text.isEmpty) {
+                                      warningMessage.value =
+                                          'Please enter a message';
+                                      return;
+                                    }
+                                    // Non-premium user, show dialog
+                                    _showPremiumDialog(context);
                                   }
                                 },
                           icon: isSending
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(),
-                                )
-                              : const Icon(
-                                  Icons.send,
-                                  color: Colors.black,
-                                ),
-                          padding:
-                              EdgeInsets.zero, // Remove padding for the icon
-                          constraints:
-                              const BoxConstraints(), // Remove constraints
-                          color: Colors
-                              .blue, // Change this to the color you prefer
+                              ? const CircularProgressIndicator()
+                              : const Icon(Icons.send),
+                          color: Colors.blue.shade900,
                         );
                       },
                     ),

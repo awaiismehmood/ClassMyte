@@ -27,8 +27,9 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
   final ValueNotifier<bool> isLoadingNotifier = ValueNotifier(true);
   final adManager = AdManager();
   final SubscriptionData subscriptionData = SubscriptionData();
+  bool adLoaded = false;
 
-   @override
+  @override
   void initState() {
     super.initState();
     _initializeData();
@@ -38,7 +39,13 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
     await getStudentData();
     await subscriptionData.checkSubscriptionStatus();
     if (!subscriptionData.isPremiumUser.value) {
-      adManager.loadBannerAd(); // Load ads only if not premium
+      adManager.loadBannerAd(() {
+        if (mounted && !subscriptionData.isPremiumUser.value) {
+          setState(() {
+            adLoaded = true; // Ad is loaded and user is not premium
+          });
+        }
+      });
     }
   }
 
@@ -394,7 +401,7 @@ class _StudentContactsScreenState extends State<StudentContactsScreen> {
                     },
                   ),
                 ),
-                if (!subscriptionData.isPremiumUser.value)
+                if (adLoaded && !subscriptionData.isPremiumUser.value)
                   adManager.displayBannerAd(),
               ],
             ),

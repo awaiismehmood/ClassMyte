@@ -13,8 +13,9 @@ class ExcelExport {
 
       // Create a new Excel document
       var excel = Excel.createExcel();
-      // Use 'Students' sheet directly and remove the default 'Sheet1'
-      Sheet sheetObject = excel['Students'];
+      
+      // Access the default sheet (Sheet1)
+      Sheet sheetObject = excel.sheets[excel.getDefaultSheet()]!;
 
       // Create headers
       List<String> headers = [
@@ -28,16 +29,16 @@ class ExcelExport {
       ];
       sheetObject.appendRow(headers.map((header) => TextCellValue(header)).toList());
 
-      // Add data to the sheet, excluding document ID
+      // Add data to the sheet as plain text
       for (var student in studentData) {
         List<CellValue?> row = [
           TextCellValue(student['name'] ?? ''),
           TextCellValue(student['class'] ?? ''),
-          TextCellValue(student['phoneNumber'] ?? ''),
+          TextCellValue(student['phoneNumber'] ?? ''),  // Store as text
           TextCellValue(student['fatherName'] ?? ''),
           TextCellValue(student['DOB'] ?? ''),
           TextCellValue(student['Admission Date'] ?? ''),
-          TextCellValue(student['altNumber'] ?? ''),
+          TextCellValue(student['altNumber'] ?? ''),  // Store as text
         ];
         sheetObject.appendRow(row);
       }
@@ -46,7 +47,6 @@ class ExcelExport {
       String? path = await FilePicker.platform.getDirectoryPath();
       if (path != null) {
         String filePath = '$path/StudentContacts.xlsx';
-        print('Selected path: $path');
         try {
           await File(filePath).writeAsBytes(await excel.encode()!);
           print('Excel file saved at $filePath');
@@ -61,9 +61,6 @@ class ExcelExport {
     }
   }
 
-
-
-  // Request storage permissions
   Future<bool> requestStoragePermission() async {
     if (Platform.isAndroid && await Permission.manageExternalStorage.isGranted) {
       return true;
@@ -78,7 +75,6 @@ class ExcelExport {
         return false;
       }
     } else {
-      // iOS or other platforms
       var status = await Permission.storage.request();
       return status.isGranted;
     }

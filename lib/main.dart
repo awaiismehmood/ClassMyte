@@ -57,6 +57,7 @@ Future<void> _checkSubscriptionAndLoadAd() async {
   await subscriptionData.checkSubscriptionStatus();
   if (!subscriptionData.isPremiumUser.value) {
     _adManager.loadAppOpenAd(); // Load ads only if not premium
+    _adManager.loadRewardedAd();
   }
 }
 
