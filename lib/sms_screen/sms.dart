@@ -135,56 +135,28 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
           actions: [
             TextButton(
               onPressed: () async {
-                // Close the dialog
-                Navigator.of(context).pop();
-
-                // Check if the ad is already loaded
-                if (adManager.reward != null) {
-                  // Ad is loaded, show it
+                Navigator.of(context).pop(); // Close the dialog
+                if (adManager.isAdLoaded.value) {
+                  // Show the ad if it is already loaded
                   bool adCompleted = await adManager.showRewardedAd();
                   if (adCompleted) {
                     sendMessage();
                   } else {
                     Fluttertoast.showToast(
-                      msg: "Ad not completed. Please watch the full ad.",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      timeInSecForIosWeb: 2,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 16.0,
-                    );
+                        msg: "Ad not completed. Please try again.");
                   }
                 } else {
-                  // Load a new ad first
-                  adManager.loadRewardedAd(); // Load a new rewarded ad
-
-                  // Show loading toast
-                  Fluttertoast.showToast(
-                    msg: "Loading ad, please wait...",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    timeInSecForIosWeb: 2,
-                    backgroundColor: Colors.blue,
-                    textColor: Colors.white,
-                    fontSize: 16.0,
-                  );
-
-                  // After loading, try to show the ad
-                  bool adCompleted = await adManager.showRewardedAd();
-                  if (adCompleted) {
-                    sendMessage();
-                  } else {
-                    Fluttertoast.showToast(
-                      msg: "Ad not completed. Please try again.",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      timeInSecForIosWeb: 2,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 16.0,
-                    );
-                  }
+                  // Load and wait for the ad to be ready
+                  Fluttertoast.showToast(msg: "Loading ad, please wait...");
+                  adManager.loadRewardedAd(onAdLoaded: () async {
+                    bool adCompleted = await adManager.showRewardedAd();
+                    if (adCompleted) {
+                      sendMessage();
+                    } else {
+                      Fluttertoast.showToast(
+                          msg: "Ad not completed. Please try again.");
+                    }
+                  });
                 }
               },
               child: const Text(

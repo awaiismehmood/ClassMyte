@@ -1,83 +1,104 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdManager {
   BannerAd? _bannerAd;
   AppOpenAd? _appOpenAd;
-    RewardedAd? _rewardedAd;
+  RewardedAd? _rewardedAd;
+  ValueNotifier<bool> isAdLoaded = ValueNotifier(false);
   bool _isShowingAd = false;
+  bool _isAdShowing = false; // To prevent multiple Rewarded Ads from showing simultaneously
 
-    RewardedAd? get reward => _rewardedAd;
+  RewardedAd? get reward => _rewardedAd;
 
+  // Load a Rewarded Ad
+  void loadRewardedAd({VoidCallback? onAdLoaded}) {
+    RewardedAd.load(
+      adUnitId: 'ca-app-pub-6452085379535380/1053355157', // Replace with your actual Ad Unit ID
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          print("Rewarded ad loaded");
+          _rewardedAd = ad;
+          isAdLoaded.value = true;
+          onAdLoaded?.call(); // Notify that the ad is loaded
+        },
+        onAdFailedToLoad: (error) {
+          print("Failed to load rewarded ad: $error");
+        },
+      ),
+    );
+  }
 
-// Load a Rewarded Ad
-void loadRewardedAd() {
-  RewardedAd.load(
-    adUnitId: 'ca-app-pub-6452085379535380/1053355157', // Replace with your actual Ad Unit ID
-    request: const AdRequest(),
-    rewardedAdLoadCallback: RewardedAdLoadCallback(
-      onAdLoaded: (ad) {
-        print("Rewarded ad loaded");
-        _rewardedAd = ad;
-      },
-      onAdFailedToLoad: (error) {
-        print("Failed to load rewarded ad: $error");
-      },
-    ),
-  );
-}
+  // Show the Rewarded Ad and return a Future<bool> indicating completion
+  Future<bool> showRewardedAd() async {
+    if (_isAdShowing || _rewardedAd == null) {
+      print('Rewarded ad is not ready or already showing.');
+      return Future.value(false);
+    }
 
-// Show the Rewarded Ad and return a Future<bool> indicating completion
-Future<bool> showRewardedAd() async {
-  if (_rewardedAd != null) {
-    final completer = Completer<bool>(); // Used to return the ad result
+    _isAdShowing = true; // Set flag to prevent multiple ads from showing
+
+    final completer = Completer<bool>();
 
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {
         print('Rewarded ad dismissed');
         ad.dispose();
-        loadRewardedAd(); // Load a new rewarded ad for the next time
-        completer.complete(false); // Ad was dismissed without earning the reward
+        loadRewardedAd(); // Load a new ad
+        _isAdShowing = false;
+        completer.complete(false);
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         print('Failed to show rewarded ad: $error');
         ad.dispose();
         loadRewardedAd(); // Try loading a new ad after failure
-        completer.complete(false); // Ad failed to show
+        _isAdShowing = false;
+        completer.complete(false);
       },
     );
 
     _rewardedAd!.show(
       onUserEarnedReward: (ad, reward) {
         print('User earned reward: ${reward.amount} ${reward.type}');
-        completer.complete(true); // User completed the ad and earned reward
+        completer.complete(true);
       },
     );
 
     _rewardedAd = null; // Ensure the ad can't be reused
-    return completer.future; // Return the completion state (true or false)
-  } else {
-    print('Rewarded ad is not ready yet.');
-    return Future.value(false); // Return false if the ad isn't ready
+    return completer.future;
   }
-}
 
+  // Enhanced Method for showing ads with timeout and user feedback
+  Future<void> tryShowRewardedAd(BuildContext context) async {
+    bool success = await showRewardedAd().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        print('Ad display timed out.');
+        return false;
+      },
+    );
 
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Rewarded ad not available. Try again later.')),
+      );
+    }
+  }
 
+  // Load a Banner Ad
   void loadBannerAd(Function onAdLoadedCallback) {
     _bannerAd = BannerAd(
-          // adUnitId: 'ca-app-pub-3940256099942544/6300978111',
       adUnitId: 'ca-app-pub-6452085379535380/3415236131',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (Ad ad) {
           print('Banner ad loaded.');
-          onAdLoadedCallback();  // Notify when ad is loaded
+          onAdLoadedCallback();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           print('Banner ad failed to load: $error');
@@ -86,27 +107,6 @@ Future<bool> showRewardedAd() async {
       ),
     )..load();
   }
-
-  // // Method to load a banner ad
-  // void loadBannerAd() {
-  //   _bannerAd = BannerAd(
-  //     size: AdSize.banner,
-  //     // adUnitId: 'ca-app-pub-3940256099942544/6300978111',
-  //     adUnitId: 'ca-app-pub-6452085379535380/3415236131',
-
-  //     request: const AdRequest(),
-  //     listener: BannerAdListener(
-  //       onAdLoaded: (ad) {
-  //         print("Banner ad loaded");
-  //       },
-  //       onAdFailedToLoad: (ad, error) {
-  //         print("Failed to load banner ad: $error");
-  //         ad.dispose();
-  //       },
-  //     ),
-  //   );
-  //   _bannerAd!.load();
-  // }
 
   Widget displayBannerAd() {
     if (_bannerAd != null) {
@@ -119,13 +119,10 @@ Future<bool> showRewardedAd() async {
     }
   }
 
-
-  // Method to load an app open ad
+  // Load an App Open Ad
   void loadAppOpenAd() {
     AppOpenAd.load(
-      // adUnitId: 'ca-app-pub-3940256099942544/9257395921', // Test ad unit ID
       adUnitId: 'ca-app-pub-6452085379535380/3959233441',
-
       request: const AdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
@@ -139,6 +136,7 @@ Future<bool> showRewardedAd() async {
     );
   }
 
+  // Show App Open Ad
   void showAppOpenAd() {
     if (_appOpenAd == null || _isShowingAd) {
       print('App Open Ad is not ready or already showing.');
@@ -154,7 +152,7 @@ Future<bool> showRewardedAd() async {
         _isShowingAd = false;
         print('App Open Ad dismissed.');
         ad.dispose();
-        loadAppOpenAd(); // Load a new ad after dismissing the current one
+        loadAppOpenAd();
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         _isShowingAd = false;
