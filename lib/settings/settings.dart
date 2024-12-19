@@ -1,8 +1,10 @@
 import 'package:classmyte/Contact%20Us/contact_us.dart';
+import 'package:classmyte/main.dart';
 import 'package:classmyte/onboarding/terms_and_conditions.dart';
 import 'package:classmyte/premium/subscription_screen.dart';
 import 'package:classmyte/settings/change_password.dart';
 import 'package:classmyte/settings/delete_account.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -78,17 +80,17 @@ class SettingsScreen extends StatelessWidget {
                   );
                 },
               ),
-              // const Divider(),
-              // ListTile(
-              //   leading: const Icon(Icons.logout),
-              //   title: const Text('Logout'),
-              //   onTap: () {
-              //     FirebaseAuth.instance.signOut();
-              //     Navigator.of(context).pushReplacement(
-              //       MaterialPageRoute(builder: (context) => const MyApp()),
-              //     );
-              //   },
-              // ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () {
+                  FirebaseAuth.instance.signOut();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const MyApp()),
+                  );
+                },
+              ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.contact_support),
@@ -100,6 +102,16 @@ class SettingsScreen extends StatelessWidget {
                   );
                 },
               ),
+              // const Divider(),
+              //  ListTile(
+              //   leading: const Icon(Icons.contact_support),
+              //   title: const Text('Signout'),
+              //   onTap: () {
+              //              Navigator.of(context).pushReplacement(
+              //     MaterialPageRoute(builder: (context) => const MyApp()),
+              //   );
+              //   },
+              // ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.delete),

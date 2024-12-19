@@ -27,41 +27,42 @@ class _HomePageState extends State<HomePage> {
           return getPage(index, context);
         },
       ),
-      // bottomNavigationBar: ValueListenableBuilder<int>(
-      //   valueListenable: _selectedIndex,
-      //   builder: (context, index, child) {
-      //     return BottomNavigationBar(
+      bottomNavigationBar: ValueListenableBuilder<int>(
+        valueListenable: _selectedIndex,
+        builder: (context, index, child) {
+          return BottomNavigationBar(
             
-      //       backgroundColor: Colors.blue.shade500,
-      //       elevation: 4, 
-      //       selectedFontSize: 15,
-      //       unselectedFontSize: 13,
-      //       selectedIconTheme: const IconThemeData(color: Colors.white, size: 30),
-      //       unselectedIconTheme: const IconThemeData(color: Colors.white70, size: 24),
-      //       selectedItemColor: Colors.white,
-      //       unselectedItemColor: Colors.white70,
-      //       currentIndex: index,
-      //       onTap: (int newIndex) {
-      //         _selectedIndex.value = newIndex;
-      //       },
-      //       items: const [
-      //         BottomNavigationBarItem(
-      //           icon: Icon(Icons.home),
-      //           label: 'Home',
-      //         ),
-      //         BottomNavigationBarItem(
-      //           icon: Icon(Icons.person_pin),
-      //           label: 'Contacts',
-      //         ),
-      //         BottomNavigationBarItem(
-      //           icon: Icon(Icons.sms),
-      //           label: 'SMS',
-      //         ),
-      //       ],
-      //       type: BottomNavigationBarType.fixed,
-      //     );
-      //   },
-      // ),
+            backgroundColor: Colors.blue.shade700,
+            
+            elevation: 4, 
+            selectedFontSize: 15,
+            unselectedFontSize: 13,
+            selectedIconTheme: const IconThemeData(color: Colors.white, size: 30),
+            unselectedIconTheme: const IconThemeData(color: Colors.white70, size: 24),
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.white70,
+            currentIndex: index,
+            onTap: (int newIndex) {
+              _selectedIndex.value = newIndex;
+            },
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_pin),
+                label: 'Contacts',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.sms),
+                label: 'SMS',
+              ),
+            ],
+            type: BottomNavigationBarType.fixed,
+          );
+        },
+      ),
     
     );
   }

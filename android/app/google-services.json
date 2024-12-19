@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:179413512790:android:b07d934f8a1481a6db01f7",
+        "mobilesdk_app_id": "1:179413512790:android:8118352304f9d243db01f7",
         "android_client_info": {
-          "package_name": "com.example.classmyte"
+          "package_name": "com.alnoor.classmyte"
         }
       },
       "oauth_client": [],

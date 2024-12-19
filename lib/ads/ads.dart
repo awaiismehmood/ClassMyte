@@ -97,11 +97,9 @@ class AdManager {
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (Ad ad) {
-          print('Banner ad loaded.');
           onAdLoadedCallback();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          print('Banner ad failed to load: $error');
           ad.dispose();
         },
       ),

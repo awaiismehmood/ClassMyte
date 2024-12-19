@@ -35,6 +35,8 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController fatherController = TextEditingController();
   final TextEditingController altNumberController = TextEditingController();
+    final dobController = TextEditingController();
+  final admissionDateController = TextEditingController();
 
   if (student != null) {
     nameController.text = student['name'] ?? '';
@@ -45,6 +47,14 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
     altNumberController.text = student['altNumber'] ?? '';
     notifier.selectedClass.value = student['class'] ?? '';
   }
+
+   // Sync ValueNotifier changes with controllers
+  notifier.dob.addListener(() {
+    dobController.text = notifier.dob.value;
+  });
+  notifier.admissionDate.addListener(() {
+    admissionDateController.text = notifier.admissionDate.value;
+  });
 
   showDialog(
     context: context,
@@ -153,7 +163,8 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                         labelText: 'Date of Birth',
                         suffixIcon: Icon(Icons.calendar_today),
                       ),
-                      controller: TextEditingController(text: notifier.dob.value),
+                      // controller: TextEditingController(text: notifier.dob.value),
+                      controller: dobController,
                     ),
                     TextField(
                       onTap: () => selectDate(context, notifier.admissionDate),
@@ -162,7 +173,8 @@ void showAddContactDialog(BuildContext context, Function refreshContacts,
                         labelText: 'Admission Date',
                         suffixIcon: Icon(Icons.calendar_today),
                       ),
-                      controller: TextEditingController(text: notifier.admissionDate.value),
+                      // controller: TextEditingController(text: notifier.admissionDate.value),
+                      controller: admissionDateController,
                     ),
                     TextField(
                       controller: altNumberController,

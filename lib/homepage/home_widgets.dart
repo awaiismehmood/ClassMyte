@@ -58,6 +58,7 @@ Widget buildHomeScreen(BuildContext context) {
       ),
       child: Column(
         children: [
+          SizedBox(height: screenHeight* 0.05),
           Expanded(
             child: GridView.count(
               padding: EdgeInsets.symmetric(
@@ -116,7 +117,6 @@ Widget buildHomeScreen(BuildContext context) {
                     );
                   },
                 ),
-              
                       _buildGridCard(
                   context,
                   'Settings',
@@ -130,22 +130,22 @@ Widget buildHomeScreen(BuildContext context) {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _buildGridCard(
-              context,
-              'Signout',
-              icon: Icons.logout,
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => const MyApp()),
-                );
-              },
-              color: Colors.redAccent.shade200,
-            ),
-          ),
-          const SizedBox(height: 30), // Adjust the size as needed
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 20),
+          //   child: _buildGridCard(
+          //     context,
+          //     'Signout',
+          //     icon: Icons.logout,
+          //     onPressed: () {
+          //       FirebaseAuth.instance.signOut();
+                // Navigator.of(context).pushReplacement(
+                //   MaterialPageRoute(builder: (context) => const MyApp()),
+                // );
+          //     },
+          //     color: Colors.redAccent.shade200,
+          //   ),
+          // ),
+          // const SizedBox(height: 30), // Adjust the size as needed
         ],
       ),
     ),

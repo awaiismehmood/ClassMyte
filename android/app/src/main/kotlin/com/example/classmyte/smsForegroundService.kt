@@ -1,4 +1,4 @@
-package com.example.classmyte
+package com.alnoor.classmyte
 
 import android.app.Notification
 import android.app.NotificationChannel

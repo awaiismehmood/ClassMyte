@@ -16,18 +16,16 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
+    flutterVersionCode = '2'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
+    flutterVersionName = '1.1'
 }
 
 android {
- 
     compileSdk flutter.compileSdkVersion
-   
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -42,19 +40,37 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
-    namespace = "com.example.classmyte"
+    namespace = "com.alnoor.classmyte"
     defaultConfig {
-        applicationId "com.example.classmyte"
+        applicationId "com.alnoor.classmyte"
         minSdkVersion 23  
         targetSdkVersion flutter.targetSdkVersion
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        versionCode 4
+        versionName "1.3"
         multiDexEnabled true
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("C:/Users/Administrator/Desktop/my-release-key.keystore")  // Path to your keystore file
+            storePassword "alnoor"  // Password for the keystore
+            keyAlias "ReleaseKeySign"  // Alias you used when generating the keystore
+            keyPassword "alnoor"  // Password for the key
+        }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug // Update this for a release build if necessary
+            signingConfig signingConfigs.release  // Reference the signing config
+            
+            // Enable ProGuard for release builds to shrink and obfuscate the code
+            minifyEnabled true
+            shrinkResources true
+
+            // Generate debug symbols for native code
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
         }
     }
 }
@@ -72,7 +88,8 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.13.1' // Latest version
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9"
-    implementation 'com.google.android.gms:play-services-ads:23.3.0' 
+    implementation 'com.google.android.gms:play-services-ads:23.3.0'
+    implementation 'com.android.billingclient:billing:6.0.1'
 
 }
 

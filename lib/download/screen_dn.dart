@@ -84,7 +84,7 @@ class _UploadDownloadScreenState extends State<UploadDownloadScreen> {
           _buildUploadIcon(),
           const SizedBox(height: 20),
           const Text(
-            'Upload',
+            'Upload as excel file',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ],
@@ -102,7 +102,7 @@ class _UploadDownloadScreenState extends State<UploadDownloadScreen> {
           _buildDownloadIcon(),
           const SizedBox(height: 20),
           const Text(
-            'Download',
+            'Download as excel file',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ],

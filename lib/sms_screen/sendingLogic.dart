@@ -6,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MessageSender {
-  static const platform = MethodChannel('com.example.sms/sendSMS');
+  static const platform = MethodChannel('com.alnoor.sms/sendSMS');
   static const String ongoingProcessKey = 'ongoingProcess';
 
   static Future<bool> checkSmsPermission() async {

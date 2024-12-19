@@ -69,7 +69,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     controller: _accountNumberController,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Enter your Easypaisa account number',
+                      hintText: 'Enter your account number',
                     ),
                     keyboardType: TextInputType.number,
                   ),
