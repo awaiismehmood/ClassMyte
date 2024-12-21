@@ -1,47 +1,36 @@
-// payment_logic.dart
-
-import 'dart:async';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 class PaymentLogic {
-  static Future<bool> processPayment(String plan, String accountNumber, int amount) async {
-    // Simulate a delay for payment processing
-    await Future.delayed(const Duration(seconds: 2));
+  static final InAppPurchase _iap = InAppPurchase.instance;
 
-    // Dummy response: you can simulate a successful or failed payment here
-    bool paymentSuccessful = _dummyPaymentApi(accountNumber, amount);
+  static Future<bool> purchasePlan(String productId) async {
+    final bool isAvailable = await _iap.isAvailable();
+    if (!isAvailable) return false;
 
-    // You can replace this logic with the real API call once you have it
-    return paymentSuccessful;
-  }
+    final ProductDetailsResponse response =
+        await _iap.queryProductDetails({productId});
+    if (response.notFoundIDs.contains(productId) || response.productDetails.isEmpty) {
+      return false;
+    }
 
-  // This is a dummy function simulating a payment API call
-  static bool _dummyPaymentApi(String accountNumber, int amount) {
-    // Dummy logic: accept any account number that starts with "03"
-    return accountNumber.startsWith("03");
+    final ProductDetails productDetails =
+        response.productDetails.firstWhere((p) => p.id == productId);
+
+    final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
+    _iap.buyNonConsumable(purchaseParam: purchaseParam);
+
+    bool success = false;
+    await for (final purchaseDetailsList in _iap.purchaseStream) {
+      for (var purchase in purchaseDetailsList) {
+        if (purchase.productID == productId &&
+            purchase.status == PurchaseStatus.purchased) {
+          success = true;
+          _iap.completePurchase(purchase);
+        }
+      }
+      break;
+    }
+
+    return success;
   }
 }
-
-//REAL CALL
-// import 'package:dio/dio.dart';
-
-// class PaymentLogic {
-//   static Future<bool> processPayment(String plan, String accountNumber, int amount) async {
-//     try {
-//       // Example API call to Easypaisa (replace with actual endpoint and parameters)
-//       var response = await Dio().post('https://easypaisa.api/payment', data: {
-//         'accountNumber': accountNumber,
-//         'amount': amount,
-//         // Add other required fields here
-//       });
-
-//       if (response.statusCode == 200) {
-//         return response.data['success'] == true; // Parse API response
-//       } else {
-//         return false;
-//       }
-//     } catch (e) {
-//       return false; // Handle any errors
-//     }
-//   }
-// }
-

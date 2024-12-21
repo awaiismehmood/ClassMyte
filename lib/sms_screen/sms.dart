@@ -218,6 +218,10 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [ IconButton(
+            icon: const Icon(Icons.help),
+            onPressed: () {},
+          ),],
       ),
       body: Container(
         decoration: const BoxDecoration(
