@@ -1,16 +1,43 @@
-# classmyte
+# 🎓 ClassMyte - Simple & Efficient Student Management System
 
-A new Flutter project.
+**ClassMyte** is a Flutter-based student contact and class management application designed for schools, tutors, and academic institutions. It helps you organize student information, manage classes, and communicate effectively — all in one streamlined app.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
 
-A few resources to get you started if this is your first Flutter project:
+- **Class Management**
+  - Add, edit, rename, and delete classes.
+  - Automatically update student data when a class is edited or deleted.
+  
+- **Student Contact Management**
+  - Add, edit, or delete student contacts with ease.
+  - Store essential details like name, contact numbers, class, and admission dates.
+  - Search and filter students by name or class.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Bulk SMS Communication**
+  - Send SMS to entire classes or selected students directly from the app.
+  - Customize messages and add dynamic delays between SMS sends.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Secure Data Handling**
+  - Store data securely using Firebase Realtime Database.
+  - Restrict data access per authenticated user — each user manages their own classes and students.
+
+- **User-Friendly Interface**
+  - Modern, clean, and responsive UI built with Flutter.
+  - ValueNotifier-based state management for smooth real-time updates.
+
+---
+
+## 🛠 Technologies Used
+
+- **Flutter (Dart)**
+- **Firebase Realtime Database**
+- **ValueNotifier & ValueListenableBuilder for State Management**
+- **Platform Channels for Native SMS Sending**
+- **Kotlin (Android SMS Module)**
+
+---
+
+## 📂 Contact
+- For any queries contact at awaiismehmood69@gmail.com
