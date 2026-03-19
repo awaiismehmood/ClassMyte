@@ -39,17 +39,21 @@ dependencies:
   url_launcher: ^6.2.6
   icons_launcher: ^3.0.0
   shared_preferences: ^2.2.3
-  firebase_auth: ^5.3.1
-  permission_handler: ^11.3.1
+  firebase_auth: ^6.2.0
+  permission_handler: ^12.0.1
   path_provider: ^2.1.4
-  workmanager: ^0.5.2
-  flutter_local_notifications: ^17.2.3
-  google_mobile_ads: ^5.1.0
-  firebase_core: ^3.6.0
-  file_picker: ^8.1.2
+  workmanager: ^0.9.0+3
+  flutter_local_notifications: ^21.0.0
+  google_mobile_ads: ^7.0.0
+  firebase_core: ^4.5.0
+  file_picker: ^10.3.10
   excel: ^4.0.6
-  fluttertoast: ^8.2.8
+  fluttertoast: ^9.0.0
   in_app_purchase: ^3.2.0
+  flutter_riverpod: ^2.5.1
+  google_fonts: ^8.0.2
+  go_router: ^17.1.0
+
 
 
 dev_dependencies:
@@ -62,7 +66,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
 
 
 
@@ -73,9 +77,6 @@ dev_dependencies:
 flutter:
   assets:
     - assets/pencil_white.png
-    - assets/background.jpg
-    - assets/whatsapp.png
-    - assets/bg.jpg
     
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

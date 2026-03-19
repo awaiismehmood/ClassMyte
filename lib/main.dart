@@ -1,135 +1,128 @@
 // ignore_for_file: avoid_print
-import 'package:classmyte/ads/ads.dart';
-import 'package:classmyte/data_management/getSubscribe.dart';
-import 'package:classmyte/onboarding/onboarding.dart';
+import 'package:classmyte/core/providers/providers.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:classmyte/core/navigation/app_router.dart';
+import 'package:classmyte/core/theme/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'homepage/home_screen.dart';
-import 'authentication/login.dart';
-
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'features/home/home_screen.dart';
+import 'features/auth/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    MobileAds.instance.initialize(); // Initialize Google Mobile Ads SDK
+  MobileAds.instance.initialize();
 
   try {
     await Firebase.initializeApp();
+    final prefs = await SharedPreferences.getInstance();
 
-    runApp(const MyApp());
+    runApp(
+      ProviderScope(
+        overrides: [
+          sharedPrefsProvider.overrideWithValue(prefs),
+        ],
+        child: const MyApp(),
+      ),
+    );
   } catch (e) {
     print("Error initializing app: $e");
   }
-  MobileAds.instance.initialize();
 }
 
-
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _MyAppState createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  bool _isLoading = true;
-  bool _hasSeenOnboarding = false;
-   final AdManager _adManager = AdManager(); // Create an instance of AdManager
-    final SubscriptionData subscriptionData = SubscriptionData();
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
+    // Initialize app logic after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initAppLogic();
+    });
+  }
+
+  Future<void> _initAppLogic() async {
+    await ref.read(subscriptionProvider.notifier).checkSubscriptionStatus();
+    final isPremium = ref.read(subscriptionProvider).isPremiumUser;
+    
+    if (!isPremium) {
+      final adManager = ref.read(adManagerProvider);
+      adManager.loadAppOpenAd();
+      adManager.loadRewardedAd();
+      adManager.loadBannerAd(() {});
+    }
+  }
 
   @override
-void initState() {
-  super.initState();
-  _checkOnboardingStatus();
-  WidgetsBinding.instance.addObserver(this);
-
-  // Wait for the subscription status to be checked before loading the ad
-  _checkSubscriptionAndLoadAd();
-}
-
-Future<void> _checkSubscriptionAndLoadAd() async {
-  await subscriptionData.checkSubscriptionStatus();
-  if (!subscriptionData.isPremiumUser.value) {
-    _adManager.loadAppOpenAd(); // Load ads only if not premium
-    _adManager.loadRewardedAd();
-    _adManager.loadBannerAd((){});
-  }
-}
-
-
- @override
-void didChangeAppLifecycleState(AppLifecycleState state) {
-  if (state == AppLifecycleState.resumed) {
-    // Check the subscription status before showing the ad
-    subscriptionData.checkSubscriptionStatus().then((_) {
-      if (!subscriptionData.isPremiumUser.value) {
-        _adManager.showAppOpenAd(); // Show ads only if not premium
-      }
-    });
-  }
-}
-
-
-  Future<void> _checkOnboardingStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool? hasSeenOnboarding = prefs.getBool('hasSeenOnboarding');
-    setState(() {
-      _hasSeenOnboarding = hasSeenOnboarding ?? false;
-      _isLoading = false;
-    });
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(subscriptionProvider.notifier).checkSubscriptionStatus().then((_) {
+        final isPremium = ref.read(subscriptionProvider).isPremiumUser;
+        if (!isPremium) {
+          ref.read(adManagerProvider).showAppOpenAd();
+        }
+      });
+    }
   }
 
-  Future<void> _setOnboardingComplete() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasSeenOnboarding', true);
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const CircularProgressIndicator();
+    final subscriptionState = ref.watch(subscriptionProvider);
+
+    if (subscriptionState.isLoading) {
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      );
     }
 
-    return MaterialApp(
+    final goRouter = ref.watch(goRouterProvider);
+
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      home: _hasSeenOnboarding
-          ? _buildAuthStream()
-          : OnboardingScreen(onFinish: _onFinishOnboarding),
+      title: 'ClassMyte',
+      theme: AppTheme.lightTheme,
+      routerConfig: goRouter,
     );
   }
+}
 
-  void _onFinishOnboarding() {
-    _setOnboardingComplete();
-    setState(() {
-      _hasSeenOnboarding = true;
-    });
-  }
+class AuthGate extends ConsumerWidget {
+  const AuthGate({super.key});
 
-  Widget _buildAuthStream() {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        } else if (snapshot.hasData) {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
+    return authState.when(
+      data: (user) {
+        if (user != null) {
           return const HomePage();
-        } else {
-          return const LoginScreen();
         }
+        return const LoginScreen();
       },
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, s) => Scaffold(
+        body: Center(child: Text('Error: $e')),
+      ),
     );
-  }
-
-   @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _adManager.dispose();
-    super.dispose();
   }
 }
