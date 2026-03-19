@@ -101,6 +101,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       title: 'ClassMyte',
       theme: AppTheme.lightTheme,
       routerConfig: goRouter,
+      builder: (context, child) => GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: child,
+      ),
     );
   }
 }

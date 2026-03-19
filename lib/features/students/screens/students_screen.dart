@@ -2,6 +2,7 @@ import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/students/widgets/add_contact_dialog.dart';
 import 'package:classmyte/features/students/widgets/filter_dialog.dart';
+import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/core/services/functional.dart';
@@ -11,6 +12,7 @@ import 'package:classmyte/features/premium/providers/subscription_providers.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:classmyte/core/services/student_utils.dart'; // Just in case
 
 class StudentContactsScreen extends ConsumerWidget {
   const StudentContactsScreen({super.key});
@@ -21,7 +23,6 @@ class StudentContactsScreen extends ConsumerWidget {
     final filteredStudents = ref.watch(filteredStudentsProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
     final adManager = ref.read(adManagerProvider);
-    final selectedClasses = ref.watch(selectedClassesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -33,14 +34,7 @@ class StudentContactsScreen extends ConsumerWidget {
               studentDataAsync.when(
                 data: (allStudents) => _buildCircleAction(
                   icon: Icons.filter_list,
-                  onTap: () {
-                    FilterDialog.show(
-                      context,
-                      allClasses: getUniqueClasses(allStudents),
-                      selectedClasses: selectedClasses,
-                      onApply: (newClasses) => ref.read(selectedClassesProvider.notifier).state = newClasses,
-                    );
-                  },
+                  onTap: () => FilterSheet.show(context, allStudents),
                 ),
                 error: (_, __) => const SizedBox(),
                 loading: () => const SizedBox(),
@@ -48,9 +42,7 @@ class StudentContactsScreen extends ConsumerWidget {
               const SizedBox(width: 8),
               _buildCircleAction(
                 icon: Icons.add,
-                onTap: () => showAddContactDialog(context, () {
-                  ref.invalidate(studentDataProvider);
-                }),
+                onTap: () => AddContactSheet.show(context, () => ref.invalidate(studentDataProvider)),
               ),
             ],
           ),
@@ -61,18 +53,10 @@ class StudentContactsScreen extends ConsumerWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search students...',
-                        prefixIcon: const Icon(Icons.search),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      ),
+                    child: CustomTextField(
+                      labelText: 'Search',
+                      hintText: 'Search by name or phone...',
+                      prefixIcon: Icons.search,
                       onChanged: (v) => ref.read(studentSearchQueryProvider.notifier).state = v,
                     ),
                   ),

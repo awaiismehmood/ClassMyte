@@ -14,6 +14,8 @@ class CustomTextField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final int maxLines;
+  final TextCapitalization textCapitalization;
+  final ValueChanged<String>? onChanged;
 
   const CustomTextField({
     super.key,
@@ -28,6 +30,8 @@ class CustomTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.maxLines = 1,
+    this.textCapitalization = TextCapitalization.none,
+    this.onChanged,
   });
 
   @override
@@ -54,6 +58,8 @@ class CustomTextField extends StatelessWidget {
           readOnly: readOnly,
           onTap: onTap,
           maxLines: maxLines,
+          textCapitalization: textCapitalization,
+          onChanged: onChanged,
           style: GoogleFonts.outfit(
             fontSize: 16,
             color: AppColors.textPrimary,

@@ -39,17 +39,23 @@ final studentDataProvider = FutureProvider<List<Map<String, String>>>((ref) asyn
 
 final studentSearchQueryProvider = StateProvider<String>((ref) => '');
 final selectedClassesProvider = StateProvider<List<String>>((ref) => []);
+final selectedAdmissionYearProvider = StateProvider<int>((ref) => 0);
+final selectedAgeProvider = StateProvider<int>((ref) => 0);
 
 final filteredStudentsProvider = Provider<List<Map<String, String>>>((ref) {
   final allStudents = ref.watch(studentDataProvider).value ?? [];
   final query = ref.watch(studentSearchQueryProvider);
   final selectedClasses = ref.watch(selectedClassesProvider);
+  final selectedYear = ref.watch(selectedAdmissionYearProvider);
+  final selectedAge = ref.watch(selectedAgeProvider);
 
-  if (query.isEmpty && selectedClasses.isEmpty) return allStudents;
+  if (query.isEmpty && selectedClasses.isEmpty && selectedYear == 0 && selectedAge == 0) return allStudents;
 
   return SearchService.searchStudents(
     allStudents,
     query,
     selectedClasses: selectedClasses,
+    selectedYear: selectedYear,
+    selectedAge: selectedAge,
   );
 });

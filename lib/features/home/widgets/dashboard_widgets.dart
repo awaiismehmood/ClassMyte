@@ -54,7 +54,7 @@ Widget buildHomeScreen(BuildContext context) {
         children: [
           _buildDualColumnCard(
             context,
-            'WP Non-Contact',
+            'My contacts',
             Icons.person_add_disabled_outlined,
             Colors.blue,
             onTap: () => context.push('/students'),
@@ -68,7 +68,7 @@ Widget buildHomeScreen(BuildContext context) {
           ),
           _buildDualColumnCard(
             context,
-            'Group Sender',
+            'Group or Category',
             Icons.groups_outlined,
             Colors.pink,
             onTap: () => context.push('/classes'),
@@ -84,48 +84,14 @@ Widget buildHomeScreen(BuildContext context) {
             'Manage Templates',
             Icons.dashboard_customize_outlined,
             Colors.teal,
-            onTap: () {
-              // Template placeholder
-            },
+            onTap: () => context.push('/manage-templates'),
           ),
           _buildDualColumnCard(
             context,
             'Personalize Msg',
             Icons.edit_note_outlined,
             Colors.purple,
-            onTap: () => context.push('/sms'),
-          ),
-        ],
-      ),
-      const SizedBox(height: 32),
-
-      // Features Section
-      _buildSectionTitle('Features'),
-      const SizedBox(height: 16),
-      Row(
-        children: [
-          _buildQuickCard(
-            context,
-            'Chat Reports',
-            Icons.insert_chart_outlined,
-            Colors.blue,
-            onTap: () => context.push('/data-management'),
-          ),
-          const SizedBox(width: 12),
-          _buildQuickCard(
-            context,
-            'WP Call Block',
-            Icons.phone_disabled_outlined,
-            Colors.purple,
-            onTap: () => context.push('/settings'),
-          ),
-          const SizedBox(width: 12),
-          _buildQuickCard(
-            context,
-            'Unsubscriber List',
-            Icons.person_off_outlined,
-            Colors.red,
-            onTap: () => context.push('/students'),
+            onTap: () => context.push('/personalize-message'),
           ),
         ],
       ),

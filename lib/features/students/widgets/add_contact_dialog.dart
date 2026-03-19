@@ -1,246 +1,211 @@
-﻿// ignore_for_file: use_build_context_synchronously
-
 import 'package:classmyte/core/data/add_contacts.dart';
 import 'package:classmyte/core/data/data_retrieval.dart';
+import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
+import 'package:classmyte/core/widgets/custom_button.dart';
+import 'package:classmyte/core/widgets/custom_snackbar.dart';
+import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class StudentDialogNotifier {
-  ValueNotifier<String> name = ValueNotifier('');
-  ValueNotifier<String> phoneNumber = ValueNotifier('');
-  ValueNotifier<String> fatherName = ValueNotifier('');
-  ValueNotifier<String> dob = ValueNotifier('');
-  ValueNotifier<String> admissionDate = ValueNotifier('');
-  ValueNotifier<String> altNumber = ValueNotifier('');
-  ValueNotifier<String> selectedClass = ValueNotifier('');
-  ValueNotifier<String> typedClass = ValueNotifier('');
-}
+class AddContactSheet extends ConsumerStatefulWidget {
+  final VoidCallback onRefresh;
+  const AddContactSheet({super.key, required this.onRefresh});
 
-void selectDate(
-    BuildContext context, ValueNotifier<String> dateNotifier) async {
-  DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: DateTime.now(),
-    firstDate: DateTime(1900),
-    lastDate: DateTime(2100),
-  );
-  if (picked != null) {
-    dateNotifier.value = "${picked.toLocal()}".split(' ')[0];
+  static void show(BuildContext context, VoidCallback onRefresh) {
+    CustomBottomSheet.show(
+      context,
+      title: 'Add New Student',
+      child: AddContactSheet(onRefresh: onRefresh),
+    );
   }
+
+  @override
+  ConsumerState<AddContactSheet> createState() => _AddContactSheetState();
 }
 
-void showAddContactDialog(BuildContext context, Function refreshContacts,
-    {Map<String, String>? student}) {
-  final notifier = StudentDialogNotifier();
+class _AddContactSheetState extends ConsumerState<AddContactSheet> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController fatherController = TextEditingController();
   final TextEditingController altNumberController = TextEditingController();
-  final dobController = TextEditingController();
-  final admissionDateController = TextEditingController();
+  final TextEditingController dobController = TextEditingController();
+  final TextEditingController admissionDateController = TextEditingController();
+  final TextEditingController classController = TextEditingController();
 
-  if (student != null) {
-    nameController.text = student['name'] ?? '';
-    phoneController.text = student['phoneNumber'] ?? '';
-    fatherController.text = student['fatherName'] ?? '';
-    notifier.dob.value = student['DOB'] ?? '';
-    notifier.admissionDate.value = student['Admission Date'] ?? '';
-    altNumberController.text = student['altNumber'] ?? '';
-    notifier.selectedClass.value = student['class'] ?? '';
+  String? selectedClass;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    fatherController.dispose();
+    altNumberController.dispose();
+    dobController.dispose();
+    admissionDateController.dispose();
+    classController.dispose();
+    super.dispose();
   }
 
-  // Sync ValueNotifier changes with controllers
-  notifier.dob.addListener(() {
-    dobController.text = notifier.dob.value;
-  });
-  notifier.admissionDate.addListener(() {
-    admissionDateController.text = notifier.admissionDate.value;
-  });
+  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1960),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      controller.text = "${picked.toLocal()}".split(' ')[0];
+    }
+  }
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return FutureBuilder<List<Map<String, String>>>(
-        future: StudentData.getStudentData(),
-        builder: (context, snapshot) {
-          // Handle loading state
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const AlertDialog(
-              title: Text('Loading....'),
-              content: SizedBox(
-                width: 150,
-                height: 150,
-                child:
-                    Center(child: CircularProgressIndicator(strokeWidth: 4.0)),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: Text('Failed to load classes: ${snapshot.error}'),
-              actions: <Widget>[
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          } else {
-            List<Map<String, String>> allStudents = snapshot.data ?? [];
-            List<String> allClasses = allStudents
-                .map((student) => student['class'] ?? '')
-                .toSet()
-                .toList();
-            return AlertDialog(
-              title: const Text('Add Contact'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Name input
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Name'),
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: ValueListenableBuilder<String>(
-                            valueListenable: notifier.selectedClass,
-                            builder: (context, selectedClassValue, child) {
-                              return DropdownButtonFormField<String>(
-                                initialValue: selectedClassValue.isNotEmpty
-                                    ? selectedClassValue
-                                    : null,
-                                onChanged: (String? newValue) {
-                                  if (newValue != null) {
-                                    notifier.selectedClass.value = newValue;
-                                    notifier.typedClass.value = '';
-                                  }
-                                },
-                                items: allClasses.map((classItem) {
-                                  return DropdownMenuItem<String>(
-                                    value: classItem,
-                                    child: Text(classItem),
-                                  );
-                                }).toList(),
-                                decoration:
-                                    const InputDecoration(labelText: 'Class'),
-                                isExpanded: true,
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 2,
-                          child: ValueListenableBuilder<String>(
-                            valueListenable: notifier.typedClass,
-                            builder: (context, typedClassValue, child) {
-                              return TextFormField(
-                                onChanged: (value) {
-                                  notifier.typedClass.value = value;
-                                  notifier.selectedClass.value = '';
-                                },
-                                decoration: const InputDecoration(
-                                    labelText: 'New Class'),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextField(
-                      controller: phoneController,
-                      decoration:
-                          const InputDecoration(labelText: 'Phone Number'),
-                      keyboardType: TextInputType.phone,
-                    ),
-                    TextField(
-                      controller: fatherController,
-                      decoration:
-                          const InputDecoration(labelText: 'Father Name'),
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    TextField(
-                      onTap: () => selectDate(context, notifier.dob),
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Date of Birth',
-                        suffixIcon: Icon(Icons.calendar_today),
-                      ),
-                      // controller: TextEditingController(text: notifier.dob.value),
-                      controller: dobController,
-                    ),
-                    TextField(
-                      onTap: () => selectDate(context, notifier.admissionDate),
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Admission Date',
-                        suffixIcon: Icon(Icons.calendar_today),
-                      ),
-                      // controller: TextEditingController(text: notifier.admissionDate.value),
-                      controller: admissionDateController,
-                    ),
-                    TextField(
-                      controller: altNumberController,
-                      decoration:
-                          const InputDecoration(labelText: 'Alt Number'),
-                      keyboardType: TextInputType.phone,
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    if (nameController.text.isEmpty ||
-                        phoneController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('Name and Phone Number cannot be empty')),
-                      );
-                      return;
-                    }
+  Future<void> _saveContact() async {
+    if (nameController.text.isEmpty || phoneController.text.isEmpty) {
+      CustomSnackBar.showError(context, 'Name and Phone are required');
+      return;
+    }
 
-                    String finalClass = notifier.typedClass.value.isNotEmpty
-                        ? notifier.typedClass.value
-                        : notifier.selectedClass.value;
-                    AddContactService.addContact(
-                      nameController.text,
-                      finalClass,
-                      phoneController.text,
-                      fatherController.text,
-                      notifier.dob.value,
-                      notifier.admissionDate.value,
-                      altNumberController.text,
-                    ).then((_) {
-                      refreshContacts();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Contact added successfully')),
-                      );
-                      Navigator.of(context).pop();
-                    }).catchError((error) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('Failed to add contact: $error')),
-                      );
-                    });
-                  },
-                  child: const Text('Save'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-              ],
-            );
-          }
-        },
+    final finalClass = classController.text.isNotEmpty ? classController.text : selectedClass;
+    if (finalClass == null || finalClass.isEmpty) {
+      CustomSnackBar.showError(context, 'Please select or enter a class');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await AddContactService.addContact(
+        nameController.text,
+        finalClass,
+        phoneController.text,
+        fatherController.text,
+        dobController.text,
+        admissionDateController.text,
+        altNumberController.text,
       );
-    },
-  );
+      widget.onRefresh();
+      if (mounted) {
+        CustomSnackBar.showSuccess(context, 'Student added successfully');
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) CustomSnackBar.showError(context, 'Error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, String>>>(
+      future: StudentData.getStudentData(),
+      builder: (context, snapshot) {
+        List<String> allClasses = [];
+        if (snapshot.hasData) {
+          allClasses = snapshot.data!.map((s) => s['class'] ?? '').toSet().where((c) => c.isNotEmpty).toList();
+        }
+
+        return Column(
+          children: [
+            CustomTextField(
+              labelText: 'Full Name',
+              hintText: 'Enter student name',
+              prefixIcon: Icons.person_outline,
+              controller: nameController,
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedClass,
+                    hint: Text('Select Class', style: GoogleFonts.outfit(fontSize: 14)),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: AppColors.primary.withOpacity(0.05),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                    ),
+                    items: allClasses.map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.outfit()))).toList(),
+                    onChanged: (v) => setState(() {
+                      selectedClass = v;
+                      if (v != null) classController.clear();
+                    }),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CustomTextField(
+                    labelText: 'New Class',
+                    hintText: 'Or type new',
+                    controller: classController,
+                    onChanged: (v) {
+                      if (v.isNotEmpty) setState(() => selectedClass = null);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              labelText: 'Phone Number',
+              hintText: 'Enter mobile number',
+              prefixIcon: Icons.phone_outlined,
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              labelText: 'Father Name',
+              hintText: "Enter father's name",
+              prefixIcon: Icons.family_restroom_outlined,
+              controller: fatherController,
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomTextField(
+                    labelText: 'DOB',
+                    hintText: 'Select date',
+                    prefixIcon: Icons.cake_outlined,
+                    controller: dobController,
+                    readOnly: true,
+                    onTap: () => _selectDate(context, dobController),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CustomTextField(
+                    labelText: 'Admission Date',
+                    hintText: 'Select date',
+                    prefixIcon: Icons.calendar_today_outlined,
+                    controller: admissionDateController,
+                    readOnly: true,
+                    onTap: () => _selectDate(context, admissionDateController),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              labelText: 'Alternate Number',
+              hintText: 'Optional contact',
+              prefixIcon: Icons.phone_iphone_outlined,
+              controller: altNumberController,
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 32),
+            CustomButton(
+              text: _isLoading ? 'Saving...' : 'Save Student',
+              isLoading: _isLoading,
+              onPressed: _saveContact,
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

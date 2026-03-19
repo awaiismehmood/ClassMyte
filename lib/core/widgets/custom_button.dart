@@ -8,6 +8,7 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final bool isSecondary;
   final IconData? icon;
+  final Color? color;
 
   const CustomButton({
     super.key,
@@ -16,6 +17,7 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.isSecondary = false,
     this.icon,
+    this.color,
   });
 
   @override
@@ -24,12 +26,12 @@ class CustomButton extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSecondary ? Colors.white : AppColors.primary,
-          foregroundColor: isSecondary ? AppColors.primary : Colors.white,
-          side: isSecondary ? BorderSide(color: AppColors.primary, width: 2) : BorderSide.none,
+          backgroundColor: color ?? (isSecondary ? Colors.white : AppColors.primary),
+          foregroundColor: isSecondary ? (color ?? AppColors.primary) : Colors.white,
+          side: isSecondary ? BorderSide(color: color ?? AppColors.primary, width: 2) : BorderSide.none,
           padding: const EdgeInsets.symmetric(vertical: 16),
           elevation: isSecondary ? 0 : 4,
-          shadowColor: isSecondary ? null : AppColors.primary.withOpacity(0.4),
+          shadowColor: isSecondary ? null : (color ?? AppColors.primary).withOpacity(0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

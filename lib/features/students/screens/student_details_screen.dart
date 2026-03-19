@@ -1,8 +1,8 @@
 import 'package:classmyte/core/data/edit_contacts.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
-import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/features/students/models/student_edit_state.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
+import 'package:classmyte/core/services/student_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -136,7 +136,7 @@ class StudentDetailsScreen extends ConsumerWidget {
                           _buildEditableTile(ref, 'Alternate#', state.altNumber,
                               'altNumber', state.isEditable,
                               isPhone: true),
-                          _buildDateTile(context, ref, 'Date of Birth',
+                          _buildDateTile(context, ref, 'Date of Birth (Age: ${StudentUtils.calculateAge(state.dob)})',
                               state.dob, 'dob', state.isEditable),
                           _buildDateTile(
                               context,

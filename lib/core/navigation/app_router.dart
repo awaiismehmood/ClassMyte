@@ -10,6 +10,8 @@ import 'package:classmyte/features/students/screens/student_details_screen.dart'
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/features/classes/screens/classes_screen.dart';
 import 'package:classmyte/features/sms/screens/sms_screen.dart';
+import 'package:classmyte/features/sms/screens/manage_templates_screen.dart';
+import 'package:classmyte/features/sms/screens/personalize_message_screen.dart';
 import 'package:classmyte/features/settings/screens/settings_screen.dart';
 import 'package:classmyte/features/settings/screens/contact_us_screen.dart';
 import 'package:classmyte/features/settings/screens/about_screen.dart';
@@ -82,6 +84,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/sms',
         name: 'sms',
         builder: (context, state) => const NewMessageScreen(),
+      ),
+      GoRoute(
+        path: '/manage-templates',
+        name: 'manage-templates',
+        builder: (context, state) => const ManageTemplatesScreen(),
+      ),
+      GoRoute(
+        path: '/personalize-message',
+        name: 'personalize-message',
+        builder: (context, state) => const PersonalizeMessageScreen(),
       ),
       GoRoute(
         path: '/settings',

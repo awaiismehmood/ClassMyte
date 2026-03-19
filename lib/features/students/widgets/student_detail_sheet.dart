@@ -4,7 +4,7 @@ import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/features/students/models/student_edit_state.dart';
-import 'package:classmyte/core/providers/providers.dart';
+import 'package:classmyte/core/services/student_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,7 +23,6 @@ class StudentDetailSheet extends ConsumerWidget {
   }
 
   void _deleteStudent(BuildContext context, WidgetRef ref) async {
-    // Confirmation Dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -61,7 +60,6 @@ class StudentDetailSheet extends ConsumerWidget {
     ref.read(studentEditProvider(student).notifier).toggleEditable();
     ref.read(studentEditProvider(student).notifier).setLoading(false);
     ref.invalidate(studentDataProvider);
-    // Optionally close or stay. The user said "the save does this too" implying it might finish the task.
   }
 
   void _selectDate(BuildContext context, WidgetRef ref, String field) async {
@@ -83,7 +81,6 @@ class StudentDetailSheet extends ConsumerWidget {
 
     return Column(
       children: [
-        // Header info with Edit/Delete buttons
         Row(
           children: [
             CircleAvatar(
@@ -111,7 +108,6 @@ class StudentDetailSheet extends ConsumerWidget {
                 ],
               ),
             ),
-            // Edit Button
             IconButton(
               icon: Icon(state.isEditable ? Icons.check_circle : Icons.edit_note, color: state.isEditable ? Colors.green : AppColors.primary, size: 28),
               onPressed: () {
@@ -122,7 +118,6 @@ class StudentDetailSheet extends ConsumerWidget {
                 }
               },
             ),
-            // Delete Button
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 28),
               onPressed: () => _deleteStudent(context, ref),
@@ -130,8 +125,6 @@ class StudentDetailSheet extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 32),
-
-        // Detail Fields
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.02), borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.primary.withOpacity(0.05))),
@@ -142,14 +135,13 @@ class StudentDetailSheet extends ConsumerWidget {
               _buildField(ref, 'Phone#', state.phoneNumber, 'phoneNumber', state.isEditable, isPhone: true),
               _buildField(ref, 'Alt#', state.altNumber, 'altNumber', state.isEditable, isPhone: true),
               _buildField(ref, 'Father Name', state.fatherName, 'fatherName', state.isEditable),
-              _buildDateField(context, ref, 'DOB', state.dob, 'dob', state.isEditable),
+              _buildDateField(context, ref, 'DOB', state.dob, 'dob', state.isEditable, 
+                trailing: Text('Age: ${StudentUtils.calculateAge(state.dob)}', style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold))),
               _buildDateField(context, ref, 'Admission Date', state.admissionDate, 'admissionDate', state.isEditable),
             ],
           ),
         ),
         const SizedBox(height: 32),
-
-        // Optional Save Button at the bottom if in edit mode
         if (state.isEditable)
           CustomButton(
             text: state.isLoading ? 'Saving...' : 'Save Updates',
@@ -189,13 +181,19 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildDateField(BuildContext context, WidgetRef ref, String label, String value, String field, bool isEditable) {
+  Widget _buildDateField(BuildContext context, WidgetRef ref, String label, String value, String field, bool isEditable, {Widget? trailing}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+              if (trailing != null) trailing,
+            ],
+          ),
           const SizedBox(height: 4),
           GestureDetector(
             onTap: isEditable ? () => _selectDate(context, ref, field) : null,

@@ -1,25 +1,30 @@
-﻿import 'package:classmyte/core/services/filtering.dart';
+import 'package:classmyte/core/services/filtering.dart';
 
 class SearchService {
   static List<Map<String, String>> searchStudents(
     List<Map<String, String>> students,
     String query, {
     List<String>? selectedClasses,
+    int? selectedYear,
+    int? selectedAge,
   }) {
-    // Filter by classes if selectedClasses is not null and not empty
-    List<Map<String, String>> filteredStudents = students;
-    if (selectedClasses != null && selectedClasses.isNotEmpty) {
-      filteredStudents =
-          FilteringService.filterByClasses(students, selectedClasses);
-    }
+    // Apply filtering
+    List<Map<String, String>> filteredStudents = FilteringService.filterStudents(
+      students,
+      selectedClasses: selectedClasses,
+      selectedYear: selectedYear,
+      selectedAge: selectedAge,
+    );
 
     if (query.isNotEmpty) {
+      final lowercaseQuery = query.toLowerCase();
       return filteredStudents.where((student) {
-        return student['name']!.toLowerCase().contains(query.toLowerCase());
+        final name = student['name']?.toLowerCase() ?? '';
+        final phone = student['phoneNumber']?.toLowerCase() ?? '';
+        return name.contains(lowercaseQuery) || phone.contains(lowercaseQuery);
       }).toList();
     } else {
       return filteredStudents;
     }
   }
 }
-

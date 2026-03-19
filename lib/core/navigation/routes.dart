@@ -1,4 +1,4 @@
-﻿import 'package:classmyte/features/classes/classes.dart';
+import 'package:classmyte/features/classes/screens/classes_screen.dart';
 import 'package:classmyte/features/sms/screens/sms_screen.dart';
 import 'package:classmyte/features/students/screens/students_screen.dart';
 
