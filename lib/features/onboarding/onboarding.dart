@@ -1,4 +1,4 @@
-﻿import 'package:classmyte/features/onboarding/terms_and_conditions.dart';
+﻿import 'package:classmyte/features/onboarding/screens/terms_and_conditions_screen.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -40,7 +40,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildOnboardingPage(BuildContext context,
-      {required String image, required String title, required String description}) {
+      {required String image,
+      required String title,
+      required String description}) {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
@@ -81,83 +83,85 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-Widget _buildOnboardingPageWithCheckbox(BuildContext context,
-    {required String image, required String title, required String description}) {
-  return Container(
-    decoration: const BoxDecoration(
+  Widget _buildOnboardingPageWithCheckbox(BuildContext context,
+      {required String image,
+      required String title,
+      required String description}) {
+    return Container(
+      decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/background.jpg'),
           fit: BoxFit.cover,
           opacity: 0.8,
         ),
       ),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Image.asset(
-          image,
-          height: 250,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.asset(
+            image,
+            height: 250,
           ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
-          child: Text(
-            description,
-            textAlign: TextAlign.center,
+          const SizedBox(height: 20),
+          Text(
+            title,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Checkbox(
-              value: isAgreed,
-              onChanged: (value) {
-                setState(() {
-                  isAgreed = value ?? false;
-                });
-              },
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+            child: Text(
+              description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+              ),
             ),
-            const Text(
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Checkbox(
+                value: isAgreed,
+                onChanged: (value) {
+                  setState(() {
+                    isAgreed = value ?? false;
+                  });
+                },
+              ),
+              const Text(
                 'I agree to the ',
-    
-              style: TextStyle(
-                fontSize: 14,
+                style: TextStyle(
+                  fontSize: 14,
+                ),
               ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const TermsAndConditionsScreen(),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const TermsAndConditionsScreen(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Terms and Conditions',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue,
                   ),
-                );
-              },
-              child: const Text(
-               'Terms and Conditions',
-                style: TextStyle(fontSize: 14, color: Colors.blue,),
+                ),
               ),
-            ),
-           
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,12 +187,14 @@ Widget _buildOnboardingPageWithCheckbox(BuildContext context,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton( onPressed: currentIndex > 0
-                      ? () => _pageController.previousPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          )
-                      : null, icon: const Icon( Icons.arrow_back_ios)),
+                IconButton(
+                    onPressed: currentIndex > 0
+                        ? () => _pageController.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            )
+                        : null,
+                    icon: const Icon(Icons.arrow_back_ios)),
                 Row(
                   children: List.generate(
                     _buildPages(context).length,
@@ -211,16 +217,17 @@ Widget _buildOnboardingPageWithCheckbox(BuildContext context,
                                 widget.onFinish();
                               }
                             : null,
-                        child: const Text('Get Started', style: TextStyle(color: Colors.black),),
-                      )
-                    :
-
-                      IconButton( 
-                       onPressed: () => _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
+                        child: const Text(
+                          'Get Started',
+                          style: TextStyle(color: Colors.black),
                         ),
-                        icon: const Icon( Icons.arrow_forward_ios)),
+                      )
+                    : IconButton(
+                        onPressed: () => _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            ),
+                        icon: const Icon(Icons.arrow_forward_ios)),
               ],
             ),
           ),
@@ -229,4 +236,3 @@ Widget _buildOnboardingPageWithCheckbox(BuildContext context,
     );
   }
 }
-

@@ -3,6 +3,7 @@ import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/providers/providers.dart';
+import 'package:classmyte/features/auth/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,7 +13,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -26,10 +28,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     ref.read(forgotPasswordLoadingProvider.notifier).state = true;
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text.trim());
-      if (mounted) CustomSnackBar.showInfo(context, 'Reset link sent! Please check your inbox.');
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: emailController.text.trim());
+      if (mounted)
+        CustomSnackBar.showInfo(
+            context, 'Reset link sent! Please check your inbox.');
     } catch (error) {
-      if (mounted) CustomSnackBar.showError(context, 'Error occurred: ${error.toString()}');
+      if (mounted)
+        CustomSnackBar.showError(
+            context, 'Error occurred: ${error.toString()}');
     } finally {
       ref.read(forgotPasswordLoadingProvider.notifier).state = false;
     }

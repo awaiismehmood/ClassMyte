@@ -7,8 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/home/home_screen.dart';
-import 'features/auth/login.dart';
+import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +42,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Initialize app logic after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initAppLogic();
@@ -53,7 +52,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Future<void> _initAppLogic() async {
     await ref.read(subscriptionProvider.notifier).checkSubscriptionStatus();
     final isPremium = ref.read(subscriptionProvider).isPremiumUser;
-    
+
     if (!isPremium) {
       final adManager = ref.read(adManagerProvider);
       adManager.loadAppOpenAd();
@@ -65,7 +64,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      ref.read(subscriptionProvider.notifier).checkSubscriptionStatus().then((_) {
+      ref
+          .read(subscriptionProvider.notifier)
+          .checkSubscriptionStatus()
+          .then((_) {
         final isPremium = ref.read(subscriptionProvider).isPremiumUser;
         if (!isPremium) {
           ref.read(adManagerProvider).showAppOpenAd();
@@ -99,30 +101,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       title: 'ClassMyte',
       theme: AppTheme.lightTheme,
       routerConfig: goRouter,
-    );
-  }
-}
-
-class AuthGate extends ConsumerWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-
-    return authState.when(
-      data: (user) {
-        if (user != null) {
-          return const HomePage();
-        }
-        return const LoginScreen();
-      },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, s) => Scaffold(
-        body: Center(child: Text('Error: $e')),
-      ),
     );
   }
 }

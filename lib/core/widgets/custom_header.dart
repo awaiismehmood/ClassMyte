@@ -85,3 +85,52 @@ class CustomHeader extends StatelessWidget {
     );
   }
 }
+
+// Separate widget for the Premium Badge
+class PremiumBadge extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isPro;
+
+  const PremiumBadge({super.key, required this.onTap, this.isPro = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFB300), Color(0xFFFF8F00)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.amber.withOpacity(0.35),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.workspace_premium, color: Colors.white, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              isPro ? "PRO" : "GO PRO",
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

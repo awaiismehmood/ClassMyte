@@ -1,18 +1,19 @@
 import 'package:classmyte/core/providers/providers.dart';
-import 'package:classmyte/features/auth/forgetPassword.dart';
-import 'package:classmyte/features/auth/login.dart';
-import 'package:classmyte/features/auth/signup.dart';
-import 'package:classmyte/features/home/home_screen.dart';
-import 'package:classmyte/features/premium/subscription_screen.dart';
-import 'package:classmyte/features/data_sync/screen_dn.dart';
-import 'package:classmyte/features/students/students.dart';
-import 'package:classmyte/features/students/student_details.dart';
-import 'package:classmyte/features/classes/classes.dart';
-import 'package:classmyte/features/sms/sms.dart';
-import 'package:classmyte/features/settings/settings.dart';
-import 'package:classmyte/features/settings/contact_us.dart';
-import 'package:classmyte/features/settings/about.dart';
-import 'package:classmyte/features/settings/privacy_policy.dart';
+import 'package:classmyte/features/auth/screens/forgot_password_screen.dart';
+import 'package:classmyte/features/auth/screens/login_screen.dart';
+import 'package:classmyte/features/auth/screens/signup_screen.dart';
+import 'package:classmyte/features/home/screens/home_screen.dart';
+import 'package:classmyte/features/premium/screens/subscription_screen.dart';
+import 'package:classmyte/features/data_sync/screens/data_management_screen.dart';
+import 'package:classmyte/features/students/screens/students_screen.dart';
+import 'package:classmyte/features/students/screens/student_details_screen.dart';
+import 'package:classmyte/features/students/providers/student_providers.dart';
+import 'package:classmyte/features/classes/screens/classes_screen.dart';
+import 'package:classmyte/features/sms/screens/sms_screen.dart';
+import 'package:classmyte/features/settings/screens/settings_screen.dart';
+import 'package:classmyte/features/settings/screens/contact_us_screen.dart';
+import 'package:classmyte/features/settings/screens/about_screen.dart';
+import 'package:classmyte/features/settings/screens/privacy_policy_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,34 +30,42 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/login',
+        name: 'login',
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/signup',
+        name: 'signup',
         builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
         path: '/forgot-password',
+        name: 'forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/home',
+        name: 'home',
         builder: (context, state) => const HomePage(),
       ),
       GoRoute(
         path: '/subscription',
+        name: 'subscription',
         builder: (context, state) => const SubscriptionScreen(),
       ),
       GoRoute(
         path: '/data-management',
+        name: 'data-management',
         builder: (context, state) => const UploadDownloadScreen(),
       ),
       GoRoute(
         path: '/students',
+        name: 'students',
         builder: (context, state) => const StudentContactsScreen(),
         routes: [
           GoRoute(
             path: 'details',
+            name: 'student-details',
             builder: (context, state) {
               final student = state.extra as Map<String, String>;
               return StudentDetailsScreen(student: student);
@@ -66,26 +75,32 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/classes',
+        name: 'classes',
         builder: (context, state) => const ClassScreen(),
       ),
       GoRoute(
         path: '/sms',
+        name: 'sms',
         builder: (context, state) => const NewMessageScreen(),
       ),
       GoRoute(
         path: '/settings',
+        name: 'settings',
         builder: (context, state) => const SettingsScreen(),
         routes: [
-           GoRoute(
+          GoRoute(
             path: 'contact-us',
+            name: 'contact-us',
             builder: (context, state) => const ContactUsScreen(),
           ),
           GoRoute(
             path: 'about',
+            name: 'about',
             builder: (context, state) => const AboutScreen(),
           ),
           GoRoute(
             path: 'privacy',
+            name: 'privacy',
             builder: (context, state) => const PrivacyPolicyScreen(),
           ),
         ],
@@ -93,17 +108,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     ],
     redirect: (context, state) {
       final isLoggedIn = authState.asData?.value != null;
-      final isAuthRoute = state.matchedLocation == '/login' || 
-                         state.matchedLocation == '/signup' || 
-                         state.matchedLocation == '/forgot-password';
+      final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/signup' || state.matchedLocation == '/forgot-password';
 
-      if (!isLoggedIn && !isAuthRoute) {
-        return '/login';
-      }
-
-      if (isLoggedIn && isAuthRoute) {
-        return '/home';
-      }
+      if (!isLoggedIn && !isAuthRoute) return '/login';
+      if (isLoggedIn && isAuthRoute) return '/home';
 
       return null;
     },
@@ -119,9 +127,7 @@ class AuthGate extends ConsumerWidget {
 
     return authState.when(
       data: (user) {
-        if (user != null) {
-          return const HomePage();
-        }
+        if (user != null) return const HomePage();
         return const LoginScreen();
       },
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),

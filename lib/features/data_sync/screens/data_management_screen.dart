@@ -1,7 +1,9 @@
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
-import 'package:classmyte/features/data_sync/download.dart';
-import 'package:classmyte/features/data_sync/upload.dart';
+import 'package:classmyte/features/data_sync/data/excel_export.dart';
+import 'package:classmyte/features/data_sync/data/excel_import.dart';
+
+import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classmyte/core/providers/providers.dart';
@@ -23,7 +25,8 @@ class UploadDownloadScreen extends ConsumerWidget {
           const CustomHeader(title: 'Data Management'),
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+              decoration:
+                  const BoxDecoration(gradient: AppColors.backgroundGradient),
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : Padding(
@@ -35,14 +38,19 @@ class UploadDownloadScreen extends ConsumerWidget {
                             context,
                             icon: Icons.cloud_download_outlined,
                             label: 'Export to Excel',
-                            description: 'Download your student data as an Excel file.',
+                            description:
+                                'Download your student data as an Excel file.',
                             onTap: () async {
                               if (!subscriptionState.isPremiumUser) {
                                 context.push('/subscription');
                               } else {
-                                ref.read(paymentProcessingProvider.notifier).state = true;
+                                ref
+                                    .read(paymentProcessingProvider.notifier)
+                                    .state = true;
                                 await ExcelExport().exportToExcel();
-                                ref.read(paymentProcessingProvider.notifier).state = false;
+                                ref
+                                    .read(paymentProcessingProvider.notifier)
+                                    .state = false;
                               }
                             },
                           ),
@@ -51,14 +59,19 @@ class UploadDownloadScreen extends ConsumerWidget {
                             context,
                             icon: Icons.cloud_upload_outlined,
                             label: 'Import from Excel',
-                            description: 'Upload and sync student data from an Excel file.',
+                            description:
+                                'Upload and sync student data from an Excel file.',
                             onTap: () async {
                               if (!subscriptionState.isPremiumUser) {
                                 context.push('/subscription');
                               } else {
-                                ref.read(paymentProcessingProvider.notifier).state = true;
+                                ref
+                                    .read(paymentProcessingProvider.notifier)
+                                    .state = true;
                                 await ExcelImport().importFromExcel();
-                                ref.read(paymentProcessingProvider.notifier).state = false;
+                                ref
+                                    .read(paymentProcessingProvider.notifier)
+                                    .state = false;
                               }
                             },
                           ),
@@ -73,7 +86,10 @@ class UploadDownloadScreen extends ConsumerWidget {
   }
 
   Widget _buildSyncCard(BuildContext context,
-      {required IconData icon, required String label, required String description, required VoidCallback onTap}) {
+      {required IconData icon,
+      required String label,
+      required String description,
+      required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
@@ -105,9 +121,15 @@ class UploadDownloadScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  Text(label,
+                      style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
-                  Text(description, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary)),
+                  Text(description,
+                      style: GoogleFonts.outfit(
+                          fontSize: 13, color: AppColors.textSecondary)),
                 ],
               ),
             ),

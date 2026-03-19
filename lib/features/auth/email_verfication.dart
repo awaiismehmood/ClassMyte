@@ -1,4 +1,4 @@
-﻿import 'package:classmyte/features/auth/login.dart';
+﻿import 'package:classmyte/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class VerificationScreen extends StatelessWidget {
@@ -20,9 +20,11 @@ class VerificationScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                 Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()), // Replace with your main screen
-      ); // Go back to login screen
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const LoginScreen()), // Replace with your main screen
+                ); // Go back to login screen
               },
               child: const Text('Back to Login'),
             ),
@@ -32,4 +34,3 @@ class VerificationScreen extends StatelessWidget {
     );
   }
 }
-

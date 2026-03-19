@@ -1,6 +1,8 @@
 import 'package:classmyte/core/theme/app_colors.dart';
-import 'package:classmyte/features/home/home_widgets.dart';
+import 'package:classmyte/features/home/widgets/dashboard_widgets.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
+import 'package:classmyte/core/providers/providers.dart';
+import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,9 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final subscriptionState = ref.watch(subscriptionProvider);
+    final isPremium = subscriptionState.isPremiumUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -24,6 +29,11 @@ class HomePage extends ConsumerWidget {
               },
             ),
             rightActions: [
+              PremiumBadge(
+                isPro: isPremium,
+                onTap: () => context.push('/subscription'),
+              ),
+              const SizedBox(width: 12),
               _buildCircleAction(
                 icon: Icons.settings_outlined,
                 onTap: () => context.push('/settings'),

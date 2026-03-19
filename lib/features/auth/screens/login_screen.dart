@@ -3,58 +3,61 @@ import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/providers/providers.dart';
+import 'package:classmyte/features/auth/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
-class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({super.key});
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignupScreenState extends ConsumerState<SignupScreen> {
-  final TextEditingController nameController = TextEditingController();
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  Future<void> signUpWithEmailAndPassword(BuildContext context) async {
+  Future<void> signInWithEmailAndPassword(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      ref.read(signupLoadingProvider.notifier).state = true;
+      ref.read(loginLoadingProvider.notifier).state = true;
       try {
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
 
-        await userCredential.user?.sendEmailVerification();
-
-        if (mounted) {
-           CustomSnackBar.showInfo(context, 'Verification email sent! Please check your inbox.');
-           context.go('/login');
+        if (userCredential.user != null &&
+            !userCredential.user!.emailVerified) {
+          if (mounted)
+            CustomSnackBar.showError(
+                context, 'Please verify your email before logging in.');
+          FirebaseAuth.instance.signOut();
+          return;
         }
       } on FirebaseAuthException catch (e) {
-        String msg = 'Error occurred during signup';
-        if (e.code == 'email-already-in-use') msg = 'The email is already in use.';
-        if (e.code == 'weak-password') msg = 'The password is too weak.';
+        String msg = 'Incorrect email or password';
+        if (e.code == 'user-not-found') msg = 'No user found with this email.';
+        if (e.code == 'wrong-password') msg = 'Incorrect password.';
         if (mounted) CustomSnackBar.showError(context, msg);
       } catch (error) {
-        if (mounted) CustomSnackBar.showError(context, 'An unexpected error occurred.');
+        if (mounted)
+          CustomSnackBar.showError(context, 'An unexpected error occurred.');
       } finally {
-        ref.read(signupLoadingProvider.notifier).state = false;
+        ref.read(loginLoadingProvider.notifier).state = false;
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(signupLoadingProvider);
-    final isObscure = ref.watch(signupObscureProvider);
+    final isLoading = ref.watch(loginLoadingProvider);
+    final isObscure = ref.watch(loginObscureProvider);
 
     return Scaffold(
       body: Container(
@@ -64,7 +67,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -72,20 +75,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     tag: 'logo',
                     child: Image.asset(
                       'assets/pencil_white.png',
-                      height: 100,
+                      height: 120,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Create Account',
+                    'ClassMyte',
                     style: GoogleFonts.outfit(
-                      fontSize: 32,
+                      fontSize: 36,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 32),
-
+                  const SizedBox(height: 48),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(28.0),
@@ -105,62 +107,78 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          CustomTextField(
-                            labelText: 'Full Name',
-                            hintText: 'Enter your name',
-                            prefixIcon: Icons.person_outline,
-                            controller: nameController,
-                            validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
+                          Text(
+                            'Welcome Back',
+                            style: GoogleFonts.outfit(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            labelText: 'Contact Number',
-                            hintText: 'Enter your phone',
-                            prefixIcon: Icons.phone_outlined,
-                            controller: contactController,
-                            keyboardType: TextInputType.phone,
-                            validator: (v) => v == null || v.isEmpty ? 'Contact is required' : null,
-                          ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 24),
                           CustomTextField(
                             labelText: 'Email Address',
                             hintText: 'Enter your email',
                             prefixIcon: Icons.email_outlined,
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
-                            validator: (v) => v == null || v.isEmpty ? 'Email is required' : null,
+                            validator: (v) => v == null || v.isEmpty
+                                ? 'Email is required'
+                                : null,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           CustomTextField(
                             labelText: 'Password',
-                            hintText: 'Create a password',
+                            hintText: 'Enter your password',
                             prefixIcon: Icons.lock_outline,
                             controller: passwordController,
                             obscureText: isObscure,
                             suffixIcon: IconButton(
-                              icon: Icon(isObscure ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                              onPressed: () => ref.read(signupObscureProvider.notifier).state = !isObscure,
+                              icon: Icon(isObscure
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined),
+                              onPressed: () => ref
+                                  .read(loginObscureProvider.notifier)
+                                  .state = !isObscure,
                             ),
-                            validator: (v) => v == null || v.length < 6 ? 'Min 6 characters required' : null,
+                            validator: (v) => v == null || v.isEmpty
+                                ? 'Password is required'
+                                : null,
                           ),
-                          const SizedBox(height: 32),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => context.push('/forgot-password'),
+                              child: Text(
+                                "Forgot Password?",
+                                style: GoogleFonts.outfit(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           CustomButton(
-                            text: 'Sign Up',
+                            text: 'Sign In',
                             isLoading: isLoading,
-                            onPressed: () => signUpWithEmailAndPassword(context),
+                            onPressed: () =>
+                                signInWithEmailAndPassword(context),
                           ),
                           const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "Already have an account? ",
-                                style: GoogleFonts.outfit(color: AppColors.textSecondary),
+                                "Don't have an account? ",
+                                style: GoogleFonts.outfit(
+                                    color: AppColors.textSecondary),
                               ),
                               GestureDetector(
-                                onTap: () => context.pop(),
+                                onTap: () => context.push('/signup'),
                                 child: Text(
-                                  "Login",
+                                  "Sign Up",
                                   style: GoogleFonts.outfit(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.bold,
@@ -185,10 +203,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   void dispose() {
-    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
-    contactController.dispose();
     super.dispose();
   }
 }
