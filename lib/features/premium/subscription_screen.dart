@@ -1,5 +1,6 @@
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
+import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/premium/payment_logic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,17 +64,21 @@ class SubscriptionScreen extends ConsumerWidget {
     final subscriptionState = ref.watch(subscriptionProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Premium Plans', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: AppColors.primaryGradient)),
-      ),
-      body: Container(
-        color: AppColors.background,
-        child: subscriptionState.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : subscriptionState.isPremiumUser
-                ? _buildPremiumUserView(ref, context, subscriptionState)
-                : _buildSubscriptionOptionsView(ref, context),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const CustomHeader(title: 'Premium Plans'),
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+              child: subscriptionState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : subscriptionState.isPremiumUser
+                      ? _buildPremiumUserView(ref, context, subscriptionState)
+                      : _buildSubscriptionOptionsView(ref, context),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -164,6 +169,13 @@ class SubscriptionScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary.withOpacity(0.05) : Colors.white,
           borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+             BoxShadow(
+              color: Colors.black.withOpacity(isSelected ? 0.08 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
           border: Border.all(color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.1), width: 2),
         ),
         child: Row(

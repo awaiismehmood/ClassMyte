@@ -1,11 +1,12 @@
 import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/data_sync/download.dart';
 import 'package:classmyte/features/data_sync/upload.dart';
-import 'package:classmyte/features/premium/subscription_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classmyte/core/providers/providers.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 class UploadDownloadScreen extends ConsumerWidget {
   const UploadDownloadScreen({super.key});
@@ -16,53 +17,57 @@ class UploadDownloadScreen extends ConsumerWidget {
     final subscriptionState = ref.watch(subscriptionProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Data Management', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: AppColors.primaryGradient)),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildSyncCard(
-                      context,
-                      icon: Icons.cloud_download_outlined,
-                      label: 'Export to Excel',
-                      description: 'Download your student data as an Excel file.',
-                      onTap: () async {
-                        if (!subscriptionState.isPremiumUser) {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
-                        } else {
-                          ref.read(paymentProcessingProvider.notifier).state = true;
-                          await ExcelExport().exportToExcel();
-                          ref.read(paymentProcessingProvider.notifier).state = false;
-                        }
-                      },
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const CustomHeader(title: 'Data Management'),
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildSyncCard(
+                            context,
+                            icon: Icons.cloud_download_outlined,
+                            label: 'Export to Excel',
+                            description: 'Download your student data as an Excel file.',
+                            onTap: () async {
+                              if (!subscriptionState.isPremiumUser) {
+                                context.push('/subscription');
+                              } else {
+                                ref.read(paymentProcessingProvider.notifier).state = true;
+                                await ExcelExport().exportToExcel();
+                                ref.read(paymentProcessingProvider.notifier).state = false;
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          _buildSyncCard(
+                            context,
+                            icon: Icons.cloud_upload_outlined,
+                            label: 'Import from Excel',
+                            description: 'Upload and sync student data from an Excel file.',
+                            onTap: () async {
+                              if (!subscriptionState.isPremiumUser) {
+                                context.push('/subscription');
+                              } else {
+                                ref.read(paymentProcessingProvider.notifier).state = true;
+                                await ExcelImport().importFromExcel();
+                                ref.read(paymentProcessingProvider.notifier).state = false;
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    _buildSyncCard(
-                      context,
-                      icon: Icons.cloud_upload_outlined,
-                      label: 'Import from Excel',
-                      description: 'Upload and sync student data from an Excel file.',
-                      onTap: () async {
-                        if (!subscriptionState.isPremiumUser) {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
-                        } else {
-                          ref.read(paymentProcessingProvider.notifier).state = true;
-                          await ExcelImport().importFromExcel();
-                          ref.read(paymentProcessingProvider.notifier).state = false;
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -73,19 +78,17 @@ class UploadDownloadScreen extends ConsumerWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: Container(
-        width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.04),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
           ],
-          border: Border.all(color: AppColors.primary.withOpacity(0.05), width: 1.5),
         ),
         child: Row(
           children: [
