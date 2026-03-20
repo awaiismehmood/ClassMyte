@@ -54,17 +54,20 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final chipBg = onSurface.withOpacity(0.05);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Filter by Class'),
+        _buildSectionHeader(context, 'Filter by Class'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8.0,
           children: widget.allClasses.map((classValue) {
             final isSelected = tempSelectedClasses.contains(classValue);
             return FilterChip(
-              label: Text(classValue, style: GoogleFonts.outfit(color: isSelected ? Colors.white : AppColors.textSecondary, fontSize: 13)),
+              label: Text(classValue, style: GoogleFonts.outfit(color: isSelected ? Colors.white : onSurface.withOpacity(0.7), fontSize: 13)),
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
@@ -76,71 +79,71 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                 });
               },
               selectedColor: AppColors.primary,
-              backgroundColor: AppColors.primary.withOpacity(0.05),
+              backgroundColor: chipBg,
               showCheckmark: false,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: isSelected ? Colors.transparent : onSurface.withOpacity(0.05))),
             );
           }).toList(),
         ),
         const SizedBox(height: 24),
-        _buildSectionHeader('Admission Year'),
+        _buildSectionHeader(context, 'Admission Year'),
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               ChoiceChip(
-                label: Text('All', style: GoogleFonts.outfit(color: tempSelectedYear == 0 ? Colors.white : AppColors.textSecondary)),
+                label: Text('All', style: GoogleFonts.outfit(color: tempSelectedYear == 0 ? Colors.white : onSurface.withOpacity(0.7))),
                 selected: tempSelectedYear == 0,
                 onSelected: (selected) => setState(() => tempSelectedYear = 0),
                 selectedColor: AppColors.primary,
-                backgroundColor: AppColors.primary.withOpacity(0.05),
+                backgroundColor: chipBg,
                 showCheckmark: false,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: tempSelectedYear == 0 ? Colors.transparent : onSurface.withOpacity(0.05))),
               ),
               const SizedBox(width: 8),
               ...widget.allAdmissionYears.map((year) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
-                  label: Text('$year', style: GoogleFonts.outfit(color: tempSelectedYear == year ? Colors.white : AppColors.textSecondary)),
+                  label: Text('$year', style: GoogleFonts.outfit(color: tempSelectedYear == year ? Colors.white : onSurface.withOpacity(0.7))),
                   selected: tempSelectedYear == year,
                   onSelected: (selected) => setState(() => tempSelectedYear = selected ? year : 0),
                   selectedColor: AppColors.primary,
-                  backgroundColor: AppColors.primary.withOpacity(0.05),
+                  backgroundColor: chipBg,
                   showCheckmark: false,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: tempSelectedYear == year ? Colors.transparent : onSurface.withOpacity(0.05))),
                 ),
               )),
             ],
           ),
         ),
         const SizedBox(height: 24),
-        _buildSectionHeader('Age'),
+        _buildSectionHeader(context, 'Age'),
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               ChoiceChip(
-                label: Text('All', style: GoogleFonts.outfit(color: tempSelectedAge == 0 ? Colors.white : AppColors.textSecondary)),
+                label: Text('All', style: GoogleFonts.outfit(color: tempSelectedAge == 0 ? Colors.white : onSurface.withOpacity(0.7))),
                 selected: tempSelectedAge == 0,
                 onSelected: (selected) => setState(() => tempSelectedAge = 0),
                 selectedColor: AppColors.primary,
-                backgroundColor: AppColors.primary.withOpacity(0.05),
+                backgroundColor: chipBg,
                 showCheckmark: false,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: tempSelectedAge == 0 ? Colors.transparent : onSurface.withOpacity(0.05))),
               ),
               const SizedBox(width: 8),
               ...widget.allAges.map((age) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
-                  label: Text('$age yrs', style: GoogleFonts.outfit(color: tempSelectedAge == age ? Colors.white : AppColors.textSecondary)),
+                  label: Text('$age yrs', style: GoogleFonts.outfit(color: tempSelectedAge == age ? Colors.white : onSurface.withOpacity(0.7))),
                   selected: tempSelectedAge == age,
                   onSelected: (selected) => setState(() => tempSelectedAge = selected ? age : 0),
                   selectedColor: AppColors.primary,
-                  backgroundColor: AppColors.primary.withOpacity(0.05),
+                  backgroundColor: chipBg,
                   showCheckmark: false,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: tempSelectedAge == age ? Colors.transparent : onSurface.withOpacity(0.05))),
                 ),
               )),
             ],
@@ -180,7 +183,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary));
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    return Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface));
   }
 }

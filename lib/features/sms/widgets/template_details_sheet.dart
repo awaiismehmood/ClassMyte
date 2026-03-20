@@ -24,13 +24,16 @@ class TemplateDetailsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (template.title.isNotEmpty) ...[
           Text(
             template.title,
-            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: onSurface),
           ),
           const SizedBox(height: 16),
         ],
@@ -38,13 +41,13 @@ class TemplateDetailsSheet extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: onSurface.withOpacity(0.1)),
           ),
           child: Text(
             template.text,
-            style: GoogleFonts.outfit(fontSize: 16, color: AppColors.textPrimary),
+            style: GoogleFonts.outfit(fontSize: 16, color: onSurface),
           ),
         ),
         const SizedBox(height: 32),

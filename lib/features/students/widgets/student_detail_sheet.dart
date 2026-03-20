@@ -83,6 +83,8 @@ class StudentDetailSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(studentEditProvider(student));
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       children: [
@@ -104,11 +106,11 @@ class StudentDetailSheet extends ConsumerWidget {
                   Text(
                     state.name,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: onSurface),
                   ),
                   Text(
                     'Class ${state.className}',
-                    style: GoogleFonts.outfit(color: AppColors.textSecondary, fontSize: 14),
+                    style: GoogleFonts.outfit(color: onSurface.withOpacity(0.6), fontSize: 14),
                   ),
                 ],
               ),
@@ -132,15 +134,19 @@ class StudentDetailSheet extends ConsumerWidget {
         const SizedBox(height: 32),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.02), borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.primary.withOpacity(0.05))),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.02) : AppColors.primary.withOpacity(0.02), 
+            borderRadius: BorderRadius.circular(24), 
+            border: Border.all(color: onSurface.withOpacity(0.05))
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildField(ref, 'Name', state.name, 'name', state.isEditable),
-              _buildField(ref, 'Class', state.className, 'class', state.isEditable),
-              _buildField(ref, 'Phone#', state.phoneNumber, 'phoneNumber', state.isEditable, isPhone: true),
-              _buildField(ref, 'Alt#', state.altNumber, 'altNumber', state.isEditable, isPhone: true),
-              _buildField(ref, 'Father Name', state.fatherName, 'fatherName', state.isEditable),
+              _buildField(context, ref, 'Name', state.name, 'name', state.isEditable),
+              _buildField(context, ref, 'Class', state.className, 'class', state.isEditable),
+              _buildField(context, ref, 'Phone#', state.phoneNumber, 'phoneNumber', state.isEditable, isPhone: true),
+              _buildField(context, ref, 'Alt#', state.altNumber, 'altNumber', state.isEditable, isPhone: true),
+              _buildField(context, ref, 'Father Name', state.fatherName, 'fatherName', state.isEditable),
               _buildDateField(context, ref, 'DOB', state.dob, 'dob', state.isEditable, 
                 trailing: Text('Age: ${StudentUtils.calculateAge(state.dob)}', style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold))),
               _buildDateField(context, ref, 'Admission Date', state.admissionDate, 'admissionDate', state.isEditable),
@@ -158,13 +164,16 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildField(WidgetRef ref, String label, String value, String field, bool isEditable, {bool isPhone = false}) {
+  Widget _buildField(BuildContext context, WidgetRef ref, String label, String value, String field, bool isEditable, {bool isPhone = false}) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+          Text(label, style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5), fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           if (isEditable)
             TextField(
@@ -173,21 +182,24 @@ class StudentDetailSheet extends ConsumerWidget {
               decoration: InputDecoration(
                 isDense: true,
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.primary.withOpacity(0.1))),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: onSurface.withOpacity(0.1))),
               ),
-              style: GoogleFonts.outfit(fontSize: 16, color: AppColors.textPrimary),
+              style: GoogleFonts.outfit(fontSize: 16, color: onSurface),
               keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
             )
           else
-            Text(value.isNotEmpty ? value : '-', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+            Text(value.isNotEmpty ? value : '-', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
         ],
       ),
     );
   }
 
   Widget _buildDateField(BuildContext context, WidgetRef ref, String label, String value, String field, bool isEditable, {Widget? trailing}) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -195,7 +207,7 @@ class StudentDetailSheet extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Text(label, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+              Text(label, style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5), fontWeight: FontWeight.bold)),
               if (trailing != null) ...[  
                 const SizedBox(width: 8),
                 trailing,
@@ -209,13 +221,13 @@ class StudentDetailSheet extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: isEditable ? Colors.white : Colors.transparent,
+                color: isEditable ? (isDark ? Colors.white.withOpacity(0.05) : Colors.white) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
-                border: isEditable ? Border.all(color: AppColors.primary.withOpacity(0.1)) : null,
+                border: isEditable ? Border.all(color: onSurface.withOpacity(0.1)) : null,
               ),
               child: Text(
                 value.isNotEmpty ? value : '-',
-                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: isEditable ? AppColors.primary : AppColors.textPrimary),
+                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: isEditable ? AppColors.primary : onSurface),
               ),
             ),
           ),

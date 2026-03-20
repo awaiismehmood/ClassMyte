@@ -15,8 +15,9 @@ class HomePage extends ConsumerWidget {
     final subscriptionState = ref.watch(subscriptionProvider);
     final isPremium = subscriptionState.isPremiumUser;
 
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           CustomHeader(
@@ -24,9 +25,7 @@ class HomePage extends ConsumerWidget {
             showBackButton: false,
             leftAction: _buildCircleAction(
               icon: Icons.person_outline,
-              onTap: () {
-                // Profile logic
-              },
+              onTap: () => context.push('/profile'),
             ),
             rightActions: [
               PremiumBadge(

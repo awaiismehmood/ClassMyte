@@ -1,4 +1,3 @@
-import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/sms/providers/template_providers.dart';
 import 'package:classmyte/features/sms/widgets/add_template_sheet.dart';
@@ -34,7 +33,7 @@ class ManageTemplatesScreen extends ConsumerWidget {
         : _preMadeTemplates.where((t) => t.category == selectedCategory).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           const CustomHeader(title: 'Manage Templates'),
@@ -50,7 +49,7 @@ class ManageTemplatesScreen extends ConsumerWidget {
                         _buildHeroSection(context, ref, isMyTemplates),
                         const SizedBox(height: 24),
                         if (!isMyTemplates) ...[
-                          _buildCategoryChips(ref, selectedCategory),
+                          _buildCategoryChips(context, ref, selectedCategory),
                           const SizedBox(height: 16),
                         ],
                         if (isMyTemplates && currentTemplates.isEmpty)
@@ -59,16 +58,16 @@ class ManageTemplatesScreen extends ConsumerWidget {
                               padding: const EdgeInsets.only(top: 40),
                               child: Column(
                                 children: [
-                                  Icon(Icons.folder_open_outlined, size: 60, color: AppColors.textLight.withOpacity(0.5)),
+                                  Icon(Icons.folder_open_outlined, size: 60, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
                                   const SizedBox(height: 16),
                                   Text(
                                     'No Templates Yet',
-                                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
                                     'Create a custom template to see it here.',
-                                    style: GoogleFonts.outfit(color: AppColors.textLight),
+                                    style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                                   ),
                                 ],
                               ),
@@ -88,7 +87,7 @@ class ManageTemplatesScreen extends ConsumerWidget {
                     right: 20,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B5CF6), // Purple button color matches screenshot
+                        backgroundColor: const Color(0xFF8B5CF6), 
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                         elevation: 6,
@@ -129,8 +128,8 @@ class ManageTemplatesScreen extends ConsumerWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.receipt_long, color: Color(0xFF8B5CF6), size: 32),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.receipt_long, color: Colors.white, size: 32),
               ),
               const SizedBox(width: 16),
               Column(
@@ -145,7 +144,7 @@ class ManageTemplatesScreen extends ConsumerWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: isMyTemplates ? Colors.white : const Color(0xFFF59E0B), // Amber color
+              backgroundColor: isMyTemplates ? Colors.white : const Color(0xFFF59E0B), 
               foregroundColor: isMyTemplates ? const Color(0xFF8B5CF6) : Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -162,8 +161,10 @@ class ManageTemplatesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryChips(WidgetRef ref, String selectedCategory) {
+  Widget _buildCategoryChips(BuildContext context, WidgetRef ref, String selectedCategory) {
     final categories = ['Anniversary', 'Birthday', 'Sales', 'Festivals'];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -177,16 +178,16 @@ class ManageTemplatesScreen extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF8B5CF6) : Colors.white,
+                  color: isSelected ? const Color(0xFF8B5CF6) : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
-                    if (!isSelected) BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                    if (!isSelected) BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 8, offset: const Offset(0, 2)),
                   ],
                 ),
                 child: Text(
                   cat,
                   style: GoogleFonts.outfit(
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   ),
                 ),
@@ -199,13 +200,16 @@ class ManageTemplatesScreen extends ConsumerWidget {
   }
 
   Widget _buildTemplateCard(BuildContext context, WidgetRef ref, TemplateModel template, bool isMyTemplates) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: InkWell(
@@ -217,9 +221,9 @@ class ManageTemplatesScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (isMyTemplates && template.title.isNotEmpty)
-                Text(template.title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                Text(template.title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: onSurface)),
               if (isMyTemplates && template.title.isNotEmpty) const SizedBox(height: 8),
-              Text(template.text, style: GoogleFonts.outfit(color: isMyTemplates ? AppColors.textSecondary : AppColors.textPrimary, fontWeight: isMyTemplates ? null : FontWeight.w600, fontSize: 14)),
+              Text(template.text, style: GoogleFonts.outfit(color: isMyTemplates ? onSurface.withOpacity(0.7) : onSurface, fontWeight: isMyTemplates ? null : FontWeight.w600, fontSize: 14)),
             ],
           ),
         ),

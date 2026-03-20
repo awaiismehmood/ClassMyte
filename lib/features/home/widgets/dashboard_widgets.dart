@@ -42,7 +42,7 @@ Widget buildHomeScreen(BuildContext context) {
       const SizedBox(height: 32),
 
       // Bulk Sending Section
-      _buildSectionTitle('Bulk Sending'),
+      _buildSectionTitle(context, 'Bulk Sending'),
       const SizedBox(height: 16),
       GridView.count(
         shrinkWrap: true,
@@ -167,6 +167,7 @@ Widget _buildHeroCard(BuildContext context) {
 Widget _buildQuickCard(
     BuildContext context, String label, IconData icon, Color color,
     {required VoidCallback onTap}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
   return Expanded(
     child: InkWell(
       onTap: onTap,
@@ -175,11 +176,11 @@ Widget _buildQuickCard(
         height: 120,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -203,7 +204,7 @@ Widget _buildQuickCard(
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -216,17 +217,18 @@ Widget _buildQuickCard(
 Widget _buildDualColumnCard(
     BuildContext context, String title, IconData icon, Color color,
     {required VoidCallback onTap}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(20),
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -249,7 +251,7 @@ Widget _buildDualColumnCard(
               style: GoogleFonts.outfit(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -259,13 +261,13 @@ Widget _buildDualColumnCard(
   );
 }
 
-Widget _buildSectionTitle(String title) {
+Widget _buildSectionTitle(BuildContext context, String title) {
   return Text(
     title,
     style: GoogleFonts.outfit(
       fontSize: 18,
       fontWeight: FontWeight.bold,
-      color: AppColors.textPrimary,
+      color: Theme.of(context).colorScheme.onSurface,
     ),
   );
 }

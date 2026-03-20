@@ -1,6 +1,5 @@
 import 'package:classmyte/core/data/add_contacts.dart';
 import 'package:classmyte/core/data/data_retrieval.dart';
-import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_dropdown.dart';
@@ -99,6 +98,8 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return FutureBuilder<List<Map<String, String>>>(
       future: StudentData.getStudentData(),
       builder: (context, snapshot) {
@@ -128,12 +129,11 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
                           style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary)),
+                              color: onSurface.withOpacity(0.6))),
                       const SizedBox(height: 6),
                       CustomDropdown<String>(
                         value: selectedClass,
                         hintText: 'Pick a class',
-                        fillColor: AppColors.primary.withOpacity(0.05),
                         items: allClasses.map((c) => CustomDropdownItem(value: c, label: c)).toList(),
                         onChanged: (v) => setState(() {
                           selectedClass = v;

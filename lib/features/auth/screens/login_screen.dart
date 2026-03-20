@@ -24,8 +24,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Always reset loading state when login screen mounts.
-    // This guards against stale true-state from a previous incomplete login attempt.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(loginLoadingProvider.notifier).state = false;
@@ -68,6 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(loginLoadingProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -81,14 +80,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Hero(
-                  //   tag: 'logo',
-                  //   child: Image.asset(
-                  //     'assets/pencil_white.png',
-                  //     height: 120,
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 16),
                   Text(
                     'ClassMyte',
                     style: GoogleFonts.outfit(
@@ -102,11 +93,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(28.0),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(32),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -122,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -175,7 +166,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Text(
                                 "Don't have an account? ",
                                 style: GoogleFonts.outfit(
-                                    color: AppColors.textSecondary),
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                               ),
                               GestureDetector(
                                 onTap: () => context.push('/signup'),

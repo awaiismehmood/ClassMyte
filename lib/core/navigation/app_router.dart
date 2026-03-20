@@ -19,6 +19,7 @@ import 'package:classmyte/features/settings/screens/contact_us_screen.dart';
 import 'package:classmyte/features/settings/screens/about_screen.dart';
 import 'package:classmyte/features/settings/screens/privacy_policy_screen.dart';
 import 'package:classmyte/features/settings/screens/change_password_screen.dart';
+import 'package:classmyte/features/settings/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -107,6 +108,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/message-report',
         name: 'message-report',
         builder: (context, state) => const MessageReportScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/settings',

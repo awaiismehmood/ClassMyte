@@ -3,128 +3,81 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  static ThemeData get lightTheme {
+  static ThemeData lightTheme() {
     return ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.background,
+      brightness: Brightness.light,
       primaryColor: AppColors.primary,
-
-      // Color Scheme
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.background,
+      cardColor: AppColors.surface,
+      appBarTheme: _appBarTheme(Brightness.light),
+      textTheme: _textTheme(Brightness.light),
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.accent,
-        background: AppColors.background,
-        onBackground: AppColors.textPrimary,
         surface: AppColors.surface,
-        onSurface: AppColors.textPrimary,
         error: AppColors.error,
-        onError: Colors.white,
+        onPrimary: Colors.white,
+        onSurface: AppColors.textPrimary,
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.grey.shade400;
+        }),
+        trackColor: WidgetStateProperty.all(AppColors.primary.withOpacity(0.2)),
+      ),
+      useMaterial3: true,
+    );
+  }
 
-      // Text Theme
-      textTheme: GoogleFonts.outfitTextTheme().copyWith(
-        displayLarge: GoogleFonts.outfit(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-        ),
-        displayMedium: GoogleFonts.outfit(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-        ),
-        titleLarge: GoogleFonts.outfit(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        bodyLarge: GoogleFonts.outfit(
-          fontSize: 16,
-          color: AppColors.textPrimary,
-        ),
-        bodyMedium: GoogleFonts.outfit(
-          fontSize: 14,
-          color: AppColors.textSecondary,
-        ),
+  static ThemeData darkTheme() {
+    return ThemeData(
+      brightness: Brightness.dark,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.backgroundDark,
+      cardColor: AppColors.surfaceDark,
+      appBarTheme: _appBarTheme(Brightness.dark),
+      textTheme: _textTheme(Brightness.dark),
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.primary,
+        secondary: AppColors.accent,
+        onPrimary: Colors.white,
+        surface: AppColors.surfaceDark,
+        error: AppColors.error,
+        onSurface: AppColors.textPrimaryDark,
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.grey.shade600;
+        }),
+        trackColor: WidgetStateProperty.all(AppColors.primary.withOpacity(0.3)),
+      ),
+      useMaterial3: true,
+    );
+  }
 
-      // AppBar Theme
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white),
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-        ),
+  static AppBarTheme _appBarTheme(Brightness brightness) {
+    return AppBarTheme(
+      elevation: 0,
+      centerTitle: true,
+      backgroundColor: brightness == Brightness.light ? AppColors.surface : AppColors.surfaceDark,
+      titleTextStyle: GoogleFonts.outfit(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: brightness == Brightness.light ? AppColors.textPrimary : AppColors.textPrimaryDark,
       ),
+      iconTheme: IconThemeData(
+        color: brightness == Brightness.light ? AppColors.textPrimary : AppColors.textPrimaryDark,
+      ),
+    );
+  }
 
-      // Card Theme
-      cardTheme: CardThemeData(
-        color: AppColors.cardBg,
-        elevation: 4,
-        shadowColor: Colors.black.withOpacity(0.05),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-
-      // Input Decoration Theme
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide:
-              BorderSide(color: AppColors.primary.withOpacity(0.1), width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-        ),
-        labelStyle: TextStyle(
-            color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-        hintStyle: TextStyle(color: AppColors.textLight),
-      ),
-
-      // Button Themes
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-
-      // BottomSheet Theme
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Colors.white,
-        elevation: 10,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-      ),
+  static TextTheme _textTheme(Brightness brightness) {
+    final baseColor = brightness == Brightness.light ? AppColors.textPrimary : AppColors.textPrimaryDark;
+    return GoogleFonts.outfitTextTheme().apply(
+      bodyColor: baseColor,
+      displayColor: baseColor,
     );
   }
 }

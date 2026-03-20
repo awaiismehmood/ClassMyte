@@ -2,7 +2,6 @@ import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
-import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/features/auth/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,6 +44,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(forgotPasswordLoadingProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -58,14 +58,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Hero(
-                  //   tag: 'logo',
-                  //   child: Image.asset(
-                  //     'assets/pencil_white.png',
-                  //     height: 100,
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 16),
                   Text(
                     'Reset Password',
                     style: GoogleFonts.outfit(
@@ -79,11 +71,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(28.0),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(32),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -96,7 +88,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           "Forgot your password? No problem. Enter your email and we'll send you a link to reset it.",
                           style: GoogleFonts.outfit(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                           ),
                           textAlign: TextAlign.center,
                         ),

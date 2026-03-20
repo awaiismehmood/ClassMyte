@@ -14,15 +14,18 @@ class ExportScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(paymentProcessingProvider);
     final subscriptionState = ref.watch(subscriptionProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           const CustomHeader(title: 'Export Contacts'),
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+              decoration: BoxDecoration(
+                gradient: AppColors.dynamicBackgroundGradient(isDark),
+              ),
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : SingleChildScrollView(
@@ -33,10 +36,10 @@ class ExportScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
-                                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                                BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 10, offset: const Offset(0, 4)),
                               ],
                             ),
                             child: Column(
@@ -46,22 +49,33 @@ class ExportScreen extends ConsumerWidget {
                                   children: [
                                     const Icon(Icons.info_outline, color: AppColors.primary),
                                     const SizedBox(width: 8),
-                                    Text('How to Export', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                    Text('How to Export', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                                   ],
                                 ),
                                 const SizedBox(height: 16),
-                                _buildInstructionStep('1', 'Tap the Export to Excel button below.'),
-                                _buildInstructionStep('2', 'Grant storage permissions if prompted by your device.'),
-                                _buildInstructionStep('3', 'Your entire student database will be compiled and saved as an Excel (.xlsx) file to your downloads folder.'),
+                                _buildInstructionStep(context, '1', 'Tap the Export to Excel button below.'),
+                                _buildInstructionStep(context, '2', 'Grant storage permissions if prompted by your device.'),
+                                _buildInstructionStep(context, '3', 'Your entire student database will be compiled and saved as an Excel (.xlsx) file to your downloads folder.'),
                                 const SizedBox(height: 12),
                                 Container(
                                   padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: const Color(0xFFFFF7ED), borderRadius: BorderRadius.circular(12)),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? Colors.orange.withOpacity(0.1) : const Color(0xFFFFF7ED), 
+                                    borderRadius: BorderRadius.circular(12)
+                                  ),
                                   child: Row(
                                     children: [
                                       const Icon(Icons.workspace_premium, color: Color(0xFFF59E0B), size: 20),
                                       const SizedBox(width: 8),
-                                      Expanded(child: Text('Note: This is a premium feature.', style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary))),
+                                      Expanded(
+                                        child: Text(
+                                          'Note: This is a premium feature.', 
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 13, 
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                                          )
+                                        )
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -94,7 +108,7 @@ class ExportScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInstructionStep(String number, String text) {
+  Widget _buildInstructionStep(BuildContext context, String number, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -108,23 +122,24 @@ class ExportScreen extends ConsumerWidget {
             child: Text(number, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 13)),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: GoogleFonts.outfit(color: AppColors.textSecondary, height: 1.4))),
+          Expanded(child: Text(text, style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), height: 1.4))),
         ],
       ),
     );
   }
 
   Widget _buildSyncCard(BuildContext context, {required IconData icon, required String label, required String description, required VoidCallback onTap}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8)),
+            BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 15, offset: const Offset(0, 8)),
           ],
         ),
         child: Row(
@@ -139,13 +154,13 @@ class ExportScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  Text(label, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                   const SizedBox(height: 4),
-                  Text(description, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary)),
+                  Text(description, style: GoogleFonts.outfit(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textLight),
+            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
           ],
         ),
       ),

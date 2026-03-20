@@ -11,9 +11,8 @@ class MessageReportScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Connect this to actual campaign logic provider later
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           const CustomHeader(title: 'Message Report'),
@@ -26,6 +25,7 @@ class MessageReportScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -51,7 +51,7 @@ class MessageReportScreen extends ConsumerWidget {
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -60,7 +60,7 @@ class MessageReportScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 15,
-                color: AppColors.textSecondary,
+                color: onSurface.withOpacity(0.6),
                 height: 1.4,
               ),
             ),
@@ -80,5 +80,4 @@ class MessageReportScreen extends ConsumerWidget {
       ),
     );
   }
-
 }

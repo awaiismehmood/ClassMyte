@@ -23,9 +23,10 @@ class ClassScreen extends ConsumerWidget {
     final filteredClasses = ref.watch(filteredClassesProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
     final adManager = ref.read(adManagerProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           CustomHeader(
@@ -40,8 +41,9 @@ class ClassScreen extends ConsumerWidget {
           ),
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(
-                  gradient: AppColors.backgroundGradient),
+              decoration: BoxDecoration(
+                gradient: AppColors.dynamicBackgroundGradient(isDark),
+              ),
               child: Column(
                 children: [
                   Padding(
@@ -70,7 +72,14 @@ class ClassScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                             Expanded(
                               child: filteredClasses.isEmpty
-                                  ? Center(child: Text('No categories found', style: GoogleFonts.outfit(color: AppColors.textSecondary)))
+                                  ? Center(
+                                      child: Text(
+                                        'No categories found', 
+                                        style: GoogleFonts.outfit(
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                                        )
+                                      )
+                                    )
                                   : ListView.builder(
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                                       itemCount: filteredClasses.length,
@@ -139,6 +148,7 @@ class ClassScreen extends ConsumerWidget {
       int count,
       List<String> allClasses,
       List<Map<String, String>> allStudents) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => EditClassSheet.show(
         context,
@@ -149,11 +159,11 @@ class ClassScreen extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -174,11 +184,14 @@ class ClassScreen extends ConsumerWidget {
               style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: AppColors.textPrimary)),
+                  color: Theme.of(context).colorScheme.onSurface)),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4.0),
             child: Text('$count Students',
-                style: GoogleFonts.outfit(color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                style: GoogleFonts.outfit(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), 
+                  fontWeight: FontWeight.w500
+                )),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,

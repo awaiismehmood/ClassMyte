@@ -82,6 +82,7 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
   void _openDropdown() {
     final renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     _overlayEntry = OverlayEntry(
       builder: (context) => GestureDetector(
@@ -104,11 +105,11 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
                       width: size.width,
                       constraints: BoxConstraints(maxHeight: widget.items.length * 56.0 + 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
+                            color: Colors.black.withOpacity(isDark ? 0.3 : 0.12),
                             blurRadius: 24,
                             offset: const Offset(0, 8),
                           ),
@@ -125,7 +126,7 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
                             thickness: 1,
                             indent: 16,
                             endIndent: 16,
-                            color: Colors.grey.shade100,
+                            color: Theme.of(context).dividerColor.withOpacity(0.05),
                           ),
                           itemBuilder: (context, index) {
                             final item = widget.items[index];
@@ -141,16 +142,18 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      item.label,
-                                      style: GoogleFonts.outfit(
-                                        color: isSelected
-                                            ? AppColors.primary
-                                            : (item.textColor ?? AppColors.textPrimary),
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.w500,
-                                        fontSize: 15,
+                                    Expanded(
+                                      child: Text(
+                                        item.label,
+                                        style: GoogleFonts.outfit(
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : (item.textColor ?? Theme.of(context).colorScheme.onSurface),
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                          fontSize: 15,
+                                        ),
                                       ),
                                     ),
                                     if (item.icon != null)
@@ -159,7 +162,7 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
                                         size: 20,
                                         color: isSelected
                                             ? AppColors.primary
-                                            : (item.textColor ?? AppColors.textSecondary),
+                                            : (item.textColor ?? Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                                       ),
                                   ],
                                 ),
@@ -210,10 +213,10 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: widget.fillColor ?? Colors.white,
+            color: widget.fillColor ?? Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _isOpen ? AppColors.primary : Colors.grey.shade300,
+              color: _isOpen ? AppColors.primary : Theme.of(context).dividerColor.withOpacity(0.1),
               width: _isOpen ? 2 : 1,
             ),
           ),
@@ -227,7 +230,9 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
                 child: Text(
                   selected?.label ?? widget.hintText ?? '',
                   style: GoogleFonts.outfit(
-                    color: selected != null ? AppColors.textPrimary : AppColors.textLight,
+                    color: selected != null 
+                        ? Theme.of(context).colorScheme.onSurface 
+                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                     fontWeight: selected != null ? FontWeight.w500 : FontWeight.normal,
                     fontSize: 15,
                   ),
@@ -236,8 +241,8 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
               AnimatedRotation(
                 turns: _isOpen ? 0.5 : 0,
                 duration: const Duration(milliseconds: 180),
-                child: const Icon(Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.textSecondary),
+                child: Icon(Icons.keyboard_arrow_down_rounded,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
               ),
             ],
           ),

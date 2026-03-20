@@ -58,6 +58,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(signupLoadingProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
@@ -71,13 +72,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Hero(
-                  //   tag: 'logo',
-                  //   child: Image.asset(
-                  //     'assets/pencil_white.png',
-                  //     height: 100,
-                  //   ),
-                  // ),
                   const SizedBox(height: 16),
                   Text(
                     'Create Account',
@@ -92,11 +86,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(28.0),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(32),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -163,7 +157,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               Text(
                                 "Already have an account? ",
                                 style: GoogleFonts.outfit(
-                                    color: AppColors.textSecondary),
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                               ),
                               GestureDetector(
                                 onTap: () => context.pop(),

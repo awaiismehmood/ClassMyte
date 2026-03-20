@@ -45,8 +45,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: Text(msg, style: GoogleFonts.outfit()),
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+        content: Text(msg, style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
         ],
@@ -56,22 +57,27 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _cancelSubscription() async {
     final passwordController = TextEditingController();
+    
     bool confirmed = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Cancel Subscription', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).cardColor,
+        title: Text('Cancel Subscription', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Please enter your password to confirm cancellation:', style: GoogleFonts.outfit()),
+            Text('Please enter your password to confirm cancellation:', style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8))),
             const SizedBox(height: 16),
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
+              style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface),
+              decoration: InputDecoration(
                 labelText: 'Password',
-                border: OutlineInputBorder(),
+                labelStyle: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+                border: const OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
               ),
             ),
           ],
@@ -111,6 +117,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final subscriptionState = ref.watch(subscriptionProvider);
     final selectedPlan = ref.watch(selectedPlanProvider);
     final isProcessing = ref.watch(paymentProcessingProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (subscriptionState.isPremiumUser) {
       return Scaffold(
@@ -180,7 +187,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           // Header Section
@@ -188,7 +195,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, bottom: 40, left: 24, right: 24),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)], // Purple gradient from screenshot
+                colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)], 
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -207,7 +214,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.restore, color: Colors.white), // Restore icon from screenshot
+                      icon: const Icon(Icons.restore, color: Colors.white),
                       onPressed: () {},
                     ),
                   ],
@@ -265,13 +272,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Container(
               padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(color: const Color(0xFFF3E5F5), borderRadius: BorderRadius.circular(32)),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFF3E5F5), 
+                borderRadius: BorderRadius.circular(32)
+              ),
               child: ValueListenableBuilder<int>(
                 valueListenable: _selectedTab,
                 builder: (context, val, _) => Row(
                   children: [
-                    _buildTab(0, 'Free Features', const Icon(Icons.workspace_premium_outlined, size: 18, color: Color(0xFFFFB300))),
-                    _buildTab(1, 'Pro Features', const Icon(Icons.workspace_premium, size: 18, color: Color(0xFFFFB300))),
+                    _buildTab(context, 0, 'Free Features', const Icon(Icons.workspace_premium_outlined, size: 18, color: Color(0xFFFFB300))),
+                    _buildTab(context, 1, 'Pro Features', const Icon(Icons.workspace_premium, size: 18, color: Color(0xFFFFB300))),
                   ],
                 ),
               ),
@@ -284,7 +294,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               valueListenable: _selectedTab,
               builder: (context, val, _) => ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                children: val == 0 ? _buildFreeFeatures() : _buildProFeatures(),
+                children: val == 0 ? _buildFreeFeatures(context) : _buildProFeatures(context),
               ),
             ),
           ),
@@ -306,6 +316,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget _buildPlanCard(String plan, String price, String label) {
     final curSelected = ref.watch(selectedPlanProvider);
     final isSelected = curSelected == plan;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Expanded(
       child: GestureDetector(
@@ -313,12 +324,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: isSelected ? Colors.green : Colors.transparent, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withOpacity(isDark ? 0.2 : 0.08),
                 blurRadius: 15,
                 offset: const Offset(0, 6),
               ),
@@ -328,12 +339,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             children: [
               Align(
                 alignment: Alignment.topRight,
-                child: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? Colors.green : Colors.grey.shade300, size: 24),
+                child: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? Colors.green : (isDark ? Colors.white24 : Colors.grey.shade300), size: 24),
               ),
               const SizedBox(height: 8),
-              Text(price, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Text(price, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
               const SizedBox(height: 4),
-              Text(label, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 11, color: AppColors.textSecondary)),
+              Text(label, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
             ],
           ),
         ),
@@ -341,15 +352,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
-  Widget _buildTab(int index, String label, Widget icon) {
+  Widget _buildTab(BuildContext context, int index, String label, Widget icon) {
     final isSelected = _selectedTab.value == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Expanded(
       child: GestureDetector(
         onTap: () => _selectedTab.value = index,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? (isDark ? Colors.white10 : Colors.white) : Colors.transparent,
             borderRadius: BorderRadius.circular(28),
             boxShadow: isSelected
                 ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))]
@@ -362,7 +375,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: isSelected ? AppColors.primary : AppColors.textSecondary),
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 13, 
+                  color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.5)
+                ),
               ),
             ],
           ),
@@ -371,42 +388,42 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
-  List<Widget> _buildFreeFeatures() {
+  List<Widget> _buildFreeFeatures(BuildContext context) {
     return [
-      _buildFeatureItem('Ads included', true),
-      _buildFeatureItem('Limited WP non-contact', true),
-      _buildFeatureItem('No. of campaign - 01', true),
-      _buildFeatureItem('Maximum contact allowed - 10', true),
-      _buildFeatureItem('Add manual contacts - 10', true),
-      _buildFeatureItem('Personalize message - 10', true),
-      _buildFeatureItem('Basic Unsubscribe', true),
-      _buildFeatureItem('Standard WP Call Block', true),
+      _buildFeatureItem(context, 'Ads included', true),
+      _buildFeatureItem(context, 'Limited WP non-contact', true),
+      _buildFeatureItem(context, 'No. of campaign - 01', true),
+      _buildFeatureItem(context, 'Maximum contact allowed - 10', true),
+      _buildFeatureItem(context, 'Add manual contacts - 10', true),
+      _buildFeatureItem(context, 'Personalize message - 10', true),
+      _buildFeatureItem(context, 'Basic Unsubscribe', true),
+      _buildFeatureItem(context, 'Standard WP Call Block', true),
     ];
   }
 
-  List<Widget> _buildProFeatures() {
+  List<Widget> _buildProFeatures(BuildContext context) {
     return [
-      _buildFeatureItem('Remove All Ads', true),
-      _buildFeatureItem('Unlimited WP non-contact', true),
-      _buildFeatureItem('Unlimited campaigns', true),
-      _buildFeatureItem('Unlimited contacts allowed', true),
-      _buildFeatureItem('No limits on manual contacts', true),
-      _buildFeatureItem('Unlimited personalize messages', true),
-      _buildFeatureItem('Full Unsubscribe management', true),
-      _buildFeatureItem('Advanced WP Call Block', true),
-      _buildFeatureItem('Export to Excel', true),
-      _buildFeatureItem('Priority Support', true),
+      _buildFeatureItem(context, 'Remove All Ads', true),
+      _buildFeatureItem(context, 'Unlimited WP non-contact', true),
+      _buildFeatureItem(context, 'Unlimited campaigns', true),
+      _buildFeatureItem(context, 'Unlimited contacts allowed', true),
+      _buildFeatureItem(context, 'No limits on manual contacts', true),
+      _buildFeatureItem(context, 'Unlimited personalize messages', true),
+      _buildFeatureItem(context, 'Full Unsubscribe management', true),
+      _buildFeatureItem(context, 'Advanced WP Call Block', true),
+      _buildFeatureItem(context, 'Export to Excel', true),
+      _buildFeatureItem(context, 'Priority Support', true),
     ];
   }
 
-  Widget _buildFeatureItem(String text, bool included) {
+  Widget _buildFeatureItem(BuildContext context, String text, bool included) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          Icon(Icons.check, color: Colors.teal, size: 20),
+          const Icon(Icons.check, color: Colors.teal, size: 20),
           const SizedBox(width: 16),
-          Text(text, style: GoogleFonts.outfit(fontSize: 15, color: AppColors.textPrimary)),
+          Text(text, style: GoogleFonts.outfit(fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
         ],
       ),
     );

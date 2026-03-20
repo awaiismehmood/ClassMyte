@@ -12,7 +12,6 @@ import 'package:classmyte/features/premium/providers/subscription_providers.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:classmyte/core/services/student_utils.dart'; // Just in case
 
 class StudentContactsScreen extends ConsumerWidget {
   const StudentContactsScreen({super.key});
@@ -23,9 +22,10 @@ class StudentContactsScreen extends ConsumerWidget {
     final filteredStudents = ref.watch(filteredStudentsProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
     final adManager = ref.read(adManagerProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           CustomHeader(
@@ -48,7 +48,9 @@ class StudentContactsScreen extends ConsumerWidget {
           ),
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+              decoration: BoxDecoration(
+                gradient: AppColors.dynamicBackgroundGradient(isDark),
+              ),
               child: Column(
                 children: [
                   Padding(
@@ -64,9 +66,9 @@ class StudentContactsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Row(
                       children: [
-                        _buildBadge('Total: ${studentDataAsync.value?.length ?? 0}', AppColors.primary),
+                        _buildBadge(context, 'Total: ${studentDataAsync.value?.length ?? 0}', AppColors.primary),
                         const SizedBox(width: 8),
-                        _buildBadge('Filtered: ${filteredStudents.length}', Colors.black54),
+                        _buildBadge(context, 'Filtered: ${filteredStudents.length}', isDark ? AppColors.textLightDark : Colors.black54),
                       ],
                     ),
                   ),
@@ -74,7 +76,14 @@ class StudentContactsScreen extends ConsumerWidget {
                   Expanded(
                     child: studentDataAsync.when(
                       data: (_) => filteredStudents.isEmpty
-                          ? Center(child: Text('No students found', style: GoogleFonts.outfit(color: AppColors.textSecondary)))
+                          ? Center(
+                              child: Text(
+                                'No students found', 
+                                style: GoogleFonts.outfit(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                                )
+                              )
+                            )
                           : ListView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                               itemCount: filteredStudents.length,
@@ -113,7 +122,7 @@ class StudentContactsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBadge(String text, Color color) {
+  Widget _buildBadge(BuildContext context, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -126,16 +135,17 @@ class StudentContactsScreen extends ConsumerWidget {
   }
 
   Widget _buildRedesignedStudentCard(BuildContext context, WidgetRef ref, Map<String, String> student) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => StudentDetailSheet.show(context, student),
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -171,21 +181,33 @@ class StudentContactsScreen extends ConsumerWidget {
                       children: [
                         Text(
                           (student['class'] ?? 'General').toUpperCase(),
-                          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textSecondary, letterSpacing: 1.2),
+                          style: GoogleFonts.outfit(
+                            fontSize: 11, 
+                            fontWeight: FontWeight.w900, 
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), 
+                            letterSpacing: 1.2
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           student['name'] ?? 'Unknown',
-                          style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          style: GoogleFonts.outfit(
+                            fontSize: 22, 
+                            fontWeight: FontWeight.bold, 
+                            color: Theme.of(context).colorScheme.onSurface
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.phone_outlined, size: 14, color: AppColors.textLight),
+                            Icon(Icons.phone_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
                             const SizedBox(width: 6),
                             Text(
                               student['phoneNumber'] ?? 'No contact',
-                              style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textSecondary),
+                              style: GoogleFonts.outfit(
+                                fontSize: 14, 
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                              ),
                             ),
                           ],
                         ),
@@ -217,7 +239,7 @@ class StudentContactsScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  Container(width: 1, height: 25, color: Colors.grey.withOpacity(0.2)),
+                  Container(width: 1, height: 25, color: Theme.of(context).dividerColor.withOpacity(0.1)),
                   Expanded(
                     child: InkWell(
                       onTap: () => WhatsAppMessaging().sendWhatsAppMessageIndividually(student['phoneNumber']!),

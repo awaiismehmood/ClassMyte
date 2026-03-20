@@ -25,9 +25,9 @@ class CustomHeader extends StatelessWidget {
         left: 20,
         right: 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
@@ -54,7 +54,7 @@ class CustomHeader extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),

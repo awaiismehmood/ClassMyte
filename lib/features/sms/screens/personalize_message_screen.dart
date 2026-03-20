@@ -1,4 +1,3 @@
-import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/core/widgets/custom_snackbar.dart';
@@ -49,8 +48,11 @@ class _PersonalizeMessageScreenState extends ConsumerState<PersonalizeMessageScr
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           const CustomHeader(title: 'Personalize Message'),
@@ -62,22 +64,22 @@ class _PersonalizeMessageScreenState extends ConsumerState<PersonalizeMessageScr
                 children: [
                   Text(
                     'Set a default start and end to attach to your bulk messages automatically. This helps to make messages more personalized.',
-                    style: GoogleFonts.outfit(color: AppColors.textSecondary, fontSize: 14),
+                    style: GoogleFonts.outfit(color: onSurface.withOpacity(0.6), fontSize: 14),
                   ),
                   const SizedBox(height: 32),
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                        BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 10, offset: const Offset(0, 4)),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Start of Message (Prefix)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                        Text('Start of Message (Prefix)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: onSurface)),
                         const SizedBox(height: 12),
                         CustomTextField(
                           labelText: 'Prefix',
@@ -86,7 +88,7 @@ class _PersonalizeMessageScreenState extends ConsumerState<PersonalizeMessageScr
                           prefixIcon: Icons.format_quote_outlined,
                         ),
                         const SizedBox(height: 24),
-                        Text('End of Message (Suffix)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                        Text('End of Message (Suffix)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: onSurface)),
                         const SizedBox(height: 12),
                         CustomTextField(
                           labelText: 'Suffix',

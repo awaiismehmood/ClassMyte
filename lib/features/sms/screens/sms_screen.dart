@@ -143,16 +143,18 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   Widget build(BuildContext context) {
     final studentDataAsync = ref.watch(studentDataProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           const CustomHeader(title: 'Bulk Messaging'),
           Expanded(
             child: Container(
-              decoration:
-                  const BoxDecoration(gradient: AppColors.backgroundGradient),
+              decoration: BoxDecoration(
+                gradient: AppColors.dynamicBackgroundGradient(isDark),
+              ),
               child: studentDataAsync.when(
                 data: (contactList) => Column(
                   children: [
@@ -196,12 +198,11 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                                 style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
-                                    color: AppColors.textPrimary)),
+                                    color: Theme.of(context).colorScheme.onSurface)),
                             const SizedBox(height: 12),
                             CustomDropdown<String>(
                               value: null,
                               hintText: 'Choose Classes',
-                              fillColor: Colors.white,
                               items: [
                                 const CustomDropdownItem(value: 'All', label: 'All Students', icon: Icons.groups_outlined),
                                 ...contactList
@@ -255,13 +256,13 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            _buildDelaySection(),
+                            _buildDelaySection(context),
                             const SizedBox(height: 32),
                             Text('Message Content',
                                 style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
-                                    color: AppColors.textPrimary)),
+                                    color: Theme.of(context).colorScheme.onSurface)),
                             const SizedBox(height: 12),
                             TextField(
                               controller: messageController,
@@ -269,12 +270,14 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                               decoration: InputDecoration(
                                 hintText: "Type your message here...",
                                 filled: true,
-                                fillColor: Colors.white,
+                                fillColor: Theme.of(context).cardColor,
                                 border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(20),
                                     borderSide: BorderSide.none),
                               ),
-                              style: GoogleFonts.outfit(),
+                              style: GoogleFonts.outfit(
+                                color: Theme.of(context).colorScheme.onSurface
+                              ),
                             ),
                             const SizedBox(height: 32),
                             ValueListenableBuilder<bool>(
@@ -293,6 +296,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                                               context, contactList);
                                         }
                                       },
+                                color: AppColors.primary,
                               ),
                             ),
                           ],
@@ -311,14 +315,15 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     );
   }
 
-  Widget _buildDelaySection() {
+  Widget _buildDelaySection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -328,20 +333,23 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
             children: [
               const Icon(Icons.more_time_rounded, color: Colors.teal),
               const SizedBox(width: 8),
-              Text('Message delay time', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+              Text('Message delay time', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             '(We strongly recommend a 15 second+ delay if you don\'t want to risk your SIM being blocked by Mobile Carriers or the PTA for spamming)',
-            style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+            style: GoogleFonts.outfit(
+              fontSize: 13, 
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), 
+              height: 1.4
+            ),
           ),
           const SizedBox(height: 20),
           ValueListenableBuilder<int>(
             valueListenable: selectedDelay,
             builder: (context, delay, _) => CustomDropdown<int>(
               value: [0, 5, 10, 15, 30, 45, 60].contains(delay) ? delay : 15, // Provide safe fallback
-              fillColor: Colors.white,
               items: [0, 5, 10, 15, 30, 45, 60].map((d) {
                 return CustomDropdownItem<int>(
                   value: d,

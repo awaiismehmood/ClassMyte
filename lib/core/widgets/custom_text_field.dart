@@ -52,7 +52,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   void didUpdateWidget(covariant CustomTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If not using internal password toggle, sync with parent state
     if (!widget.isPassword && oldWidget.obscureText != widget.obscureText) {
       _isObscured = widget.obscureText;
     }
@@ -60,6 +59,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -70,7 +72,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             style: GoogleFonts.outfit(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: onSurface.withOpacity(0.8),
             ),
           ),
         ),
@@ -86,24 +88,27 @@ class _CustomTextFieldState extends State<CustomTextField> {
           onChanged: widget.onChanged,
           style: GoogleFonts.outfit(
             fontSize: 16,
-            color: AppColors.textPrimary,
+            color: onSurface,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
             hintText: widget.hintText,
-            prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, color: AppColors.primary, size: 22) : null,
+            hintStyle: GoogleFonts.outfit(color: onSurface.withOpacity(0.3)),
+            prefixIcon: widget.prefixIcon != null 
+                ? Icon(widget.prefixIcon, color: AppColors.primary, size: 22) 
+                : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
                       _isObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: AppColors.textSecondary,
+                      color: onSurface.withOpacity(0.4),
                       size: 20,
                     ),
                     onPressed: () => setState(() => _isObscured = !_isObscured),
                   )
                 : widget.suffixIcon,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).cardColor,
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -111,7 +116,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: AppColors.primary.withOpacity(0.08), width: 1.5),
+              borderSide: BorderSide(
+                color: isDark ? Colors.white.withOpacity(0.05) : AppColors.primary.withOpacity(0.08), 
+                width: 1.5
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),

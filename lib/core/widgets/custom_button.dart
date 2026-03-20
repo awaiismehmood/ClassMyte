@@ -22,15 +22,18 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = color ?? (isSecondary ? Theme.of(context).cardColor : AppColors.primary);
+    final fgColor = isSecondary ? (color ?? AppColors.primary) : Colors.white;
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: color ?? (isSecondary ? Colors.white : AppColors.primary),
-          foregroundColor: isSecondary ? (color ?? AppColors.primary) : Colors.white,
+          backgroundColor: bgColor,
+          foregroundColor: fgColor,
           side: isSecondary ? BorderSide(color: color ?? AppColors.primary, width: 2) : BorderSide.none,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          elevation: isSecondary ? 0 : 4,
+          elevation: isSecondary ? 0 : (Theme.of(context).brightness == Brightness.dark ? 2 : 4),
           shadowColor: isSecondary ? null : (color ?? AppColors.primary).withOpacity(0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -38,12 +41,12 @@ class CustomButton extends StatelessWidget {
         ),
         onPressed: isLoading ? null : onPressed,
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(fgColor),
                 ),
               )
             : Row(
