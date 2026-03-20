@@ -58,14 +58,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Hero(
-                    tag: 'logo',
-                    child: Image.asset(
-                      'assets/pencil_white.png',
-                      height: 100,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  // Hero(
+                  //   tag: 'logo',
+                  //   child: Image.asset(
+                  //     'assets/pencil_white.png',
+                  //     height: 100,
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 16),
                   Text(
                     'Reset Password',
                     style: GoogleFonts.outfit(

@@ -18,6 +18,7 @@ import 'package:classmyte/features/settings/screens/settings_screen.dart';
 import 'package:classmyte/features/settings/screens/contact_us_screen.dart';
 import 'package:classmyte/features/settings/screens/about_screen.dart';
 import 'package:classmyte/features/settings/screens/privacy_policy_screen.dart';
+import 'package:classmyte/features/settings/screens/change_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -126,6 +127,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: 'privacy',
             name: 'privacy',
             builder: (context, state) => const PrivacyPolicyScreen(),
+          ),
+          GoRoute(
+            path: 'change-password',
+            name: 'change-password',
+            builder: (context, state) => const ChangePasswordScreen(),
           ),
         ],
       ),

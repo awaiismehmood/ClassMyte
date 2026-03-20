@@ -3,9 +3,42 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/subscription_state.dart';
 
+// Dedicated auth stream for the subscription notifier to listen to (avoids circular dep)
+final subscriptionAuthProvider = StreamProvider<User?>((ref) {
+  return FirebaseAuth.instance.authStateChanges();
+});
+
 class SubscriptionNotifier extends Notifier<SubscriptionState> {
   @override
-  SubscriptionState build() => SubscriptionState();
+  SubscriptionState build() {
+    // Listen to auth state changes — re-check subscription on every login/logout
+    ref.listen<AsyncValue<User?>>(
+      subscriptionAuthProvider,
+      (previous, next) {
+        if (next.hasValue) {
+          final user = next.value;
+          if (user != null) {
+            // User just logged in — fetch fresh subscription status from Firestore
+            checkSubscriptionStatus();
+          } else {
+            // User logged out or no user — reset subscription state to base/Free and STOP LOADING
+            state = SubscriptionState(isLoading: false);
+          }
+        }
+      },
+    );
+
+    // Initial check if we have a user during first build
+    final user = ref.read(subscriptionAuthProvider).value;
+    if (user != null) {
+      // Defer so state can be updated after build
+      Future.microtask(() => checkSubscriptionStatus());
+      return SubscriptionState(isLoading: true);
+    }
+
+    // Default state: not logged in, not loading
+    return SubscriptionState(isLoading: false);
+  }
 
   Future<void> checkSubscriptionStatus() async {
     try {

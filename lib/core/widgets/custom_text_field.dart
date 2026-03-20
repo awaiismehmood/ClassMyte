@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final String labelText;
   final String? hintText;
   final IconData? prefixIcon;
@@ -16,6 +16,7 @@ class CustomTextField extends StatelessWidget {
   final int maxLines;
   final TextCapitalization textCapitalization;
   final ValueChanged<String>? onChanged;
+  final bool isPassword;
 
   const CustomTextField({
     super.key,
@@ -32,7 +33,30 @@ class CustomTextField extends StatelessWidget {
     this.maxLines = 1,
     this.textCapitalization = TextCapitalization.none,
     this.onChanged,
+    this.isPassword = false,
   });
+
+  @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  late bool _isObscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _isObscured = widget.isPassword || widget.obscureText;
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If not using internal password toggle, sync with parent state
+    if (!widget.isPassword && oldWidget.obscureText != widget.obscureText) {
+      _isObscured = widget.obscureText;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +66,7 @@ class CustomTextField extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
           child: Text(
-            labelText,
+            widget.labelText,
             style: GoogleFonts.outfit(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -51,24 +75,33 @@ class CustomTextField extends StatelessWidget {
           ),
         ),
         TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          validator: validator,
-          keyboardType: keyboardType,
-          readOnly: readOnly,
-          onTap: onTap,
-          maxLines: maxLines,
-          textCapitalization: textCapitalization,
-          onChanged: onChanged,
+          controller: widget.controller,
+          obscureText: _isObscured,
+          validator: widget.validator,
+          keyboardType: widget.keyboardType,
+          readOnly: widget.readOnly,
+          onTap: widget.onTap,
+          maxLines: widget.maxLines,
+          textCapitalization: widget.textCapitalization,
+          onChanged: widget.onChanged,
           style: GoogleFonts.outfit(
             fontSize: 16,
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
-            hintText: hintText,
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.primary, size: 22) : null,
-            suffixIcon: suffixIcon,
+            hintText: widget.hintText,
+            prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, color: AppColors.primary, size: 22) : null,
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _isObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() => _isObscured = !_isObscured),
+                  )
+                : widget.suffixIcon,
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

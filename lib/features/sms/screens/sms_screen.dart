@@ -2,9 +2,9 @@ import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:classmyte/core/widgets/custom_dropdown.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
-import 'package:classmyte/features/premium/screens/subscription_screen.dart';
 import 'package:classmyte/features/sms/data/sms_service.dart';
 import 'package:classmyte/features/sms/providers/template_providers.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -110,52 +111,30 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   void _showPremiumDialog(
       BuildContext context, List<Map<String, String>> contactList) {
     final adManager = ref.read(adManagerProvider);
-    showDialog(
+    
+    CustomDialog.show(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: Text('Send Bulk Message',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-          content: Text(
-              'To send bulk messages, you can either watch a quick ad or upgrade to premium for an ad-free experience.',
-              style: GoogleFonts.outfit()),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                if (adManager.isAdLoaded.value) {
-                  bool adCompleted = await adManager.showRewardedAd();
-                  if (adCompleted) sendMessage(contactList);
-                } else {
-                  Fluttertoast.showToast(msg: "Loading ad, please wait...");
-                  adManager.loadRewardedAd(onAdLoaded: () async {
-                    bool adCompleted = await adManager.showRewardedAd();
-                    if (adCompleted) sendMessage(contactList);
-                  });
-                }
-              },
-              child: Text('Watch Ad',
-                  style: GoogleFonts.outfit(
-                      color: AppColors.primary, fontWeight: FontWeight.bold)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => const SubscriptionScreen()));
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text('Go Premium',
-                  style: GoogleFonts.outfit(color: Colors.white)),
-            ),
-          ],
-        );
+      title: 'Send Bulk Message',
+      subtitle: 'To send bulk messages, you can either watch a quick ad or upgrade to premium for an ad-free experience.',
+      confirmText: 'Go Premium',
+      cancelText: 'Watch Ad',
+      confirmColor: AppColors.primary,
+      onConfirm: () {
+        Navigator.of(context).pop();
+        context.push('/subscription');
+      },
+      onCancel: () async {
+        Navigator.of(context).pop();
+        if (adManager.isAdLoaded.value) {
+          bool adCompleted = await adManager.showRewardedAd();
+          if (adCompleted) sendMessage(contactList);
+        } else {
+          Fluttertoast.showToast(msg: "Loading ad, please wait...");
+          adManager.loadRewardedAd(onAdLoaded: () async {
+            bool adCompleted = await adManager.showRewardedAd();
+            if (adCompleted) sendMessage(contactList);
+          });
+        }
       },
     );
   }

@@ -1,5 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/core/widgets/custom_button.dart';
+import 'package:classmyte/core/widgets/custom_header.dart';
+import 'package:classmyte/core/widgets/custom_snackbar.dart';
+import 'package:classmyte/core/widgets/custom_text_field.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -12,40 +19,55 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final TextEditingController currentPasswordController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final ValueNotifier<bool> isLoading = ValueNotifier(false);
-  final ValueNotifier<String> errorMessage = ValueNotifier('');
-  final FocusNode currentPasswordFocusNode = FocusNode();
-  final FocusNode newPasswordFocusNode = FocusNode();
 
   Future<void> changePassword(BuildContext context) async {
-    if (currentPasswordController.text.isEmpty || newPasswordController.text.isEmpty) {
-      errorMessage.value = 'Please fill in all fields.';
+    final currentPass = currentPasswordController.text.trim();
+    final newPass = newPasswordController.text.trim();
+
+    if (currentPass.isEmpty || newPass.isEmpty) {
+      CustomSnackBar.showError(context, 'Please fill in all fields.');
+      return;
+    }
+    
+    if (newPass.length < 6) {
+      CustomSnackBar.showError(context, 'New password must be at least 6 characters.');
       return;
     }
 
     isLoading.value = true;
     try {
       User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      
       AuthCredential credential = EmailAuthProvider.credential(
-        email: user!.email!,
-        password: currentPasswordController.text.trim(),
+        email: user.email!,
+        password: currentPass,
       );
 
       // Reauthenticate user
       await user.reauthenticateWithCredential(credential);
 
       // Change password
-      await user.updatePassword(newPasswordController.text.trim());
+      await user.updatePassword(newPass);
 
-      // Automatically sign out from all devices
+      // Success feedback
+      if (context.mounted) {
+        CustomSnackBar.showSuccess(context, 'Password changed successfully! Please log in again.');
+      }
+
+      // Automatically sign out as security best practice
       await FirebaseAuth.instance.signOut();
-
-      // Show success message and navigate back
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password changed successfully! Please log in again.')),
-      );
+      
+      // Navigate to login using GoRouter
+      if (context.mounted) {
+        context.go('/login');
+      }
+    } on FirebaseAuthException catch (e) {
+      String msg = 'Failed to change password.';
+      if (e.code == 'wrong-password') msg = 'Current password is incorrect.';
+      if (context.mounted) CustomSnackBar.showError(context, msg);
     } catch (e) {
-      errorMessage.value = 'Error: ${e.toString()}';
+      if (context.mounted) CustomSnackBar.showError(context, 'An unexpected error occurred.');
     } finally {
       isLoading.value = false;
     }
@@ -55,133 +77,115 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   void dispose() {
     currentPasswordController.dispose();
     newPasswordController.dispose();
-    currentPasswordFocusNode.dispose();
-    newPasswordFocusNode.dispose();
+    isLoading.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       appBar: AppBar(
-        iconTheme: const IconThemeData(
-          color: Colors.white, // Change the back button color to white
-        ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade400, Colors.blue.shade900],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        title: const Text(
-          'Change Password',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22, // Make the font size a bit larger
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: GestureDetector(
-        onTap: () {
-          // Unfocus text fields when tapping outside
-          currentPasswordFocusNode.unfocus();
-          newPasswordFocusNode.unfocus();
-        },
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, Colors.blueAccent],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: ValueListenableBuilder<bool>(
-              valueListenable: isLoading,
-              builder: (context, loading, child) {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const CustomHeader(title: 'Change Password'),
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: AppColors.backgroundGradient,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
                   children: [
-                    // Current Password Field
-                    _buildPasswordField(
-                      controller: currentPasswordController,
-                      labelText: 'Current Password',
-                      focusNode: currentPasswordFocusNode,
-                    ),
-                    const SizedBox(height: 20),
-                    // New Password Field
-                    _buildPasswordField(
-                      controller: newPasswordController,
-                      labelText: 'New Password',
-                      focusNode: newPasswordFocusNode,
-                    ),
-                    const SizedBox(height: 20),
-                    loading
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: () => changePassword(context),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                              backgroundColor: Colors.blue[800], // Button color
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30), // Rounded corners
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Update Security',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Enter your current and new password to update your account security.',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          CustomTextField(
+                            labelText: 'Current Password',
+                            hintText: 'Enter old password',
+                            prefixIcon: Icons.lock_open_outlined,
+                            controller: currentPasswordController,
+                            isPassword: true,
+                          ),
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => context.push('/forgot-password'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              textStyle: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                              child: Text(
+                                'Forgot Password?',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
-                            child: const Text('Change Password', style: TextStyle(color: Colors.white),),
                           ),
-                    const SizedBox(height: 20),
-                    // Error Message Display
-                    ValueListenableBuilder<String>(
-                      valueListenable: errorMessage,
-                      builder: (context, error, child) {
-                        return Text(
-                          error,
-                          style: const TextStyle(color: Colors.red),
-                        );
-                      },
+                          const SizedBox(height: 20),
+                          CustomTextField(
+                            labelText: 'New Password',
+                            hintText: 'Enter new password',
+                            prefixIcon: Icons.lock_outline,
+                            controller: newPasswordController,
+                            isPassword: true,
+                          ),
+                          const SizedBox(height: 32),
+                          ValueListenableBuilder<bool>(
+                            valueListenable: isLoading,
+                            builder: (context, loading, _) => CustomButton(
+                              text: 'Update Password',
+                              isLoading: loading,
+                              onPressed: () => changePassword(context),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
-                );
-              },
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField({required TextEditingController controller, required String labelText, required FocusNode focusNode}) {
-    
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      obscureText: true,
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: const TextStyle(color: Colors.black54),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.blueAccent),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
-        ),
-        
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        ],
       ),
     );
   }
 }
+
 

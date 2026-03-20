@@ -3,7 +3,7 @@ import 'package:classmyte/core/data/data_retrieval.dart';
 import 'package:classmyte/core/services/searching.dart';
 import '../models/student_edit_state.dart';
 
-class StudentEditNotifier extends FamilyNotifier<StudentEditState, Map<String, String>> {
+class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, Map<String, String>> {
   @override
   StudentEditState build(Map<String, String> arg) {
     return StudentEditState(
@@ -33,7 +33,7 @@ class StudentEditNotifier extends FamilyNotifier<StudentEditState, Map<String, S
   void setLoading(bool val) => state = state.copyWith(isLoading: val);
 }
 
-final studentEditProvider = NotifierProvider.family<StudentEditNotifier, StudentEditState, Map<String, String>>(StudentEditNotifier.new);
+final studentEditProvider = NotifierProvider.family.autoDispose<StudentEditNotifier, StudentEditState, Map<String, String>>(StudentEditNotifier.new);
 
 final studentDataProvider = FutureProvider<List<Map<String, String>>>((ref) async => await StudentData.getStudentData());
 

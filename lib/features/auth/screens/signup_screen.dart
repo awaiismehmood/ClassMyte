@@ -2,7 +2,6 @@ import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
-import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/features/auth/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,7 +58,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(signupLoadingProvider);
-    final isObscure = ref.watch(signupObscureProvider);
 
     return Scaffold(
       body: Container(
@@ -73,13 +71,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Hero(
-                    tag: 'logo',
-                    child: Image.asset(
-                      'assets/pencil_white.png',
-                      height: 100,
-                    ),
-                  ),
+                  // Hero(
+                  //   tag: 'logo',
+                  //   child: Image.asset(
+                  //     'assets/pencil_white.png',
+                  //     height: 100,
+                  //   ),
+                  // ),
                   const SizedBox(height: 16),
                   Text(
                     'Create Account',
@@ -146,15 +144,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             hintText: 'Create a password',
                             prefixIcon: Icons.lock_outline,
                             controller: passwordController,
-                            obscureText: isObscure,
-                            suffixIcon: IconButton(
-                              icon: Icon(isObscure
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined),
-                              onPressed: () => ref
-                                  .read(signupObscureProvider.notifier)
-                                  .state = !isObscure,
-                            ),
+                            isPassword: true,
                             validator: (v) => v == null || v.length < 6
                                 ? 'Min 6 characters required'
                                 : null,

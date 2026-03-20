@@ -2,6 +2,8 @@ import 'package:classmyte/core/data/edit_contacts.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
+import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/features/students/models/student_edit_state.dart';
 import 'package:classmyte/core/services/student_utils.dart';
@@ -23,26 +25,29 @@ class StudentDetailSheet extends ConsumerWidget {
   }
 
   void _deleteStudent(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
+    CustomDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Delete Contact', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to remove this student from your list?', style: GoogleFonts.outfit()),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.outfit(color: AppColors.textSecondary))),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Yes, Delete', style: GoogleFonts.outfit(color: Colors.redAccent, fontWeight: FontWeight.bold))),
-        ],
-      ),
+      title: 'Delete Student',
+      subtitle: 'Are you sure you want to remove this student from your list?',
+      confirmText: 'Yes, Delete',
+      confirmColor: Colors.redAccent,
+      onConfirm: () async {
+        try {
+          await EditContactService.deleteContact(student['id'] ?? '');
+          ref.invalidate(studentDataProvider);
+          if (context.mounted) {
+            Navigator.pop(context); // Close dialog
+            Navigator.pop(context); // Close bottom sheet
+            CustomSnackBar.showSuccess(context, 'Student deleted successfully');
+          }
+        } catch (e) {
+          if (context.mounted) {
+            Navigator.pop(context); // Close dialog
+            CustomSnackBar.showError(context, 'Error deleting student');
+          }
+        }
+      },
     );
-
-    if (confirmed == true) {
-      await EditContactService.deleteContact(student['id'] ?? '');
-      ref.invalidate(studentDataProvider);
-      if (context.mounted) {
-        Navigator.pop(context); // Close bottom sheet
-      }
-    }
   }
 
   void _saveChanges(BuildContext context, WidgetRef ref, StudentEditState state) async {

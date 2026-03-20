@@ -1,8 +1,10 @@
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
+import 'package:classmyte/core/data/edit_contacts.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
+import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/core/providers/providers.dart';
-import 'package:classmyte/features/classes/widgets/delete_class_sheet.dart';
 import 'package:classmyte/features/classes/widgets/edit_class_sheet.dart';
 import 'package:classmyte/features/classes/providers/class_providers.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
@@ -192,7 +194,40 @@ class ClassScreen extends ConsumerWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
-                onPressed: () => DeleteClassSheet.show(context, className),
+                onPressed: () {
+                  final confirmController = TextEditingController();
+                  CustomDialog.show(
+                    context: context,
+                    title: 'Delete Category',
+                    subtitle: "Type '$className' below to confirm. All students in this category will be removed.",
+                    confirmText: 'Delete Now',
+                    confirmColor: Colors.redAccent,
+                    controller: confirmController,
+                    inputLabel: 'Category Name',
+                    inputHint: 'Enter name precisely',
+                    onConfirm: () async {
+                      if (confirmController.text.trim() != className) {
+                        Navigator.pop(context);
+                        CustomSnackBar.showError(context, 'Failed to delete: Name does not match');
+                        return;
+                      }
+
+                      try {
+                        await EditContactService.deleteClassAndStudents(className);
+                        ref.invalidate(studentDataProvider);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          CustomSnackBar.showSuccess(context, 'Category deleted successfully');
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          CustomSnackBar.showError(context, 'Error deleting category');
+                        }
+                      }
+                    },
+                  );
+                },
               ),
             ],
           ),
