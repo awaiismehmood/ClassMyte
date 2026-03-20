@@ -1,6 +1,7 @@
-import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TemplateModel {
   final String id;
@@ -35,51 +36,89 @@ class PersonalizationNotifier extends StateNotifier<Map<String, String>> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = {
-      'prefix': prefs.getString('msg_prefix') ?? '',
-      'suffix': prefs.getString('msg_suffix') ?? '',
-    };
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        state = {
+          'prefix': doc.data()?['msg_prefix'] ?? '',
+          'suffix': doc.data()?['msg_suffix'] ?? '',
+        };
+      }
+    } else {
+      // Fallback for not logged in yet
+      final prefs = await SharedPreferences.getInstance();
+      state = {
+        'prefix': prefs.getString('msg_prefix') ?? '',
+        'suffix': prefs.getString('msg_suffix') ?? '',
+      };
+    }
   }
 
   Future<void> save(String prefix, String suffix) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('msg_prefix', prefix);
-    await prefs.setString('msg_suffix', suffix);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'msg_prefix': prefix,
+        'msg_suffix': suffix,
+      }, SetOptions(merge: true));
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('msg_prefix', prefix);
+      await prefs.setString('msg_suffix', suffix);
+    }
     state = {'prefix': prefix, 'suffix': suffix};
   }
 }
 
-final userTemplatesProvider = StateNotifierProvider<TemplatesNotifier, List<TemplateModel>>((ref) {
-  return TemplatesNotifier();
+final userTemplatesProvider = StreamProvider.autoDispose<List<TemplateModel>>((ref) {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return Stream.value([]);
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('templates')
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+          .map((doc) => TemplateModel.fromMap({...doc.data(), 'id': doc.id}))
+          .toList());
 });
 
-class TemplatesNotifier extends StateNotifier<List<TemplateModel>> {
-  TemplatesNotifier() : super([]) {
-    _load();
+class TemplateService {
+  static Future<void> addTemplate(TemplateModel template) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final docRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('templates')
+        .doc();
+    await docRef.set({...template.toMap(), 'id': docRef.id});
   }
 
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList('user_templates') ?? [];
-    state = data.map((e) => TemplateModel.fromMap(jsonDecode(e))).toList();
+  static Future<void> updateTemplate(TemplateModel template) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('templates')
+        .doc(template.id)
+        .update(template.toMap());
   }
 
-  Future<void> addTemplate(TemplateModel template) async {
-    final prefs = await SharedPreferences.getInstance();
-    final updated = [...state, template];
-    final encoded = updated.map((e) => jsonEncode(e.toMap())).toList();
-    await prefs.setStringList('user_templates', encoded);
-    state = updated;
-  }
-
-  Future<void> removeTemplate(String id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final updated = state.where((e) => e.id != id).toList();
-    final encoded = updated.map((e) => jsonEncode(e.toMap())).toList();
-    await prefs.setStringList('user_templates', encoded);
-    state = updated;
+  static Future<void> removeTemplate(String id) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('templates')
+        .doc(id)
+        .delete();
   }
 }
+
+final selectedTemplateProvider = StateProvider<String?>((ref) => null);
 
 final templateCategoryProvider = StateProvider<String>((ref) => 'Anniversary');

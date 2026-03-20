@@ -104,15 +104,11 @@ Widget _buildHeroCard(BuildContext context) {
     width: double.infinity,
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)], // Purple/Indigo gradient
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
+      gradient: AppColors.primaryGradient,
       borderRadius: BorderRadius.circular(32),
       boxShadow: [
         BoxShadow(
-          color: Colors.purple.withOpacity(0.35),
+          color: AppColors.primary.withOpacity(0.35),
           blurRadius: 20,
           offset: const Offset(0, 10),
         ),
@@ -143,7 +139,7 @@ Widget _buildHeroCard(BuildContext context) {
             ElevatedButton(
               onPressed: () => context.push('/sms'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFB300), // Amber button
+                backgroundColor: AppColors.accent,
                 foregroundColor: Colors.black87,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

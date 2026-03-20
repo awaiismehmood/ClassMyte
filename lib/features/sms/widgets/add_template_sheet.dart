@@ -4,13 +4,13 @@ import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/features/sms/providers/template_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AddTemplateSheet extends ConsumerStatefulWidget {
-  const AddTemplateSheet({super.key});
+  final TemplateModel? existingTemplate;
+  const AddTemplateSheet({super.key, this.existingTemplate});
 
-  static void show(BuildContext context) {
-    CustomBottomSheet.show(context, title: 'New Template', child: const AddTemplateSheet());
+  static void show(BuildContext context, {TemplateModel? template}) {
+    CustomBottomSheet.show(context, title: template == null ? 'New Template' : 'Edit Template', child: AddTemplateSheet(existingTemplate: template));
   }
 
   @override
@@ -18,22 +18,32 @@ class AddTemplateSheet extends ConsumerStatefulWidget {
 }
 
 class _AddTemplateSheetState extends ConsumerState<AddTemplateSheet> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _textController = TextEditingController();
-  String _selectedCategory = 'Anniversary';
+  late final TextEditingController _titleController;
+  late final TextEditingController _textController;
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.existingTemplate?.title ?? '');
+    _textController = TextEditingController(text: widget.existingTemplate?.text ?? '');
+  }
 
-  void _save() {
+  void _save() async {
     if (_titleController.text.trim().isEmpty || _textController.text.trim().isEmpty) return;
 
     final newTemplate = TemplateModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.existingTemplate?.id ?? '', // TemplateService handles generation for new ones inside set()
       title: _titleController.text.trim(),
       text: _textController.text.trim(),
-      category: _selectedCategory,
+      category: 'Custom', // User templates no longer use categories
     );
 
-    ref.read(userTemplatesProvider.notifier).addTemplate(newTemplate);
-    Navigator.pop(context);
+    if (widget.existingTemplate != null) {
+      await TemplateService.updateTemplate(newTemplate);
+    } else {
+      await TemplateService.addTemplate(newTemplate);
+    }
+    
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -52,20 +62,6 @@ class _AddTemplateSheetState extends ConsumerState<AddTemplateSheet> {
           hintText: 'e.g. Special Offer',
           controller: _titleController,
           prefixIcon: Icons.title,
-        ),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<String>(
-          value: _selectedCategory,
-          decoration: InputDecoration(
-            labelText: 'Category',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-          ),
-          items: ['Anniversary', 'Birthday', 'Sales', 'Festivals']
-              .map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.outfit())))
-              .toList(),
-          onChanged: (v) => setState(() => _selectedCategory = v!),
         ),
         const SizedBox(height: 16),
         CustomTextField(

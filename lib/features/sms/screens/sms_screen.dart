@@ -5,6 +5,7 @@ import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:classmyte/features/premium/screens/subscription_screen.dart';
 import 'package:classmyte/features/sms/data/sms_service.dart';
+import 'package:classmyte/features/sms/providers/template_providers.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +33,13 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   void initState() {
     super.initState();
     _requestNotificationPermission();
+    Future.microtask(() {
+      final templateText = ref.read(selectedTemplateProvider);
+      if (templateText != null) {
+        messageController.text = templateText;
+        ref.read(selectedTemplateProvider.notifier).state = null;
+      }
+    });
   }
 
   @override

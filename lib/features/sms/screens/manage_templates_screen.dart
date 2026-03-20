@@ -2,6 +2,7 @@ import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/sms/providers/template_providers.dart';
 import 'package:classmyte/features/sms/widgets/add_template_sheet.dart';
+import 'package:classmyte/features/sms/widgets/template_details_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,11 +25,12 @@ class ManageTemplatesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isMyTemplates = ref.watch(isMyTemplatesProvider);
-    final userTemplates = ref.watch(userTemplatesProvider);
+    final userTemplatesAsync = ref.watch(userTemplatesProvider);
+    final userTemplates = userTemplatesAsync.value ?? [];
     final selectedCategory = ref.watch(templateCategoryProvider);
 
     final currentTemplates = isMyTemplates
-        ? userTemplates.where((t) => t.category == selectedCategory).toList()
+        ? userTemplates
         : _preMadeTemplates.where((t) => t.category == selectedCategory).toList();
 
     return Scaffold(
@@ -47,9 +49,33 @@ class ManageTemplatesScreen extends ConsumerWidget {
                       children: [
                         _buildHeroSection(context, ref, isMyTemplates),
                         const SizedBox(height: 24),
-                        _buildCategoryChips(ref, selectedCategory),
-                        const SizedBox(height: 16),
-                        ...currentTemplates.map((t) => _buildTemplateCard(context, ref, t, isMyTemplates)),
+                        if (!isMyTemplates) ...[
+                          _buildCategoryChips(ref, selectedCategory),
+                          const SizedBox(height: 16),
+                        ],
+                        if (isMyTemplates && currentTemplates.isEmpty)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 40),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.folder_open_outlined, size: 60, color: AppColors.textLight.withOpacity(0.5)),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No Templates Yet',
+                                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Create a custom template to see it here.',
+                                    style: GoogleFonts.outfit(color: AppColors.textLight),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          ...currentTemplates.map((t) => _buildTemplateCard(context, ref, t, isMyTemplates)),
                         const SizedBox(height: 100), // padding for FAB
                       ],
                     ),
@@ -175,7 +201,6 @@ class ManageTemplatesScreen extends ConsumerWidget {
   Widget _buildTemplateCard(BuildContext context, WidgetRef ref, TemplateModel template, bool isMyTemplates) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -183,52 +208,21 @@ class ManageTemplatesScreen extends ConsumerWidget {
           BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isMyTemplates)
-                  Text(template.title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
-                if (isMyTemplates) const SizedBox(height: 8),
-                Text(template.text, style: GoogleFonts.outfit(color: isMyTemplates ? AppColors.textSecondary : AppColors.textPrimary, fontWeight: isMyTemplates ? null : FontWeight.w600, fontSize: 14)),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(Icons.image_outlined, size: 16, color: Color(0xFFF59E0B)),
-                    const SizedBox(width: 6),
-                    Text('Includes media', style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => TemplateDetailsSheet.show(context, template, isMyTemplates),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (isMyTemplates)
-                PopupMenuButton<String>(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-                  onSelected: (v) {
-                    if (v == 'delete') {
-                      ref.read(userTemplatesProvider.notifier).removeTemplate(template.id);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(value: 'delete', child: Text('Delete Template', style: GoogleFonts.outfit(color: Colors.redAccent))),
-                  ],
-                )
-               else
-                 const SizedBox(height: 24),
-              const SizedBox(height: 16),
-              const Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary, size: 20),
+              if (isMyTemplates && template.title.isNotEmpty)
+                Text(template.title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+              if (isMyTemplates && template.title.isNotEmpty) const SizedBox(height: 8),
+              Text(template.text, style: GoogleFonts.outfit(color: isMyTemplates ? AppColors.textSecondary : AppColors.textPrimary, fontWeight: isMyTemplates ? null : FontWeight.w600, fontSize: 14)),
             ],
-          )
-        ],
+          ),
+        ),
       ),
     );
   }
