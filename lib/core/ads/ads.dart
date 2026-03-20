@@ -17,7 +17,7 @@ class AdManager {
   // Load a Rewarded Ad
   void loadRewardedAd({FutureOr<void> Function()? onAdLoaded}) {
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-6452085379535380/1053355157', // Replace with your actual Ad Unit ID
+      adUnitId: 'ca-app-pub-1060843075895153/4811101523', 
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
@@ -89,31 +89,39 @@ class AdManager {
     }
   }
 
+  bool isBannerLoaded = false;
+
   // Load a Banner Ad
   void loadBannerAd(Function onAdLoadedCallback) {
+    if (isBannerLoaded) return;
+    
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-6452085379535380/3415236131',
+      adUnitId: 'ca-app-pub-1060843075895153/1140150525',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (Ad ad) {
+          isBannerLoaded = true;
           onAdLoadedCallback();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
           ad.dispose();
+          isBannerLoaded = false;
         },
       ),
     )..load();
   }
 
   Widget displayBannerAd() {
-    if (_bannerAd != null) {
-      return SizedBox(
-        height: 50,
+    if (isBannerLoaded && _bannerAd != null) {
+      return Container(
+        color: Colors.transparent,
+        width: _bannerAd!.size.width.toDouble(),
+        height: _bannerAd!.size.height.toDouble(),
         child: AdWidget(ad: _bannerAd!),
       );
     } else {
-      return const SizedBox(); // Return an empty widget if the ad is not loaded
+      return const SizedBox(height: 50); // Reserved space to prevent UI jumping
     }
   }
 

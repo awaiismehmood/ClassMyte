@@ -1,4 +1,4 @@
-﻿import 'package:classmyte/features/onboarding/screens/terms_and_conditions_screen.dart';
+import 'package:classmyte/features/onboarding/screens/terms_and_conditions_screen.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -20,19 +20,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return [
       _buildOnboardingPage(
         context,
-        image: 'assets/pencil_white.png',
+        image: 'assets/logo_no_bg.png',
         title: 'Welcome to ClassMyte',
         description: 'Manage your students\' data seamlessly.',
       ),
       _buildOnboardingPage(
         context,
-        image: 'assets/pencil_white.png',
+        image: 'assets/logo_no_bg.png',
         title: 'Bulk SMS Messaging',
         description: 'Send bulk SMS to your entire class in seconds.',
       ),
       _buildOnboardingPageWithCheckbox(
         context,
-        image: 'assets/pencil_white.png',
+        image: 'assets/logo_no_bg.png',
         title: 'Stay Organized',
         description: 'Keep track of students\' details all in one place.',
       ),

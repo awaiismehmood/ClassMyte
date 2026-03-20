@@ -54,6 +54,22 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     });
 
     ref.read(smsProgressProvider.notifier).startListening();
+
+    // Preload ads for free users
+    Future.microtask(() {
+      final isPremium = ref.read(subscriptionProvider).isPremiumUser;
+      if (!isPremium) {
+        final adManager = ref.read(adManagerProvider);
+        if (!adManager.isBannerLoaded) {
+          adManager.loadBannerAd(() {
+            if (mounted) setState(() {});
+          });
+        }
+        if (!adManager.isAdLoaded.value) {
+          adManager.loadRewardedAd();
+        }
+      }
+    });
   }
 
   @override
@@ -192,13 +208,14 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                   const CircularProgressIndicator(),
                   const SizedBox(height: 24),
                   Text(
-                    'Preparing your messages...',
+                    'Loading Ad...',
                     style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Please wait a few seconds.',
+                    'Your messages will be sent automatically after the ad.',
                     style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -207,8 +224,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         ),
       );
 
-      // Wait for 8-10 seconds as a "free tier" penalty/processing time
-      await Future.delayed(const Duration(seconds: 8));
+      // Wait for 10 seconds as a "free tier" penalty/processing time
+      await Future.delayed(const Duration(seconds: 10));
       
       if (mounted) {
         Navigator.of(context).pop(); // Close loading dialog
@@ -403,6 +420,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
               ),
             ),
           ),
+          if (!isPremium) ref.watch(adManagerProvider).displayBannerAd(),
         ],
       ),
     );

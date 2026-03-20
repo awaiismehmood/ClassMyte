@@ -38,11 +38,7 @@ class AboutScreen extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Image.asset('assets/pencil_white.png', height: 60),
+                            child: Image.asset('assets/logo_no_bg.png', height: 80),
                           ),
                           const SizedBox(height: 24),
                           Text(
