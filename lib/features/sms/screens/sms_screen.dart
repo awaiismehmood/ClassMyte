@@ -219,44 +219,35 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                                     fontSize: 16,
                                     color: AppColors.textPrimary)),
                             const SizedBox(height: 12),
-                            DropdownButtonFormField<String>(
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0, vertical: 12),
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16)),
-                                filled: true,
-                                fillColor: Colors.white,
-                              ),
-                              hint: const Text('Choose Classes'),
+                            CustomDropdown<String>(
+                              value: null,
+                              hintText: 'Choose Classes',
+                              fillColor: Colors.white,
+                              items: [
+                                const CustomDropdownItem(value: 'All', label: 'All Students', icon: Icons.groups_outlined),
+                                ...contactList
+                                    .map((c) => c['class']!)
+                                    .toSet()
+                                    .map((name) => CustomDropdownItem(value: name, label: name, icon: Icons.class_outlined)),
+                              ],
                               onChanged: (String? value) {
                                 if (value != null) {
-                                  if (value == "All") {
-                                    selectedClasses.value = ["All"];
+                                  if (value == 'All') {
+                                    selectedClasses.value = ['All'];
                                   } else {
-                                    if (!selectedClasses.value
-                                        .contains(value)) {
+                                    if (!selectedClasses.value.contains(value)) {
                                       selectedClasses.value =
                                           List.from(selectedClasses.value)
                                             ..add(value);
                                       selectedClasses.value = selectedClasses
                                           .value
-                                          .where((e) => e != "All")
+                                          .where((e) => e != 'All')
                                           .toList();
                                     }
                                   }
                                   warningMessage.value = null;
                                 }
                               },
-                              items: [
-                                const DropdownMenuItem(
-                                    value: "All", child: Text("All Students")),
-                                ...contactList
-                                    .map((c) => c['class']!)
-                                    .toSet()
-                                    .map((name) => DropdownMenuItem(
-                                        value: name, child: Text(name))),
-                              ],
                             ),
                             const SizedBox(height: 12),
                             ValueListenableBuilder<List<String>>(

@@ -124,27 +124,13 @@ class StudentDetailsScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(24)),
                       child: Column(
                         children: [
-                          _buildEditableTile(ref, 'Name', state.name, 'name',
-                              state.isEditable),
-                          _buildEditableTile(ref, 'Father Name',
-                              state.fatherName, 'fatherName', state.isEditable),
-                          _buildEditableTile(ref, 'Class', state.className,
-                              'class', state.isEditable),
-                          _buildEditableTile(ref, 'Phone#', state.phoneNumber,
-                              'phoneNumber', state.isEditable,
-                              isPhone: true),
-                          _buildEditableTile(ref, 'Alternate#', state.altNumber,
-                              'altNumber', state.isEditable,
-                              isPhone: true),
-                          _buildDateTile(context, ref, 'Date of Birth (Age: ${StudentUtils.calculateAge(state.dob)})',
-                              state.dob, 'dob', state.isEditable),
-                          _buildDateTile(
-                              context,
-                              ref,
-                              'Admission Date',
-                              state.admissionDate,
-                              'admissionDate',
-                              state.isEditable),
+                          _buildDetailRow(ref, 'Name', state.name, 'name', state.isEditable),
+                          _buildDetailRow(ref, 'Father Name', state.fatherName, 'fatherName', state.isEditable),
+                          _buildDetailRow(ref, 'Class', state.className, 'class', state.isEditable),
+                          _buildDetailRow(ref, 'Phone', state.phoneNumber, 'phoneNumber', state.isEditable, isPhone: true),
+                          _buildDetailRow(ref, 'Alternate', state.altNumber, 'altNumber', state.isEditable, isPhone: true),
+                          _buildDateRow(context, ref, 'Date of Birth', state.dob, 'dob', state.isEditable, showAge: true),
+                          _buildDateRow(context, ref, 'Admission Date', state.admissionDate, 'admissionDate', state.isEditable),
                         ],
                       ),
                     ),
@@ -170,55 +156,77 @@ class StudentDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEditableTile(
-      WidgetRef ref, String title, String value, String field, bool isEditable,
-      {bool isPhone = false}) {
-    return ListTile(
-      title: Text(title,
-          style:
-              GoogleFonts.outfit(fontSize: 14, color: AppColors.textSecondary)),
-      subtitle: isEditable
-          ? TextField(
-              controller: TextEditingController(text: value)
-                ..selection = TextSelection.collapsed(offset: value.length),
-              onChanged: (v) => ref
-                  .read(studentEditProvider(student).notifier)
-                  .updateField(field, v),
-              decoration: const InputDecoration(
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(vertical: 8)),
-              keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
-              style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary),
-            )
-          : Text(value,
-              style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary)),
+  Widget _buildDetailRow(WidgetRef ref, String label, String value, String field,
+      bool isEditable, {bool isPhone = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          isEditable
+              ? TextField(
+                  controller: TextEditingController(text: value)
+                    ..selection = TextSelection.collapsed(offset: value.length),
+                  onChanged: (v) => ref.read(studentEditProvider(student).notifier).updateField(field, v),
+                  decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 6)),
+                  keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                )
+              : Text(value.isNotEmpty ? value : '—',
+                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const Divider(height: 20, color: Color(0xFFF0F0F0)),
+        ],
+      ),
     );
   }
 
-  Widget _buildDateTile(BuildContext context, WidgetRef ref, String title,
-      String value, String field, bool isEditable) {
-    return ListTile(
-      title: Text(title,
-          style:
-              GoogleFonts.outfit(fontSize: 14, color: AppColors.textSecondary)),
-      subtitle: GestureDetector(
-        onTap: isEditable ? () => _selectDate(context, ref, field) : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(
-            value.isNotEmpty ? value : 'Select Date',
-            style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isEditable ? AppColors.primary : AppColors.textPrimary),
+  Widget _buildDateRow(BuildContext context, WidgetRef ref, String label,
+      String value, String field, bool isEditable, {bool showAge = false}) {
+    final int? age = showAge ? StudentUtils.calculateAge(value) : null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          GestureDetector(
+            onTap: isEditable ? () => _selectDate(context, ref, field) : null,
+            child: Row(
+              children: [
+                Text(
+                  value.isNotEmpty ? value : (isEditable ? 'Tap to select' : '—'),
+                  style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isEditable ? AppColors.primary : AppColors.textPrimary),
+                ),
+                if (age != null && age > 0) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('Age $age',
+                        style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
+          const Divider(height: 20, color: Color(0xFFF0F0F0)),
+        ],
       ),
     );
   }

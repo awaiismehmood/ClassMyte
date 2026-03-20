@@ -129,6 +129,7 @@ class StudentDetailSheet extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.02), borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.primary.withOpacity(0.05))),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildField(ref, 'Name', state.name, 'name', state.isEditable),
               _buildField(ref, 'Class', state.className, 'class', state.isEditable),
@@ -188,10 +189,12 @@ class StudentDetailSheet extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
-              if (trailing != null) trailing,
+              if (trailing != null) ...[  
+                const SizedBox(width: 8),
+                trailing,
+              ],
             ],
           ),
           const SizedBox(height: 4),

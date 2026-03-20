@@ -8,6 +8,7 @@ import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AddContactSheet extends ConsumerStatefulWidget {
   final VoidCallback onRefresh;
@@ -117,17 +118,29 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
             ),
             const SizedBox(height: 16),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: CustomDropdown<String>(
-                    value: selectedClass,
-                    hintText: 'Select Class',
-                    fillColor: AppColors.primary.withOpacity(0.05),
-                    items: allClasses.map((c) => CustomDropdownItem(value: c, label: c)).toList(),
-                    onChanged: (v) => setState(() {
-                      selectedClass = v;
-                      if (v != null) classController.clear();
-                    }),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Select Class',
+                          style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary)),
+                      const SizedBox(height: 6),
+                      CustomDropdown<String>(
+                        value: selectedClass,
+                        hintText: 'Pick a class',
+                        fillColor: AppColors.primary.withOpacity(0.05),
+                        items: allClasses.map((c) => CustomDropdownItem(value: c, label: c)).toList(),
+                        onChanged: (v) => setState(() {
+                          selectedClass = v;
+                          if (v != null) classController.clear();
+                        }),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 12),
