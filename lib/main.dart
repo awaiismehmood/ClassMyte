@@ -3,6 +3,7 @@ import 'package:classmyte/core/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:classmyte/core/navigation/app_router.dart';
 import 'package:classmyte/core/theme/app_theme.dart';
+import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,9 +88,14 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     final subscriptionState = ref.watch(subscriptionProvider);
 
     if (subscriptionState.isLoading) {
-      return const MaterialApp(
-        home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const Scaffold(
+          backgroundColor: AppColors.background,
+          body: Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
         ),
       );
     }

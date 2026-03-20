@@ -11,31 +11,31 @@ Widget buildHomeScreen(BuildContext context) {
       _buildHeroCard(context),
       const SizedBox(height: 24),
 
-      // Top 3 Cards (Backup, Reports, Classes)
+      // Top 3 Cards (Export, Import, Message Report)
       Row(
         children: [
           _buildQuickCard(
             context,
-            'Backup in cloud',
+            'Export Contacts',
             Icons.cloud_upload_outlined,
             Colors.purple,
-            onTap: () => context.push('/data-management'),
+            onTap: () => context.push('/export'),
+          ),
+          const SizedBox(width: 12),
+          _buildQuickCard(
+            context,
+            'Import Contacts',
+            Icons.file_download_outlined,
+            Colors.orange,
+            onTap: () => context.push('/import'),
           ),
           const SizedBox(width: 12),
           _buildQuickCard(
             context,
             'Message Report',
-            Icons.description_outlined,
-            Colors.orange,
-            onTap: () => context.push('/classes'),
-          ),
-          const SizedBox(width: 12),
-          _buildQuickCard(
-            context,
-            'Campaign Status',
-            Icons.campaign_outlined,
+            Icons.analytics_outlined,
             Colors.blue,
-            onTap: () => context.push('/data-management'),
+            onTap: () => context.push('/message-report'),
           ),
         ],
       ),
@@ -55,7 +55,7 @@ Widget buildHomeScreen(BuildContext context) {
           _buildDualColumnCard(
             context,
             'My contacts',
-            Icons.person_add_disabled_outlined,
+            Icons.person_add_outlined,
             Colors.blue,
             onTap: () => context.push('/students'),
           ),
@@ -68,17 +68,11 @@ Widget buildHomeScreen(BuildContext context) {
           ),
           _buildDualColumnCard(
             context,
-            'Group or Category',
+            'Categories',
             Icons.groups_outlined,
             Colors.pink,
             onTap: () => context.push('/classes'),
           ),
-          _buildDualColumnCard(
-              context,
-              'Grab Unsaved',
-              Icons.contact_phone_outlined,
-              Colors.green,
-              onTap: () => context.push('/students')),
           _buildDualColumnCard(
             context,
             'Manage Templates',
@@ -93,6 +87,9 @@ Widget buildHomeScreen(BuildContext context) {
             Colors.purple,
             onTap: () => context.push('/personalize-message'),
           ),
+          _buildDualColumnCard(
+              context, 'History', Icons.history_outlined, Colors.green,
+              onTap: () => context.push('/students')),
         ],
       ),
     ],
@@ -141,8 +138,10 @@ Widget _buildHeroCard(BuildContext context) {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 foregroundColor: Colors.black87,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: Text(
                 'Get Started',
@@ -165,7 +164,9 @@ Widget _buildHeroCard(BuildContext context) {
   );
 }
 
-Widget _buildQuickCard(BuildContext context, String label, IconData icon, Color color, {required VoidCallback onTap}) {
+Widget _buildQuickCard(
+    BuildContext context, String label, IconData icon, Color color,
+    {required VoidCallback onTap}) {
   return Expanded(
     child: InkWell(
       onTap: onTap,
@@ -212,7 +213,9 @@ Widget _buildQuickCard(BuildContext context, String label, IconData icon, Color 
   );
 }
 
-Widget _buildDualColumnCard(BuildContext context, String title, IconData icon, Color color, {required VoidCallback onTap}) {
+Widget _buildDualColumnCard(
+    BuildContext context, String title, IconData icon, Color color,
+    {required VoidCallback onTap}) {
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(20),

@@ -2,6 +2,7 @@ import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
+import 'package:classmyte/core/widgets/custom_dropdown.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:classmyte/features/premium/screens/subscription_screen.dart';
 import 'package:classmyte/features/sms/data/sms_service.dart';
@@ -284,12 +285,6 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            Text('Safety Delay',
-                                style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: AppColors.textPrimary)),
-                            const SizedBox(height: 12),
                             _buildDelaySection(),
                             const SizedBox(height: 32),
                             Text('Message Content',
@@ -347,33 +342,49 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   }
 
   Widget _buildDelaySection() {
-    return ValueListenableBuilder<int>(
-      valueListenable: selectedDelay,
-      builder: (context, delay, _) => Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(20)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [0, 15, 30, 45]
-              .map((d) => FilterChip(
-                    label: Text('${d}s',
-                        style: GoogleFonts.outfit(
-                            color: delay == d
-                                ? Colors.white
-                                : AppColors.textSecondary)),
-                    selected: delay == d,
-                    onSelected: (bool selected) {
-                      if (selected) selectedDelay.value = d;
-                    },
-                    selectedColor: AppColors.primary,
-                    backgroundColor: AppColors.primary.withOpacity(0.05),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    showCheckmark: false,
-                  ))
-              .toList(),
-        ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.more_time_rounded, color: Colors.teal),
+              const SizedBox(width: 8),
+              Text('Message delay time', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '(We strongly recommend a 15 second+ delay if you don\'t want to risk your SIM being blocked by Mobile Carriers or the PTA for spamming)',
+            style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+          ),
+          const SizedBox(height: 20),
+          ValueListenableBuilder<int>(
+            valueListenable: selectedDelay,
+            builder: (context, delay, _) => CustomDropdown<int>(
+              value: [0, 5, 10, 15, 30, 45, 60].contains(delay) ? delay : 15, // Provide safe fallback
+              fillColor: Colors.white,
+              items: [0, 5, 10, 15, 30, 45, 60].map((d) {
+                return CustomDropdownItem<int>(
+                  value: d,
+                  label: 'Fixed ($d Sec)',
+                  icon: Icons.timer_outlined,
+                );
+              }).toList(),
+              onChanged: (val) {
+                if (val != null) selectedDelay.value = val;
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

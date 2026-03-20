@@ -3,6 +3,7 @@ import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_snackbar.dart';
+import 'package:classmyte/core/widgets/custom_dropdown.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:flutter/material.dart';
@@ -96,15 +97,11 @@ class _EditClassSheetState extends ConsumerState<EditClassSheet> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        DropdownButtonFormField<String>(
+        CustomDropdown<String>(
           value: selectedClass,
-          hint: Text('Select Category To Merge To', style: GoogleFonts.outfit()),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: AppColors.primary.withOpacity(0.05),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-          ),
-          items: widget.classes.map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.outfit()))).toList(),
+          hintText: 'Select Category To Merge To',
+          fillColor: AppColors.primary.withOpacity(0.05),
+          items: widget.classes.map((c) => CustomDropdownItem(value: c, label: c)).toList(),
           onChanged: (v) => setState(() {
             if (v != null) {
               selectedClass = v;

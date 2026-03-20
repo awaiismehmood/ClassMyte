@@ -1,17 +1,19 @@
 import 'package:classmyte/core/providers/providers.dart';
+import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/features/auth/screens/forgot_password_screen.dart';
 import 'package:classmyte/features/auth/screens/login_screen.dart';
 import 'package:classmyte/features/auth/screens/signup_screen.dart';
 import 'package:classmyte/features/home/screens/home_screen.dart';
 import 'package:classmyte/features/premium/screens/subscription_screen.dart';
-import 'package:classmyte/features/data_sync/screens/data_management_screen.dart';
+import 'package:classmyte/features/data_sync/screens/import_screen.dart';
+import 'package:classmyte/features/data_sync/screens/export_screen.dart';
 import 'package:classmyte/features/students/screens/students_screen.dart';
 import 'package:classmyte/features/students/screens/student_details_screen.dart';
-import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/features/classes/screens/classes_screen.dart';
 import 'package:classmyte/features/sms/screens/sms_screen.dart';
 import 'package:classmyte/features/sms/screens/manage_templates_screen.dart';
 import 'package:classmyte/features/sms/screens/personalize_message_screen.dart';
+import 'package:classmyte/features/sms/screens/message_report_screen.dart';
 import 'package:classmyte/features/settings/screens/settings_screen.dart';
 import 'package:classmyte/features/settings/screens/contact_us_screen.dart';
 import 'package:classmyte/features/settings/screens/about_screen.dart';
@@ -56,9 +58,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SubscriptionScreen(),
       ),
       GoRoute(
-        path: '/data-management',
-        name: 'data-management',
-        builder: (context, state) => const UploadDownloadScreen(),
+        path: '/import',
+        name: 'import',
+        builder: (context, state) => const ImportScreen(),
+      ),
+      GoRoute(
+        path: '/export',
+        name: 'export',
+        builder: (context, state) => const ExportScreen(),
       ),
       GoRoute(
         path: '/students',
@@ -94,6 +101,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/personalize-message',
         name: 'personalize-message',
         builder: (context, state) => const PersonalizeMessageScreen(),
+      ),
+      GoRoute(
+        path: '/message-report',
+        name: 'message-report',
+        builder: (context, state) => const MessageReportScreen(),
       ),
       GoRoute(
         path: '/settings',
@@ -142,7 +154,10 @@ class AuthGate extends ConsumerWidget {
         if (user != null) return const HomePage();
         return const LoginScreen();
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      ),
       error: (e, s) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }

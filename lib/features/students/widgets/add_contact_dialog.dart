@@ -3,11 +3,11 @@ import 'package:classmyte/core/data/data_retrieval.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
+import 'package:classmyte/core/widgets/custom_dropdown.dart';
 import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AddContactSheet extends ConsumerStatefulWidget {
   final VoidCallback onRefresh;
@@ -119,15 +119,11 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
+                  child: CustomDropdown<String>(
                     value: selectedClass,
-                    hint: Text('Select Class', style: GoogleFonts.outfit(fontSize: 14)),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: AppColors.primary.withOpacity(0.05),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                    ),
-                    items: allClasses.map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.outfit()))).toList(),
+                    hintText: 'Select Class',
+                    fillColor: AppColors.primary.withOpacity(0.05),
+                    items: allClasses.map((c) => CustomDropdownItem(value: c, label: c)).toList(),
                     onChanged: (v) => setState(() {
                       selectedClass = v;
                       if (v != null) classController.clear();

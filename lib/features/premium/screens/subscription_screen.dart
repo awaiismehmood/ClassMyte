@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
@@ -53,11 +54,130 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
+  Future<void> _cancelSubscription() async {
+    final passwordController = TextEditingController();
+    bool confirmed = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Cancel Subscription', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Please enter your password to confirm cancellation:', style: GoogleFonts.outfit()),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Back')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Cancel Plan', style: GoogleFonts.outfit(color: Colors.white)),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (confirmed) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+        try {
+          AuthCredential credential = EmailAuthProvider.credential(email: user.email!, password: passwordController.text.trim());
+          await user.reauthenticateWithCredential(credential);
+          await ref.read(subscriptionProvider.notifier).updateSubscription('Free', null);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Subscription cancelled successfully')));
+          }
+        } catch (e) {
+          if (mounted) {
+            _showErrorDialog('Verification Failed', 'Incorrect password. Could not cancel subscription.');
+          }
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final subscriptionState = ref.watch(subscriptionProvider);
     final selectedPlan = ref.watch(selectedPlanProvider);
     final isProcessing = ref.watch(paymentProcessingProvider);
+
+    if (subscriptionState.isPremiumUser) {
+      return Scaffold(
+        body: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: AppColors.primaryGradient,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.accent.withOpacity(0.3), blurRadius: 40, spreadRadius: 10),
+                  ],
+                ),
+                child: const Icon(Icons.workspace_premium, size: 100, color: AppColors.accent),
+              ),
+              const SizedBox(height: 48),
+              Text(
+                'You are already\nsubscribed',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Enjoy our all premium features.',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 64),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.home, color: AppColors.primary),
+                  label: Text('Go to Home', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    elevation: 10,
+                    shadowColor: Colors.black.withOpacity(0.2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: _cancelSubscription,
+                child: Text('Cancel Subscription', style: GoogleFonts.outfit(color: Colors.white70, decoration: TextDecoration.underline, fontWeight: FontWeight.w500)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
