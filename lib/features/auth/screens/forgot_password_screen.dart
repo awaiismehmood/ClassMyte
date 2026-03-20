@@ -29,13 +29,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     try {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: emailController.text.trim());
-      if (mounted)
+      if (mounted) {
         CustomSnackBar.showInfo(
             context, 'Reset link sent! Please check your inbox.');
+      }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         CustomSnackBar.showError(
             context, 'Error occurred: ${error.toString()}');
+      }
     } finally {
       ref.read(forgotPasswordLoadingProvider.notifier).state = false;
     }
@@ -88,7 +90,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           "Forgot your password? No problem. Enter your email and we'll send you a link to reset it.",
                           style: GoogleFonts.outfit(
                             fontSize: 14,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.6),
                           ),
                           textAlign: TextAlign.center,
                         ),

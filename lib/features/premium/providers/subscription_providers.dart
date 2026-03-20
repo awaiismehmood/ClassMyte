@@ -44,7 +44,10 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
     try {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
         var data = userDoc.data() as Map<String, dynamic>?;
 
         if (data != null) {
@@ -53,12 +56,24 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
             final expiry = (subscription['expiryDate'] as Timestamp?)?.toDate();
             if (expiry != null && expiry.isBefore(DateTime.now())) {
               await updateSubscription('Free', null);
-              state = state.copyWith(isPremiumUser: false, subscribedPackage: 'Free', expiryDate: null, isLoading: false);
+              state = state.copyWith(
+                  isPremiumUser: false,
+                  subscribedPackage: 'Free',
+                  expiryDate: null,
+                  isLoading: false);
             } else {
-              state = state.copyWith(isPremiumUser: true, subscribedPackage: subscription['package'], expiryDate: expiry, isLoading: false);
+              state = state.copyWith(
+                  isPremiumUser: true,
+                  subscribedPackage: subscription['package'],
+                  expiryDate: expiry,
+                  isLoading: false);
             }
           } else {
-            state = state.copyWith(isPremiumUser: false, subscribedPackage: 'Free', expiryDate: null, isLoading: false);
+            state = state.copyWith(
+                isPremiumUser: false,
+                subscribedPackage: 'Free',
+                expiryDate: null,
+                isLoading: false);
           }
         } else {
           state = state.copyWith(isLoading: false);
@@ -74,13 +89,26 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
   Future<void> updateSubscription(String package, DateTime? expiryDate) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      DocumentReference userDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      DocumentReference userDocRef =
+          FirebaseFirestore.instance.collection('users').doc(user.uid);
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         DocumentSnapshot userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists) {
-          await transaction.set(userDocRef, {'subscription': {'package': package, 'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate) : null}});
+          transaction.set(userDocRef, {
+            'subscription': {
+              'package': package,
+              'expiryDate':
+                  expiryDate != null ? Timestamp.fromDate(expiryDate) : null
+            }
+          });
         } else {
-          await transaction.update(userDocRef, {'subscription': {'package': package, 'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate) : null}});
+          transaction.update(userDocRef, {
+            'subscription': {
+              'package': package,
+              'expiryDate':
+                  expiryDate != null ? Timestamp.fromDate(expiryDate) : null
+            }
+          });
         }
       });
       await checkSubscriptionStatus();
@@ -88,6 +116,8 @@ class SubscriptionNotifier extends Notifier<SubscriptionState> {
   }
 }
 
-final subscriptionProvider = NotifierProvider<SubscriptionNotifier, SubscriptionState>(SubscriptionNotifier.new);
+final subscriptionProvider =
+    NotifierProvider<SubscriptionNotifier, SubscriptionState>(
+        SubscriptionNotifier.new);
 final selectedPlanProvider = StateProvider<String>((ref) => 'Free');
 final paymentProcessingProvider = StateProvider<bool>((ref) => false);

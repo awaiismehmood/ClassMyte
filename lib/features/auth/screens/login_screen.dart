@@ -43,9 +43,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         if (userCredential.user != null &&
             !userCredential.user!.emailVerified) {
-          if (mounted)
+          if (mounted) {
             CustomSnackBar.showError(
                 context, 'Please verify your email before logging in.');
+          }
           FirebaseAuth.instance.signOut();
           return;
         }
@@ -55,8 +56,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (e.code == 'wrong-password') msg = 'Incorrect password.';
         if (mounted) CustomSnackBar.showError(context, msg);
       } catch (error) {
-        if (mounted)
+        if (mounted) {
           CustomSnackBar.showError(context, 'An unexpected error occurred.');
+        }
       } finally {
         ref.read(loginLoadingProvider.notifier).state = false;
       }
@@ -166,7 +168,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Text(
                                 "Don't have an account? ",
                                 style: GoogleFonts.outfit(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.6)),
                               ),
                               GestureDetector(
                                 onTap: () => context.push('/signup'),

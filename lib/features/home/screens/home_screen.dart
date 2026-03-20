@@ -1,7 +1,6 @@
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/features/home/widgets/dashboard_widgets.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
-import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +13,6 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final subscriptionState = ref.watch(subscriptionProvider);
     final isPremium = subscriptionState.isPremiumUser;
-
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -50,7 +48,8 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildCircleAction({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildCircleAction(
+      {required IconData icon, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(15),

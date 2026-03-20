@@ -42,13 +42,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         }
       } on FirebaseAuthException catch (e) {
         String msg = 'Error occurred during signup';
-        if (e.code == 'email-already-in-use')
+        if (e.code == 'email-already-in-use') {
           msg = 'The email is already in use.';
+        }
         if (e.code == 'weak-password') msg = 'The password is too weak.';
         if (mounted) CustomSnackBar.showError(context, msg);
       } catch (error) {
-        if (mounted)
+        if (mounted) {
           CustomSnackBar.showError(context, 'An unexpected error occurred.');
+        }
       } finally {
         ref.read(signupLoadingProvider.notifier).state = false;
       }
@@ -157,7 +159,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               Text(
                                 "Already have an account? ",
                                 style: GoogleFonts.outfit(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.6)),
                               ),
                               GestureDetector(
                                 onTap: () => context.pop(),

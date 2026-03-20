@@ -77,11 +77,8 @@ class SettingsScreen extends ConsumerWidget {
           color: AppColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(
-          isDark ? Icons.dark_mode : Icons.light_mode_outlined, 
-          color: AppColors.primary, 
-          size: 20
-        ),
+        child: Icon(isDark ? Icons.dark_mode : Icons.light_mode_outlined,
+            color: AppColors.primary, size: 20),
       ),
       title: Text(
         'Dark Mode',
@@ -94,12 +91,13 @@ class SettingsScreen extends ConsumerWidget {
       trailing: Switch(
         value: isDark,
         onChanged: (v) => ref.read(themeProvider.notifier).toggleTheme(v),
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
       ),
     );
   }
 
-  Widget _buildSettingsGroup(BuildContext context, String title, List<Widget> children) {
+  Widget _buildSettingsGroup(
+      BuildContext context, String title, List<Widget> children) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -121,7 +119,8 @@ class SettingsScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isThemeDark(context) ? 0.2 : 0.04),
+                color:
+                    Colors.black.withOpacity(isThemeDark(context) ? 0.2 : 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -133,7 +132,8 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  bool isThemeDark(BuildContext context) => Theme.of(context).brightness == Brightness.dark;
+  bool isThemeDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
 
   Widget _buildSettingsTile(
     BuildContext context, {
@@ -159,7 +159,9 @@ class SettingsScreen extends ConsumerWidget {
           color: color ?? Theme.of(context).colorScheme.onSurface,
         ),
       ),
-      trailing: Icon(Icons.chevron_right, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+      trailing: Icon(Icons.chevron_right,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
       onTap: onTap,
     );
   }

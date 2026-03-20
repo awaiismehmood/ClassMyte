@@ -1,35 +1,34 @@
+import 'package:classmyte/core/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) {
-  return ThemeNotifier();
+  final prefs = ref.watch(sharedPrefsProvider);
+  return ThemeNotifier(prefs);
 });
 
 class ThemeNotifier extends StateNotifier<ThemeMode> {
   static const _key = 'theme_preference';
-  
-  ThemeNotifier() : super(ThemeMode.light) {
-    _loadTheme();
+  final SharedPreferences _prefs;
+
+  ThemeNotifier(this._prefs) : super(ThemeMode.light) {
+    _initTheme();
   }
 
-  Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final themeStr = prefs.getString(_key);
-    
+  void _initTheme() {
+    final themeStr = _prefs.getString(_key);
     if (themeStr == 'dark') {
       state = ThemeMode.dark;
-    } else if (themeStr == 'light') {
-      state = ThemeMode.light;
     } else {
-      state = ThemeMode.system; // Support system default if no choice made
+      // Default or explicit light
+      state = ThemeMode.light;
     }
   }
 
   Future<void> toggleTheme(bool isDark) async {
     final newTheme = isDark ? ThemeMode.dark : ThemeMode.light;
     state = newTheme;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, isDark ? 'dark' : 'light');
+    await _prefs.setString(_key, isDark ? 'dark' : 'light');
   }
 }
