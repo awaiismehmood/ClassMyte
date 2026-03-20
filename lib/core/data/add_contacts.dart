@@ -1,4 +1,4 @@
-﻿// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -31,6 +31,7 @@ class AddContactService {
               'DOB': DOB,
               'Admission Date': admission,
               'Alt Number': altNumber,
+              'status': 'Active',
             })
             .then((value) => print('Contact added successfully'))
             .catchError((error) => print('Failed to add contact: $error'));

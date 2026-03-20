@@ -1,4 +1,4 @@
-﻿// ignore_for_file: avoid_print, invalid_return_type_for_catch_error
+// ignore_for_file: avoid_print, invalid_return_type_for_catch_error
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +14,7 @@ class EditContactService {
     String DOB,
     String admission,
     String altNumber,
+    String status,
   ) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
@@ -33,6 +34,7 @@ class EditContactService {
               'DOB': DOB,
               'Admission Date': admission,
               'Alt Number': altNumber,
+              'status': status,
             })
 
             .then((value) => print('Contact updated successfully'))
@@ -117,6 +119,40 @@ class EditContactService {
     }
   }
 
-  
+  static Future<void> deleteMultipleContacts(List<String> ids) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      
+      final collectionRef = FirebaseFirestore.instance.collection('users').doc(uid).collection('contacts');
+      final batch = FirebaseFirestore.instance.batch();
+      
+      for (var id in ids) {
+        batch.delete(collectionRef.doc(id));
+      }
+      
+      await batch.commit();
+    } catch (e) {
+      print('Error deleting multiple contacts: $e');
+    }
+  }
+
+  static Future<void> updateMultipleStatus(List<String> ids, String status) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      
+      final collectionRef = FirebaseFirestore.instance.collection('users').doc(uid).collection('contacts');
+      final batch = FirebaseFirestore.instance.batch();
+      
+      for (var id in ids) {
+        batch.update(collectionRef.doc(id), {'status': status});
+      }
+      
+      await batch.commit();
+    } catch (e) {
+      print('Error updating multiple contacts status: $e');
+    }
+  }
 }
 

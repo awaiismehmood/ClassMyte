@@ -14,6 +14,7 @@ class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, Ma
       altNumber: arg['altNumber'] ?? '',
       dob: arg['DOB'] ?? '',
       admissionDate: arg['Admission Date'] ?? '',
+      isActive: arg['status'] == 'Active',
     );
   }
 
@@ -29,6 +30,7 @@ class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, Ma
     }
   }
 
+  void toggleActive(bool val) => state = state.copyWith(isActive: val);
   void toggleEditable() => state = state.copyWith(isEditable: !state.isEditable);
   void setLoading(bool val) => state = state.copyWith(isLoading: val);
 }
@@ -41,6 +43,7 @@ final studentSearchQueryProvider = StateProvider<String>((ref) => '');
 final selectedClassesProvider = StateProvider<List<String>>((ref) => []);
 final selectedAdmissionYearProvider = StateProvider<int>((ref) => 0);
 final selectedAgeProvider = StateProvider<int>((ref) => 0);
+final showBirthdaysOnlyProvider = StateProvider<bool>((ref) => false);
 
 final filteredStudentsProvider = Provider<List<Map<String, String>>>((ref) {
   final allStudents = ref.watch(studentDataProvider).value ?? [];
@@ -48,8 +51,9 @@ final filteredStudentsProvider = Provider<List<Map<String, String>>>((ref) {
   final selectedClasses = ref.watch(selectedClassesProvider);
   final selectedYear = ref.watch(selectedAdmissionYearProvider);
   final selectedAge = ref.watch(selectedAgeProvider);
+  final showBirthdaysOnly = ref.watch(showBirthdaysOnlyProvider);
 
-  if (query.isEmpty && selectedClasses.isEmpty && selectedYear == 0 && selectedAge == 0) return allStudents;
+  if (query.isEmpty && selectedClasses.isEmpty && selectedYear == 0 && selectedAge == 0 && !showBirthdaysOnly) return allStudents;
 
   return SearchService.searchStudents(
     allStudents,
@@ -57,5 +61,8 @@ final filteredStudentsProvider = Provider<List<Map<String, String>>>((ref) {
     selectedClasses: selectedClasses,
     selectedYear: selectedYear,
     selectedAge: selectedAge,
+    showBirthdaysOnly: showBirthdaysOnly,
   );
 });
+
+final selectedStudentIdsProvider = StateProvider<Set<String>>((ref) => {});

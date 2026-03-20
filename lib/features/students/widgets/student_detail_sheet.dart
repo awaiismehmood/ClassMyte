@@ -1,5 +1,8 @@
 import 'package:classmyte/core/data/edit_contacts.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/core/widgets/communication_dialogs.dart';
+import 'package:classmyte/core/services/functional.dart';
+import 'package:classmyte/features/sms/data/whatsapp_service.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_dialog.dart';
@@ -61,6 +64,7 @@ class StudentDetailSheet extends ConsumerWidget {
       state.dob,
       state.admissionDate,
       state.altNumber,
+      state.isActive ? 'Active' : 'Inactive',
     );
     ref.read(studentEditProvider(student).notifier).toggleEditable();
     ref.read(studentEditProvider(student).notifier).setLoading(false);
@@ -150,6 +154,7 @@ class StudentDetailSheet extends ConsumerWidget {
               _buildDateField(context, ref, 'DOB', state.dob, 'dob', state.isEditable, 
                 trailing: Text('Age: ${StudentUtils.calculateAge(state.dob)}', style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold))),
               _buildDateField(context, ref, 'Admission Date', state.admissionDate, 'admissionDate', state.isEditable),
+              _buildStatusField(context, ref, state.isActive, state.isEditable),
             ],
           ),
         ),
@@ -188,6 +193,32 @@ class StudentDetailSheet extends ConsumerWidget {
               ),
               style: GoogleFonts.outfit(fontSize: 16, color: onSurface),
               keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
+            )
+          else if (isPhone && value.isNotEmpty && value != '0')
+            Row(
+              children: [
+                Text(value, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.phone_outlined, size: 20, color: AppColors.primary),
+                  onPressed: () => makeCall(value),
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline, size: 20, color: Colors.green),
+                  onPressed: () {
+                    CommunicationDialogs.showMessageOptionDialog(
+                      context: context,
+                      phoneNumber: value,
+                      onSMS: () => sendSMS(value),
+                      onWhatsApp: () => WhatsAppMessaging().sendWhatsAppMessageIndividually(value),
+                    );
+                  },
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ],
             )
           else
             Text(value.isNotEmpty ? value : '-', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
@@ -230,6 +261,41 @@ class StudentDetailSheet extends ConsumerWidget {
                 style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: isEditable ? AppColors.primary : onSurface),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusField(BuildContext context, WidgetRef ref, bool isActive, bool isEditable) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Status', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5), fontWeight: FontWeight.bold)),
+                  Text(isActive ? 'Active' : 'Inactive', 
+                    style: GoogleFonts.outfit(
+                      fontSize: 16, 
+                      fontWeight: FontWeight.w600, 
+                      color: isActive ? Colors.green : Colors.redAccent
+                    )),
+                ],
+              ),
+              const Spacer(),
+              if (isEditable)
+                Switch(
+                  value: isActive,
+                  onChanged: (v) => ref.read(studentEditProvider(student).notifier).toggleActive(v),
+                  activeColor: Colors.green,
+                ),
+            ],
           ),
         ],
       ),

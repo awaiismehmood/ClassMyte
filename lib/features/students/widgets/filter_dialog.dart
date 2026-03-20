@@ -43,6 +43,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   late List<String> tempSelectedClasses;
   late int tempSelectedYear;
   late int tempSelectedAge;
+  late bool tempShowBirthdaysOnly;
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
     tempSelectedClasses = List.from(ref.read(selectedClassesProvider));
     tempSelectedYear = ref.read(selectedAdmissionYearProvider);
     tempSelectedAge = ref.read(selectedAgeProvider);
+    tempShowBirthdaysOnly = ref.read(showBirthdaysOnlyProvider);
   }
 
   @override
@@ -149,7 +151,16 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
             ],
           ),
         ),
-        const SizedBox(height: 32),
+        _buildSectionHeader(context, 'Special'),
+        const SizedBox(height: 12),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text('Show Birthdays Today', style: GoogleFonts.outfit(fontSize: 14, color: onSurface)),
+          secondary: Icon(Icons.cake_outlined, color: tempShowBirthdaysOnly ? Colors.pink : onSurface.withOpacity(0.4)),
+          value: tempShowBirthdaysOnly,
+          activeColor: Colors.pink,
+          onChanged: (val) => setState(() => tempShowBirthdaysOnly = val),
+        ),
         Row(
           children: [
             Expanded(
@@ -159,6 +170,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     tempSelectedClasses = [];
                     tempSelectedYear = 0;
                     tempSelectedAge = 0;
+                    tempShowBirthdaysOnly = false;
                   });
                 },
                 child: Text('Clear Filters', style: GoogleFonts.outfit(color: Colors.redAccent, fontWeight: FontWeight.bold)),
@@ -173,6 +185,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                   ref.read(selectedClassesProvider.notifier).state = tempSelectedClasses;
                   ref.read(selectedAdmissionYearProvider.notifier).state = tempSelectedYear;
                   ref.read(selectedAgeProvider.notifier).state = tempSelectedAge;
+                  ref.read(showBirthdaysOnlyProvider.notifier).state = tempShowBirthdaysOnly;
                   Navigator.pop(context);
                 },
               ),

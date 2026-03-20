@@ -6,6 +6,7 @@ class StudentEditState {
   final String altNumber;
   final String dob;
   final String admissionDate;
+  final bool isActive;
   final bool isEditable;
   final bool isLoading;
 
@@ -17,6 +18,7 @@ class StudentEditState {
     required this.altNumber,
     required this.dob,
     required this.admissionDate,
+    this.isActive = true,
     this.isEditable = false,
     this.isLoading = false,
   });
@@ -29,6 +31,7 @@ class StudentEditState {
     String? altNumber,
     String? dob,
     String? admissionDate,
+    bool? isActive,
     bool? isEditable,
     bool? isLoading,
   }) {
@@ -40,6 +43,7 @@ class StudentEditState {
       altNumber: altNumber ?? this.altNumber,
       dob: dob ?? this.dob,
       admissionDate: admissionDate ?? this.admissionDate,
+      isActive: isActive ?? this.isActive,
       isEditable: isEditable ?? this.isEditable,
       isLoading: isLoading ?? this.isLoading,
     );

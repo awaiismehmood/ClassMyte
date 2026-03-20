@@ -29,4 +29,17 @@ class StudentUtils {
       return 0;
     }
   }
+
+  static bool isBirthdayToday(String? dobString) {
+    if (dobString == null || dobString.isEmpty || dobString == 'Not set') {
+      return false;
+    }
+    try {
+      final dob = DateTime.parse(dobString);
+      final today = DateTime.now();
+      return dob.month == today.month && dob.day == today.day;
+    } catch (e) {
+      return false;
+    }
+  }
 }

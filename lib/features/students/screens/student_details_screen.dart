@@ -52,6 +52,7 @@ class StudentDetailsScreen extends ConsumerWidget {
       state.dob,
       state.admissionDate,
       state.altNumber,
+      state.isActive ? 'Active' : 'Inactive',
     );
     ref.read(studentEditProvider(student).notifier).toggleEditable();
     ref.read(studentEditProvider(student).notifier).setLoading(false);

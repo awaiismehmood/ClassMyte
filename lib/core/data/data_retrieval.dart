@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class StudentData {
@@ -24,6 +24,7 @@ class StudentData {
             'DOB': doc['DOB'] as String,
             'Admission Date': doc['Admission Date'] as String,
             'altNumber': doc['Alt Number'] as String,
+            'status': doc.data().containsKey('status') ? (doc['status'] as String) : 'Active',
           };
         }).toList();
 

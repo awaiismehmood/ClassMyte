@@ -1,3 +1,6 @@
+import 'package:classmyte/core/data/edit_contacts.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
+import 'package:classmyte/core/services/student_utils.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/students/widgets/add_contact_dialog.dart';
@@ -7,6 +10,7 @@ import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/core/services/functional.dart';
 import 'package:classmyte/features/sms/data/whatsapp_service.dart';
+import 'package:classmyte/core/widgets/communication_dialogs.dart';
 import 'package:classmyte/features/students/widgets/student_detail_sheet.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
@@ -20,31 +24,61 @@ class StudentContactsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final studentDataAsync = ref.watch(studentDataProvider);
     final filteredStudents = ref.watch(filteredStudentsProvider);
+    final selectedIds = ref.watch(selectedStudentIdsProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
     final adManager = ref.read(adManagerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final isSelectionMode = selectedIds.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           CustomHeader(
-            title: 'Students',
-            rightActions: [
-              studentDataAsync.when(
-                data: (allStudents) => _buildCircleAction(
-                  icon: Icons.filter_list,
-                  onTap: () => FilterSheet.show(context, allStudents),
-                ),
-                error: (_, __) => const SizedBox(),
-                loading: () => const SizedBox(),
-              ),
-              const SizedBox(width: 8),
-              _buildCircleAction(
-                icon: Icons.add,
-                onTap: () => AddContactSheet.show(context, () => ref.invalidate(studentDataProvider)),
-              ),
-            ],
+            title: isSelectionMode ? '${selectedIds.length} Selected' : 'Students',
+            leftAction: isSelectionMode 
+              ? _buildCircleAction(
+                  icon: Icons.close,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  onTap: () => ref.read(selectedStudentIdsProvider.notifier).state = {},
+                )
+              : null,
+            rightActions: isSelectionMode
+              ? [
+                  _buildCircleAction(
+                    icon: Icons.check_circle_outline,
+                    color: Colors.green,
+                    onTap: () => _handleBulkStatusUpdate(context, ref, selectedIds.toList(), 'Active'),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildCircleAction(
+                    icon: Icons.remove_circle_outline,
+                    color: Colors.orange,
+                    onTap: () => _handleBulkStatusUpdate(context, ref, selectedIds.toList(), 'Inactive'),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildCircleAction(
+                    icon: Icons.delete_outline,
+                    color: Colors.redAccent,
+                    onTap: () => _handleBulkDelete(context, ref, selectedIds.toList()),
+                  ),
+                ]
+              : [
+                  studentDataAsync.when(
+                    data: (allStudents) => _buildCircleAction(
+                      icon: Icons.filter_list,
+                      onTap: () => FilterSheet.show(context, allStudents),
+                    ),
+                    error: (_, __) => const SizedBox(),
+                    loading: () => const SizedBox(),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildCircleAction(
+                    icon: Icons.add,
+                    onTap: () => AddContactSheet.show(context, () => ref.invalidate(studentDataProvider)),
+                  ),
+                ],
           ),
           Expanded(
             child: Container(
@@ -89,7 +123,8 @@ class StudentContactsScreen extends ConsumerWidget {
                               itemCount: filteredStudents.length,
                               itemBuilder: (context, index) {
                                 final student = filteredStudents[index];
-                                return _buildRedesignedStudentCard(context, ref, student);
+                                final isSelected = selectedIds.contains(student['id']);
+                                return _buildRedesignedStudentCard(context, ref, student, isSelected);
                               },
                             ),
                       loading: () => const Center(child: CircularProgressIndicator()),
@@ -106,7 +141,29 @@ class StudentContactsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCircleAction({required IconData icon, required VoidCallback onTap}) {
+  void _handleBulkDelete(BuildContext context, WidgetRef ref, List<String> ids) {
+    CustomDialog.show(
+      context: context,
+      title: 'Delete Selected?',
+      subtitle: 'Are you sure you want to delete ${ids.length} students? This cannot be undone.',
+      confirmText: 'Delete',
+      confirmColor: Colors.redAccent,
+      onConfirm: () async {
+        Navigator.pop(context); // Close dialog
+        await EditContactService.deleteMultipleContacts(ids);
+        ref.read(selectedStudentIdsProvider.notifier).state = {};
+        ref.invalidate(studentDataProvider);
+      },
+    );
+  }
+
+  void _handleBulkStatusUpdate(BuildContext context, WidgetRef ref, List<String> ids, String status) async {
+    await EditContactService.updateMultipleStatus(ids, status);
+    ref.read(selectedStudentIdsProvider.notifier).state = {};
+    ref.invalidate(studentDataProvider);
+  }
+
+  Widget _buildCircleAction({required IconData icon, required VoidCallback onTap, Color? color}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(15),
@@ -114,10 +171,10 @@ class StudentContactsScreen extends ConsumerWidget {
         width: 45,
         height: 45,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.05),
+          color: (color ?? AppColors.primary).withOpacity(0.05),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Icon(icon, color: AppColors.primary, size: 24),
+        child: Icon(icon, color: color ?? AppColors.primary, size: 24),
       ),
     );
   }
@@ -134,15 +191,44 @@ class StudentContactsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRedesignedStudentCard(BuildContext context, WidgetRef ref, Map<String, String> student) {
+  Widget _buildRedesignedStudentCard(BuildContext context, WidgetRef ref, Map<String, String> student, bool isSelected) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedIds = ref.read(selectedStudentIdsProvider);
+    final isSelectionMode = selectedIds.isNotEmpty;
+
     return GestureDetector(
-      onTap: () => StudentDetailSheet.show(context, student),
-      child: Container(
+      onLongPress: () {
+        final current = ref.read(selectedStudentIdsProvider);
+        if (current.contains(student['id'])) {
+          ref.read(selectedStudentIdsProvider.notifier).state = {...current}..remove(student['id']);
+        } else {
+          ref.read(selectedStudentIdsProvider.notifier).state = {...current, student['id']!};
+        }
+      },
+      onTap: () {
+        if (isSelectionMode) {
+          final current = ref.read(selectedStudentIdsProvider);
+          if (current.contains(student['id'])) {
+            ref.read(selectedStudentIdsProvider.notifier).state = {...current}..remove(student['id']);
+          } else {
+            ref.read(selectedStudentIdsProvider.notifier).state = {...current, student['id']!};
+          }
+        } else {
+          StudentDetailSheet.show(context, student);
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: isSelected 
+              ? AppColors.primary.withOpacity(isDark ? 0.15 : 0.05)
+              : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
@@ -153,88 +239,158 @@ class StudentContactsScreen extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  // Large Avatar
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary.withOpacity(0.1), width: 4),
-                    ),
-                    child: Center(
-                      child: Text(
-                        student['name']?[0].toUpperCase() ?? '?',
-                        style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary),
+            Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      // Large Avatar
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.primary.withOpacity(0.1), width: 4),
+                        ),
+                        child: Center(
+                          child: Text(
+                            student['name']?[0].toUpperCase() ?? '?',
+                            style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  // Student Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          (student['class'] ?? 'General').toUpperCase(),
-                          style: GoogleFonts.outfit(
-                            fontSize: 11, 
-                            fontWeight: FontWeight.w900, 
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), 
-                            letterSpacing: 1.2
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          student['name'] ?? 'Unknown',
-                          style: GoogleFonts.outfit(
-                            fontSize: 22, 
-                            fontWeight: FontWeight.bold, 
-                            color: Theme.of(context).colorScheme.onSurface
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.phone_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
-                            const SizedBox(width: 6),
-                            Text(
-                              student['phoneNumber'] ?? 'No contact',
-                              style: GoogleFonts.outfit(
-                                fontSize: 14, 
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  (student['class'] ?? 'General').toUpperCase(),
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11, 
+                                    fontWeight: FontWeight.w900, 
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), 
+                                    letterSpacing: 1.2
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: (student['status'] == 'Active' ? Colors.green : Colors.redAccent).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    student['status'] ?? 'Active',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: student['status'] == 'Active' ? Colors.green : Colors.redAccent,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    student['name'] ?? 'Unknown',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 22, 
+                                      fontWeight: FontWeight.bold, 
+                                      color: Theme.of(context).colorScheme.onSurface
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (StudentUtils.isBirthdayToday(student['DOB'])) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.pink.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.cake, color: Colors.pink, size: 16),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.phone_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  student['phoneNumber'] ?? 'No contact',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14, 
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check, color: Colors.white, size: 16),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
             // Footer Bar
             Container(
               height: 55,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.03),
+                color: isSelected 
+                    ? AppColors.primary.withOpacity(0.1)
+                    : AppColors.primary.withOpacity(0.03),
                 borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: InkWell(
-                      onTap: () => makeCall(student['phoneNumber']!),
+                      onTap: isSelectionMode ? null : () {
+                        final primary = student['phoneNumber'] ?? '';
+                        final alt = student['altNumber'] ?? '';
+                        if (alt.isNotEmpty && alt != '0') {
+                          CommunicationDialogs.showNumberSelectionDialog(
+                            context: context,
+                            title: 'Select Number to Call',
+                            primaryNumber: primary,
+                            altNumber: alt,
+                            onSelected: (num) => makeCall(num),
+                          );
+                        } else {
+                          makeCall(primary);
+                        }
+                      },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.phone_outlined, size: 18, color: AppColors.primary),
+                          Icon(Icons.phone_outlined, size: 18, color: isSelectionMode ? Colors.grey : AppColors.primary),
                           const SizedBox(width: 8),
-                          Text('Call', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                          Text('Call', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isSelectionMode ? Colors.grey : AppColors.primary)),
                         ],
                       ),
                     ),
@@ -242,13 +398,37 @@ class StudentContactsScreen extends ConsumerWidget {
                   Container(width: 1, height: 25, color: Theme.of(context).dividerColor.withOpacity(0.1)),
                   Expanded(
                     child: InkWell(
-                      onTap: () => WhatsAppMessaging().sendWhatsAppMessageIndividually(student['phoneNumber']!),
+                      onTap: isSelectionMode ? null : () {
+                        final primary = student['phoneNumber'] ?? '';
+                        final alt = student['altNumber'] ?? '';
+                        
+                        void showOptions(String num) {
+                          CommunicationDialogs.showMessageOptionDialog(
+                            context: context,
+                            phoneNumber: num,
+                            onSMS: () => sendSMS(num),
+                            onWhatsApp: () => WhatsAppMessaging().sendWhatsAppMessageIndividually(num),
+                          );
+                        }
+
+                        if (alt.isNotEmpty && alt != '0') {
+                          CommunicationDialogs.showNumberSelectionDialog(
+                            context: context,
+                            title: 'Select Number to Message',
+                            primaryNumber: primary,
+                            altNumber: alt,
+                            onSelected: (num) => showOptions(num),
+                          );
+                        } else {
+                          showOptions(primary);
+                        }
+                      },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.chat_bubble_outline, size: 18, color: Colors.green),
+                          Icon(Icons.chat_bubble_outline, size: 18, color: isSelectionMode ? Colors.grey : Colors.green),
                           const SizedBox(width: 8),
-                          Text('Message', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.green)),
+                          Text('Message', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isSelectionMode ? Colors.grey : Colors.green)),
                         ],
                       ),
                     ),
