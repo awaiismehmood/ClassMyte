@@ -77,8 +77,9 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/pencil_white.png
     - assets/logo_no_bg.png
+    - assets/logo_square.png
+    - assets/logo_transparent_square.png
     
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -117,7 +118,7 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 
 icons_launcher:
-  image_path: "assets/logo_no_bg.png"
+  image_path: "assets/logo_square.png"
   platforms:
     android:
       enable: true

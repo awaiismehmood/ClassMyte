@@ -15,7 +15,8 @@ class AboutScreen extends StatelessWidget {
           const CustomHeader(title: 'About ClassMyte'),
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+              decoration:
+                  const BoxDecoration(gradient: AppColors.backgroundGradient),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
@@ -38,7 +39,9 @@ class AboutScreen extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(16),
-                            child: Image.asset('assets/logo_no_bg.png', height: 80),
+                            child: Image.asset(
+                                'assets/logo_transparent_square.png',
+                                height: 110),
                           ),
                           const SizedBox(height: 24),
                           Text(
@@ -143,4 +146,3 @@ class AboutScreen extends StatelessWidget {
     );
   }
 }
-
