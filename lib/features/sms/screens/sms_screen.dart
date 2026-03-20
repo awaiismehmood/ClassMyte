@@ -4,9 +4,12 @@ import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:classmyte/core/widgets/custom_dropdown.dart';
+import 'package:classmyte/core/widgets/custom_snackbar.dart';
+import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:classmyte/features/sms/data/sms_service.dart';
 import 'package:classmyte/features/sms/providers/template_providers.dart';
+import 'package:classmyte/features/sms/providers/sms_providers.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,8 +31,9 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   final ValueNotifier<List<String>> selectedClasses = ValueNotifier([]);
   final ValueNotifier<bool> sendingMessage = ValueNotifier(false);
   final ValueNotifier<String> messageStatus = ValueNotifier('');
-  final ValueNotifier<String?> warningMessage = ValueNotifier(null);
   final ValueNotifier<int> selectedDelay = ValueNotifier(30);
+  final ValueNotifier<bool> excludeInactive = ValueNotifier(false); // Default to false for free
+  final ValueNotifier<bool> includePersonalization = ValueNotifier(true);
 
   @override
   void initState() {
@@ -41,7 +45,15 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         messageController.text = templateText;
         ref.read(selectedTemplateProvider.notifier).state = null;
       }
+
+      final progress = ref.read(smsProgressProvider);
+      if (progress.status == 'sending') {
+        _showProcessOngoingSnackbar();
+        context.push('/message-report');
+      }
     });
+
+    ref.read(smsProgressProvider.notifier).startListening();
   }
 
   @override
@@ -51,7 +63,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     messageStatus.dispose();
     selectedClasses.dispose();
     selectedDelay.dispose();
-    warningMessage.dispose();
+    excludeInactive.dispose();
+    includePersonalization.dispose();
     super.dispose();
   }
 
@@ -72,69 +85,161 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         .initialize(settings: initializationSettings);
   }
 
+  void _showProcessOngoingSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'A messaging process is already running.',
+          style: GoogleFonts.outfit(
+              color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'View',
+          textColor: Colors.white,
+          onPressed: () => context.push('/message-report'),
+        ),
+      ),
+    );
+  }
+
   void sendMessage(List<Map<String, String>> contactList) async {
+    final progress = ref.read(smsProgressProvider);
+    if (progress.status == 'sending') {
+      _showProcessOngoingSnackbar();
+      return;
+    }
+
     if (selectedClasses.value.isEmpty) {
-      warningMessage.value = 'Please select at least one recipient';
+      CustomSnackBar.showWarning(context, 'Please select at least one recipient');
       return;
     }
     if (messageController.text.isEmpty) {
-      warningMessage.value = 'Please enter a message';
+      CustomSnackBar.showWarning(context, 'Please enter a message');
       return;
     }
 
-    sendingMessage.value = true;
-    messageStatus.value = "Sending messages...";
-
     final permissionGranted = await MessageSender.checkSmsPermission();
     if (permissionGranted) {
-      List<String> allPhoneNumbers = contactList
+      final personalization = ref.read(personalizationProvider);
+      final filterByStatus = (Map<String, String> contact) {
+        if (!excludeInactive.value) return true;
+        return (contact['status'] ?? 'Active').toLowerCase() == 'active';
+      };
+
+      final selectedContacts = contactList
           .where((contact) =>
-              selectedClasses.value.contains("All") ||
-              selectedClasses.value.contains(contact['class']))
-          .map((contact) => contact['phoneNumber']!)
+              (selectedClasses.value.contains("All") ||
+                  selectedClasses.value.contains(contact['class'])) &&
+              filterByStatus(contact))
           .toList();
 
+      if (selectedContacts.isEmpty) {
+        CustomSnackBar.showWarning(context, 'No active contacts found for selected classes');
+        return;
+      }
+
+      String finalMessage = messageController.text;
+      if (includePersonalization.value) {
+        final prefix = personalization['prefix'] ?? '';
+        final suffix = personalization['suffix'] ?? '';
+        if (prefix.isNotEmpty) finalMessage = '$prefix\n$finalMessage';
+        if (suffix.isNotEmpty) finalMessage = '$finalMessage\n$suffix';
+      }
+
+      List<String> phoneNumbers = selectedContacts.map((c) => c['phoneNumber']!).toList();
+      List<String> names = selectedContacts.map((c) => c['name']!).toList();
+
+      ref.read(smsProgressProvider.notifier).setLastMessage(finalMessage.trim());
+
       await MessageSender.sendMessages(
-        allPhoneNumbers,
-        messageController.text,
-        selectedDelay.value,
-        sendingMessage,
-        messageStatus,
+        phoneNumbers: phoneNumbers,
+        names: names,
+        message: finalMessage.trim(),
+        delay: selectedDelay.value,
       );
-      sendingMessage.value = false;
+
+      if (mounted) context.push('/message-report');
     } else {
-      sendingMessage.value = false;
-      messageStatus.value = "Permission denied.";
+      Fluttertoast.showToast(msg: "SMS Permission Denied!");
     }
   }
 
-  void _showPremiumDialog(
-      BuildContext context, List<Map<String, String>> contactList) {
+  void _startFreeSendFlow(BuildContext context, List<Map<String, String>> contactList) async {
     final adManager = ref.read(adManagerProvider);
     
+    if (adManager.isAdLoaded.value) {
+      bool adCompleted = await adManager.showRewardedAd();
+      if (adCompleted) sendMessage(contactList);
+    } else {
+      // No ad available, show a temporary "Loading" state and then proceed after a delay
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => WillPopScope(
+          onWillPop: () async => false,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Preparing your messages...',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please wait a few seconds.',
+                    style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Wait for 8-10 seconds as a "free tier" penalty/processing time
+      await Future.delayed(const Duration(seconds: 8));
+      
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        sendMessage(contactList);
+      }
+    }
+  }
+
+  void _showPremiumOptionsDialog(BuildContext context, List<Map<String, String>> contactList) {
+    List<String> selectedPremium = [];
+    if (selectedDelay.value != 30) selectedPremium.add('Custom Delay (${selectedDelay.value}s)');
+    if (excludeInactive.value) selectedPremium.add('Inactive Student Filter');
+
     CustomDialog.show(
       context: context,
-      title: 'Send Bulk Message',
-      subtitle: 'To send bulk messages, you can either watch a quick ad or upgrade to premium for an ad-free experience.',
+      title: 'Premium Options Selected',
+      subtitle: 'You have selected features reserved for premium members:\n\n• ${selectedPremium.join('\n• ')}\n\nUpgrade to use these features, or continue with basic settings.',
       confirmText: 'Go Premium',
-      cancelText: 'Watch Ad',
+      cancelText: 'Use Basic Features',
       confirmColor: AppColors.primary,
       onConfirm: () {
         Navigator.of(context).pop();
         context.push('/subscription');
       },
-      onCancel: () async {
+      onCancel: () {
         Navigator.of(context).pop();
-        if (adManager.isAdLoaded.value) {
-          bool adCompleted = await adManager.showRewardedAd();
-          if (adCompleted) sendMessage(contactList);
-        } else {
-          Fluttertoast.showToast(msg: "Loading ad, please wait...");
-          adManager.loadRewardedAd(onAdLoaded: () async {
-            bool adCompleted = await adManager.showRewardedAd();
-            if (adCompleted) sendMessage(contactList);
-          });
-        }
+        // Reset to basic features
+        selectedDelay.value = 30;
+        excludeInactive.value = false;
+        // Start the free flow
+        _startFreeSendFlow(context, contactList);
       },
     );
   }
@@ -144,6 +249,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     final studentDataAsync = ref.watch(studentDataProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final personalization = ref.watch(personalizationProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -164,18 +270,6 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ValueListenableBuilder<String?>(
-                              valueListenable: warningMessage,
-                              builder: (context, warning, _) => warning != null
-                                  ? Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 12),
-                                      child: Text(warning,
-                                          style: const TextStyle(
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.bold)))
-                                  : const SizedBox.shrink(),
-                            ),
                             ValueListenableBuilder<String>(
                               valueListenable: messageStatus,
                               builder: (context, status, _) => status.isNotEmpty
@@ -204,11 +298,17 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                               value: null,
                               hintText: 'Choose Classes',
                               items: [
-                                const CustomDropdownItem(value: 'All', label: 'All Students', icon: Icons.groups_outlined),
+                                const CustomDropdownItem(
+                                    value: 'All',
+                                    label: 'All Students',
+                                    icon: Icons.groups_outlined),
                                 ...contactList
                                     .map((c) => c['class']!)
                                     .toSet()
-                                    .map((name) => CustomDropdownItem(value: name, label: name, icon: Icons.class_outlined)),
+                                    .map((name) => CustomDropdownItem(
+                                        value: name,
+                                        label: name,
+                                        icon: Icons.class_outlined)),
                               ],
                               onChanged: (String? value) {
                                 if (value != null) {
@@ -225,7 +325,6 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                                           .toList();
                                     }
                                   }
-                                  warningMessage.value = null;
                                 }
                               },
                             ),
@@ -256,44 +355,38 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            _buildDelaySection(context),
+                            _buildDelaySection(context, contactList, isPremium),
                             const SizedBox(height: 32),
-                            Text('Message Content',
-                                style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Theme.of(context).colorScheme.onSurface)),
-                            const SizedBox(height: 12),
-                            TextField(
+                            _buildOptionsSection(context, contactList, isPremium),
+                            const SizedBox(height: 32),
+                            _buildMessagePreview(context, personalization),
+                            const SizedBox(height: 16),
+                            CustomTextField(
+                              labelText: 'Message Content',
+                              hintText: "Type your message here...",
                               controller: messageController,
                               maxLines: 6,
-                              decoration: InputDecoration(
-                                hintText: "Type your message here...",
-                                filled: true,
-                                fillColor: Theme.of(context).cardColor,
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    borderSide: BorderSide.none),
-                              ),
-                              style: GoogleFonts.outfit(
-                                color: Theme.of(context).colorScheme.onSurface
-                              ),
                             ),
                             const SizedBox(height: 32),
                             ValueListenableBuilder<bool>(
                               valueListenable: sendingMessage,
                               builder: (context, isSending, _) => CustomButton(
-                                text:
-                                    isSending ? 'Sending...' : 'Send Messages',
+                                text: isSending ? 'Sending...' : 'Send Messages',
                                 isLoading: isSending,
                                 onPressed: isSending
                                     ? null
                                     : () {
                                         if (isPremium) {
                                           sendMessage(contactList);
+                                          return;
+                                        }
+
+                                        // Free User Logic
+                                        final usingPremium = selectedDelay.value != 30 || excludeInactive.value;
+                                        if (usingPremium) {
+                                          _showPremiumOptionsDialog(context, contactList);
                                         } else {
-                                          _showPremiumDialog(
-                                              context, contactList);
+                                          _startFreeSendFlow(context, contactList);
                                         }
                                       },
                                 color: AppColors.primary,
@@ -315,7 +408,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     );
   }
 
-  Widget _buildDelaySection(BuildContext context) {
+  Widget _buildDelaySection(BuildContext context,
+      List<Map<String, String>> contactList, bool isPremium) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
@@ -323,7 +417,10 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -333,33 +430,171 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
             children: [
               const Icon(Icons.more_time_rounded, color: Colors.teal),
               const SizedBox(width: 8),
-              Text('Message delay time', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+              Text('Message delay time',
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurface)),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             '(We strongly recommend a 15 second+ delay if you don\'t want to risk your SIM being blocked by Mobile Carriers or the PTA for spamming)',
             style: GoogleFonts.outfit(
-              fontSize: 13, 
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), 
-              height: 1.4
-            ),
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                height: 1.4),
           ),
           const SizedBox(height: 20),
           ValueListenableBuilder<int>(
             valueListenable: selectedDelay,
             builder: (context, delay, _) => CustomDropdown<int>(
-              value: [0, 5, 10, 15, 30, 45, 60].contains(delay) ? delay : 15, // Provide safe fallback
+              value: [0, 5, 10, 15, 30, 45, 60].contains(delay) ? delay : 30,
               items: [0, 5, 10, 15, 30, 45, 60].map((d) {
                 return CustomDropdownItem<int>(
                   value: d,
                   label: 'Fixed ($d Sec)',
                   icon: Icons.timer_outlined,
+                  trailingIcon: (!isPremium && d != 30) ? Icons.lock_outline : null,
                 );
               }).toList(),
               onChanged: (val) {
-                if (val != null) selectedDelay.value = val;
+                if (val != null) {
+                  selectedDelay.value = val;
+                }
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessagePreview(
+      BuildContext context, Map<String, String> personalization) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: includePersonalization,
+      builder: (context, showPersonalization, _) =>
+          ValueListenableBuilder<TextEditingValue>(
+        valueListenable: messageController,
+        builder: (context, value, _) {
+          if (value.text.isEmpty) return const SizedBox.shrink();
+
+          final prefix = showPersonalization ? (personalization['prefix'] ?? '') : '';
+          final suffix = showPersonalization ? (personalization['suffix'] ?? '') : '';
+
+          List<String> combinedParts = [];
+          if (prefix.isNotEmpty) combinedParts.add(prefix);
+          combinedParts.add(value.text);
+          if (suffix.isNotEmpty) combinedParts.add(suffix);
+
+          final finalMsg = combinedParts.join('\n');
+          final charCount = finalMsg.length;
+          final segments = (charCount / 160).ceil();
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(isDark ? 0.08 : 0.04),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Message Preview',
+                        style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary)),
+                    Text(
+                        '$charCount chars | $segments segment${segments > 1 ? "s" : ""}',
+                        style: GoogleFonts.outfit(
+                            fontSize: 11, color: onSurface.withOpacity(0.5))),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  finalMsg,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: onSurface.withOpacity(0.8),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildOptionsSection(BuildContext context,
+      List<Map<String, String>> contactList, bool isPremium) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          ValueListenableBuilder<bool>(
+            valueListenable: excludeInactive,
+            builder: (context, val, _) => SwitchListTile(
+              title: Row(
+                children: [
+                  Text('Exclude Inactive',
+                      style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: onSurface)),
+                  if (!isPremium) ...[
+                    const SizedBox(width: 8),
+                    const Icon(Icons.lock_outline,
+                        size: 14, color: Colors.amber),
+                  ],
+                ],
+              ),
+              subtitle: Text('Don\'t send to inactive students',
+                  style: GoogleFonts.outfit(
+                      fontSize: 12, color: onSurface.withOpacity(0.6))),
+              value: val,
+              activeColor: AppColors.primary,
+              onChanged: (v) => excludeInactive.value = v,
+            ),
+          ),
+          Divider(color: onSurface.withOpacity(0.1), height: 1),
+          ValueListenableBuilder<bool>(
+            valueListenable: includePersonalization,
+            builder: (context, val, _) => SwitchListTile(
+              title: Text('Apply Personalization',
+                  style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: onSurface)),
+              subtitle: Text('Add Prefix & Suffix from database',
+                  style: GoogleFonts.outfit(
+                      fontSize: 12, color: onSurface.withOpacity(0.6))),
+              value: val,
+              activeColor: AppColors.primary,
+              onChanged: (v) => includePersonalization.value = v,
             ),
           ),
         ],

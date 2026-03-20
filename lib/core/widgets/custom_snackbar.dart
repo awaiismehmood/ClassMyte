@@ -30,6 +30,15 @@ class CustomSnackBar {
     );
   }
 
+  static void showWarning(BuildContext context, String message) {
+    _showSnackBar(
+      context,
+      message,
+      AppColors.warning,
+      Icons.warning_amber_outlined,
+    );
+  }
+
   static void _showSnackBar(
     BuildContext context,
     String message,

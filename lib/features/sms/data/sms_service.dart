@@ -1,6 +1,5 @@
-﻿// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,73 +17,61 @@ class MessageSender {
     return true;
   }
 
- static Future<void> sendMessages(
-  List<String> phoneNumbers,
-  String message,
-  int delay,
-  ValueNotifier<bool> sendingMessage,
-  ValueNotifier<String> messageStatus,
-) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setBool(ongoingProcessKey, true);
-  sendingMessage.value = true;
-  messageStatus.value = 'Sending Messages...';
+  static Future<void> sendMessages({
+    required List<String> phoneNumbers,
+    required List<String> names,
+    required String message,
+    required int delay,
+  }) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(ongoingProcessKey, true);
 
-  if (phoneNumbers.isNotEmpty) {
-    try {
-      await _startForegroundService(phoneNumbers, message, delay);
-      await Future.delayed(Duration(seconds: delay * phoneNumbers.length));
-      messageStatus.value = 'Messages sent successfully!';
-    } catch (error) {
-      messageStatus.value = 'Failed to send messages: $error';
-    } finally {
-      await prefs.setBool(ongoingProcessKey, false);
-      sendingMessage.value = false;
+    if (phoneNumbers.isNotEmpty) {
+      try {
+        await _startForegroundService(phoneNumbers, names, message, delay);
+      } catch (error) {
+        print('Failed to start native service: $error');
+      }
     }
-  } else {
-    messageStatus.value = 'No contacts available to send the message.';
-    await prefs.setBool(ongoingProcessKey, false);
-    sendingMessage.value = false;
   }
-}
 
-
-
-  static Future<void> cancelMessageSending(
-  ValueNotifier<bool> sendingMessage,
-  ValueNotifier<String> messageStatus,
-) async {
-  if (sendingMessage.value) {
-    sendingMessage.value = false;
-    messageStatus.value = 'Message sending cancelled.';
-    
+  static Future<void> cancelMessageSending() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool(ongoingProcessKey, false);
     await _stopForegroundService();
   }
-}
-
 
   static Future<void> _stopForegroundService() async {
     try {
       await platform.invokeMethod('stopService');
-      print('Service stopped.');
+      print('Cancel action sent to service');
     } on PlatformException catch (e) {
       print("Failed to stop service: '${e.message}'");
     }
   }
 
   static Future<void> _startForegroundService(
-      List<String> phoneNumbers, String message, int delay) async {
+      List<String> phoneNumbers, List<String> names, String message, int delay) async {
     try {
       final result = await platform.invokeMethod('sendSMS', {
         'phoneNumbers': phoneNumbers,
+        'names': names,
         'message': message,
         'delay': delay,
       });
       print('Service started: $result');
     } on PlatformException catch (e) {
       print("Failed to start service: '${e.message}'");
+    }
+  }
+
+  static Future<bool> isServiceRunning() async {
+    try {
+      final bool? isRunning = await platform.invokeMethod('isServiceRunning');
+      return isRunning ?? false;
+    } on PlatformException catch (e) {
+      print("Failed to check service status: ${e.message}");
+      return false;
     }
   }
 }

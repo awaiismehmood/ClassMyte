@@ -1,27 +1,55 @@
-﻿// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously
 import 'package:classmyte/main.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeleteAccount {
   static Future<void> delete(BuildContext context) async {
-    bool confirm = await _showDeleteConfirmationDialog(context);
-    if (confirm) {
-      String? password = await _showPasswordDialog(context);
-      if (password != null) {
+    CustomDialog.show(
+      context: context,
+      title: 'Confirm Delete Account',
+      subtitle: 'Are you sure you want to delete your account? This action cannot be undone, and all your data will be lost.',
+      confirmText: 'Delete',
+      confirmColor: Colors.redAccent,
+      onConfirm: () {
+        Navigator.pop(context); // Close confirmation
+        _reauthenticateAndDelete(context);
+      },
+    );
+  }
+
+  static Future<void> _reauthenticateAndDelete(BuildContext context) async {
+    final passwordController = TextEditingController();
+    
+    CustomDialog.show(
+      context: context,
+      title: 'Confirm Password',
+      subtitle: 'Please enter your password to proceed with account deletion.',
+      confirmText: 'Confirm Delete',
+      confirmColor: Colors.redAccent,
+      controller: passwordController,
+      inputLabel: 'Password',
+      inputHint: 'Enter your password',
+      isPassword: true,
+      onConfirm: () async {
+        final password = passwordController.text.trim();
+        if (password.isEmpty) return;
+
         try {
-          showDialog(
+          // Show loading
+          CustomDialog.show(
             context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return const Center(child: CircularProgressIndicator());
-            },
+            title: 'Deleting Account',
+            subtitle: 'Please wait...',
+            isLoading: true,
+            onConfirm: () {},
           );
 
           User? user = FirebaseAuth.instance.currentUser;
           if (user == null) {
-            Navigator.of(context).pop(); 
+            Navigator.pop(context); // Close loading
             _showErrorDialog(context, 'No user is currently logged in.');
             return;
           }
@@ -34,17 +62,16 @@ class DeleteAccount {
           await _deleteUserData(user.uid);
           await user.delete();
 
-          Navigator.of(context).pop();
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const MyApp()),
             (Route<dynamic> route) => false,
           );
         } catch (e) {
-          Navigator.of(context).pop();
+          Navigator.pop(context); // Close loading
           _showErrorDialog(context, 'Error: ${e.toString()}');
         }
-      }
-    }
+      },
+    );
   }
 
   static Future<void> _deleteUserData(String uid) async {
@@ -75,87 +102,13 @@ class DeleteAccount {
     await firestore.collection('users').doc(uid).delete();
   }
 
-  static Future<void> _showErrorDialog(BuildContext context, String message) {
-    return showDialog<void>(
+  static void _showErrorDialog(BuildContext context, String message) {
+    CustomDialog.show(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error'),
-          content: Text(message),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  static Future<bool> _showDeleteConfirmationDialog(BuildContext context) {
-    return showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Delete Account'),
-          content: const Text(
-            'Are you sure you want to delete your account? This action cannot be undone, and all your data will be lost.',
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-            TextButton(
-              child: const Text('Delete'),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-          ],
-        );
-      },
-    ).then((value) => value ?? false);
-  }
-
-  static Future<String?> _showPasswordDialog(BuildContext context) async {
-    String password = '';
-    final controller = TextEditingController();
-
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Password'),
-          content: TextField(
-            controller: controller,
-            obscureText: true,
-            decoration: const InputDecoration(hintText: "Enter your password"),
-            onChanged: (value) {
-              password = value;
-            },
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-            ),
-            TextButton(
-              child: const Text('Confirm'),
-              onPressed: () {
-                Navigator.of(context).pop(password);
-              },
-            ),
-          ],
-        );
-      },
+      title: 'Error',
+      subtitle: message,
+      confirmText: 'OK',
+      onConfirm: () => Navigator.pop(context),
     );
   }
 }

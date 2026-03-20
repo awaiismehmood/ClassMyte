@@ -5,8 +5,12 @@ import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_dropdown.dart';
 import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
+import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
+import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddContactSheet extends ConsumerStatefulWidget {
@@ -210,7 +214,34 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
             CustomButton(
               text: _isLoading ? 'Saving...' : 'Save Student',
               isLoading: _isLoading,
-              onPressed: _saveContact,
+              onPressed: () {
+                final isPremium = ref.read(subscriptionProvider).isPremiumUser;
+                if (!isPremium) {
+                  StudentData.getStudentData().then((students) {
+                    if (students.length >= 50) {
+                      CustomDialog.show(
+                        context: context,
+                        title: 'Contact Limit Reached',
+                        subtitle: 'Free users can save up to 50 contacts. Please upgrade to premium for more control!',
+                        confirmText: 'Go Premium',
+                        confirmColor: AppColors.primary,
+                        onConfirm: () {
+                          Navigator.pop(context);
+                          context.push('/subscription');
+                        },
+                      );
+                    } else {
+                      _saveContact();
+                    }
+                  });
+                } else {
+                  _saveContact();
+                }
+              },
+              // Make it look disabled if limit reached
+              color: (snapshot.hasData && snapshot.data!.length >= 50 && !ref.watch(subscriptionProvider).isPremiumUser) 
+                ? Colors.grey 
+                : AppColors.primary,
             ),
           ],
         );

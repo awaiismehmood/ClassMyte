@@ -1,9 +1,13 @@
+import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
+import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:classmyte/features/sms/providers/template_providers.dart';
 import 'package:classmyte/features/sms/widgets/add_template_sheet.dart';
 import 'package:classmyte/features/sms/widgets/template_details_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 final isMyTemplatesProvider = StateProvider<bool>((ref) => false);
@@ -27,6 +31,7 @@ class ManageTemplatesScreen extends ConsumerWidget {
     final userTemplatesAsync = ref.watch(userTemplatesProvider);
     final userTemplates = userTemplatesAsync.value ?? [];
     final selectedCategory = ref.watch(templateCategoryProvider);
+    final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
 
     final currentTemplates = isMyTemplates
         ? userTemplates
@@ -46,7 +51,7 @@ class ManageTemplatesScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeroSection(context, ref, isMyTemplates),
+                        _buildHeroSection(context, ref, isMyTemplates, isPremium),
                         const SizedBox(height: 24),
                         if (!isMyTemplates) ...[
                           _buildCategoryChips(context, ref, selectedCategory),
@@ -93,7 +98,13 @@ class ManageTemplatesScreen extends ConsumerWidget {
                         elevation: 6,
                         shadowColor: Colors.purple.withOpacity(0.4),
                       ),
-                      onPressed: () => AddTemplateSheet.show(context),
+                      onPressed: () {
+                        if (isPremium) {
+                          AddTemplateSheet.show(context);
+                        } else {
+                          _showPremiumDialog(context);
+                        }
+                      },
                       icon: const Icon(Icons.add, color: Colors.white),
                       label: Text('New Template', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
@@ -106,7 +117,7 @@ class ManageTemplatesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeroSection(BuildContext context, WidgetRef ref, bool isMyTemplates) {
+  Widget _buildHeroSection(BuildContext context, WidgetRef ref, bool isMyTemplates, bool isPremium) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -158,6 +169,20 @@ class ManageTemplatesScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showPremiumDialog(BuildContext context) {
+    CustomDialog.show(
+      context: context,
+      title: 'Premium Feature',
+      subtitle: 'Creating and managing your own templates is a premium feature. Upgrade now to unlock it!',
+      confirmText: 'Go Premium',
+      confirmColor: AppColors.primary,
+      onConfirm: () {
+        Navigator.pop(context);
+        context.push('/subscription');
+      },
     );
   }
 

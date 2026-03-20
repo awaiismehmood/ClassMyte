@@ -6,12 +6,14 @@ class CustomDropdownItem<T> {
   final T value;
   final String label;
   final IconData? icon;
+  final IconData? trailingIcon;
   final Color? textColor;
 
   const CustomDropdownItem({
     required this.value,
     required this.label,
     this.icon,
+    this.trailingIcon,
     this.textColor,
   });
 }
@@ -164,6 +166,14 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
                                             ? AppColors.primary
                                             : (item.textColor ?? Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                                       ),
+                                    if (item.trailingIcon != null) ...[
+                                      const SizedBox(width: 8),
+                                      Icon(
+                                        item.trailingIcon,
+                                        size: 16,
+                                        color: Colors.amber,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),

@@ -7,10 +7,16 @@ import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.EventChannel
 
 class MainActivity : FlutterActivity() {
 
     private val CHANNEL = "com.alnoor.sms/sendSMS"
+    private val PROGRESS_CHANNEL = "com.alnoor.sms/progress"
+    
+    companion object {
+        var eventSink: EventChannel.EventSink? = null
+    }
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -18,10 +24,11 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "sendSMS" -> {
                     val phoneNumbers = call.argument<List<String>>("phoneNumbers")
+                    val names = call.argument<List<String>>("names") ?: emptyList()
                     val message = call.argument<String>("message")
                     val delay = call.argument<Int>("delay") ?: 15 
                     if (phoneNumbers != null && message != null) {
-                        startForegroundService(phoneNumbers, message, delay, result)
+                        startForegroundService(phoneNumbers, names, message, delay, result)
                     } else {
                         result.error("INVALID_ARGUMENTS", "Invalid phone numbers or message", null)
                     }
@@ -29,14 +36,31 @@ class MainActivity : FlutterActivity() {
                 "stopService" -> {
                     stopForegroundService(result)
                 }
+                "isServiceRunning" -> {
+                    result.success(SmsForegroundService.isServiceRunning)
+                }
                 else -> result.notImplemented()
             }
         }
+
+        // Event Channel for real-time progress updates
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, PROGRESS_CHANNEL).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    eventSink = events
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    eventSink = null
+                }
+            }
+        )
     }
 
- private fun startForegroundService(phoneNumbers: List<String>, message: String, delay: Int, result: MethodChannel.Result) {
+  private fun startForegroundService(phoneNumbers: List<String>, names: List<String>, message: String, delay: Int, result: MethodChannel.Result) {
     val serviceIntent = Intent(this, SmsForegroundService::class.java).apply {
         putStringArrayListExtra("phoneNumbers", ArrayList(phoneNumbers))
+        putStringArrayListExtra("names", ArrayList(names))
         putExtra("message", message)
         putExtra("delay", delay) // Pass the delay to the service
         action = "ACTION_START_SENDING"
@@ -53,15 +77,17 @@ class MainActivity : FlutterActivity() {
     result.success(true)
 }
 
-
-
-
 private fun stopForegroundService(result: MethodChannel.Result) {
     val serviceIntent = Intent(this, SmsForegroundService::class.java).apply {
         action = "ACTION_CANCEL_SENDING"  // Add action for canceling the service
     }
-    stopService(serviceIntent)
-    Log.d("MainActivity", "Foreground service stopped")
+    // Use startService specifically to pass the intent with the cancel action
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        startForegroundService(serviceIntent)
+    } else {
+        startService(serviceIntent)
+    }
+    Log.d("MainActivity", "Forwarded cancel action to service")
     result.success(true)
 }
 

@@ -10,6 +10,7 @@ import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/features/students/models/student_edit_state.dart';
 import 'package:classmyte/core/services/student_utils.dart';
+import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -178,20 +179,14 @@ class StudentDetailSheet extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5), fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
           if (isEditable)
-            TextField(
-              controller: TextEditingController(text: value)..selection = TextSelection.collapsed(offset: value.length),
-              onChanged: (v) => ref.read(studentEditProvider(student).notifier).updateField(field, v),
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: onSurface.withOpacity(0.1))),
-              ),
-              style: GoogleFonts.outfit(fontSize: 16, color: onSurface),
+            CustomTextField(
+              labelText: label,
+              hintText: 'Enter $label',
+              controller: TextEditingController(text: value)
+                ..selection = TextSelection.collapsed(offset: value.length),
+              onChanged: (v) =>
+                  ref.read(studentEditProvider(student).notifier).updateField(field, v),
               keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
             )
           else if (isPhone && value.isNotEmpty && value != '0')

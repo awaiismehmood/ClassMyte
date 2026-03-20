@@ -5,6 +5,7 @@ import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:classmyte/features/students/models/student_edit_state.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/core/services/student_utils.dart';
+import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -165,28 +166,33 @@ class StudentDetailsScreen extends ConsumerWidget {
       bool isEditable, {bool isPhone = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 4),
-          isEditable
-              ? TextField(
-                  controller: TextEditingController(text: value)
-                    ..selection = TextSelection.collapsed(offset: value.length),
-                  onChanged: (v) => ref.read(studentEditProvider(student).notifier).updateField(field, v),
-                  decoration: const InputDecoration(
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 6)),
-                  keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                )
-              : Text(value.isNotEmpty ? value : '—',
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          const Divider(height: 20, color: Color(0xFFF0F0F0)),
-        ],
-      ),
+      child: isEditable
+          ? CustomTextField(
+              labelText: label,
+              hintText: 'Enter $label',
+              controller: TextEditingController(text: value)
+                ..selection = TextSelection.collapsed(offset: value.length),
+              onChanged: (v) =>
+                  ref.read(studentEditProvider(student).notifier).updateField(field, v),
+              keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500)),
+                const SizedBox(height: 4),
+                Text(value.isNotEmpty ? value : '—',
+                    style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary)),
+                const Divider(height: 20, color: Color(0xFFF0F0F0)),
+              ],
+            ),
     );
   }
 

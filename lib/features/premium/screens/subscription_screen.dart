@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
+import 'package:classmyte/core/widgets/custom_snackbar.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
@@ -42,74 +44,56 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   void _showErrorDialog(String title, String msg) {
-    showDialog(
+    CustomDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor,
-        title: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
-        content: Text(msg, style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8))),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
-        ],
-      ),
+      title: title,
+      subtitle: msg,
+      confirmText: 'OK',
+      onConfirm: () => Navigator.pop(context),
     );
   }
 
   Future<void> _cancelSubscription() async {
     final passwordController = TextEditingController();
     
-    bool confirmed = await showDialog(
+    CustomDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor,
-        title: Text('Cancel Subscription', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Please enter your password to confirm cancellation:', style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8))),
-            const SizedBox(height: 16),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface),
-              decoration: InputDecoration(
-                labelText: 'Password',
-                labelStyle: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                border: const OutlineInputBorder(),
-                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1))),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Back')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Cancel Plan', style: GoogleFonts.outfit(color: Colors.white)),
-          ),
-        ],
-      ),
-    ) ?? false;
+      title: 'Cancel Subscription',
+      subtitle: 'Please enter your password to confirm cancellation:',
+      confirmText: 'Cancel Plan',
+      confirmColor: AppColors.error,
+      controller: passwordController,
+      inputLabel: 'Password',
+      inputHint: 'Enter password',
+      isPassword: true,
+      onConfirm: () async {
+        if (passwordController.text.trim().isEmpty) {
+          CustomSnackBar.showError(context, 'Please enter your password');
+          return;
+        }
 
-    if (confirmed) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && user.email != null) {
-        try {
-          AuthCredential credential = EmailAuthProvider.credential(email: user.email!, password: passwordController.text.trim());
-          await user.reauthenticateWithCredential(credential);
-          await ref.read(subscriptionProvider.notifier).updateSubscription('Free', null);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Subscription cancelled successfully')));
-          }
-        } catch (e) {
-          if (mounted) {
-            _showErrorDialog('Verification Failed', 'Incorrect password. Could not cancel subscription.');
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null && user.email != null) {
+          try {
+            AuthCredential credential = EmailAuthProvider.credential(
+              email: user.email!, 
+              password: passwordController.text.trim()
+            );
+            await user.reauthenticateWithCredential(credential);
+            await ref.read(subscriptionProvider.notifier).updateSubscription('Free', null);
+            
+            if (mounted) {
+              Navigator.pop(context); // Close dialog
+              CustomSnackBar.showSuccess(context, 'Subscription cancelled successfully');
+            }
+          } catch (e) {
+            if (mounted) {
+              CustomSnackBar.showError(context, 'Verification Failed: Incorrect password.');
+            }
           }
         }
-      }
-    }
+      },
+    );
   }
 
   @override
@@ -257,11 +241,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _buildPlanCard('Month', 'PKR 1,000', 'Monthly Subscription'),
+                  _buildPlanCard('Month', 'PKR 299', 'Monthly Subscription'),
                   const SizedBox(width: 12),
-                  _buildPlanCard('Year', 'PKR 10,000', 'Yearly Subscription'),
+                  _buildPlanCard('Year', 'PKR 2,999', 'Yearly (2 Months Free)'),
                   const SizedBox(width: 12),
-                  _buildPlanCard('Lifetime', 'PKR 25,000', 'Life Time Subscription'),
+                  _buildPlanCard('Lifetime', 'PKR 7,999', 'One-time Payment'),
                 ],
               ),
             ),
@@ -390,29 +374,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   List<Widget> _buildFreeFeatures(BuildContext context) {
     return [
-      _buildFeatureItem(context, 'Ads included', true),
-      _buildFeatureItem(context, 'Limited WP non-contact', true),
-      _buildFeatureItem(context, 'No. of campaign - 01', true),
-      _buildFeatureItem(context, 'Maximum contact allowed - 10', true),
-      _buildFeatureItem(context, 'Add manual contacts - 10', true),
-      _buildFeatureItem(context, 'Personalize message - 10', true),
-      _buildFeatureItem(context, 'Basic Unsubscribe', true),
-      _buildFeatureItem(context, 'Standard WP Call Block', true),
+      _buildFeatureItem(context, 'Bulk Messaging (30s Fixed Delay)', true),
+      _buildFeatureItem(context, 'Save up to 50 Contacts', true),
+      _buildFeatureItem(context, 'Standard Personalization (Prefix/Suffix)', true),
+      _buildFeatureItem(context, 'Manual Contact Entry', true),
+      _buildFeatureItem(context, 'View Pre-made Templates', true),
+      _buildFeatureItem(context, 'Ad-Supported Experience', true),
     ];
   }
 
   List<Widget> _buildProFeatures(BuildContext context) {
     return [
-      _buildFeatureItem(context, 'Remove All Ads', true),
-      _buildFeatureItem(context, 'Unlimited WP non-contact', true),
-      _buildFeatureItem(context, 'Unlimited campaigns', true),
-      _buildFeatureItem(context, 'Unlimited contacts allowed', true),
-      _buildFeatureItem(context, 'No limits on manual contacts', true),
-      _buildFeatureItem(context, 'Unlimited personalize messages', true),
-      _buildFeatureItem(context, 'Full Unsubscribe management', true),
-      _buildFeatureItem(context, 'Advanced WP Call Block', true),
-      _buildFeatureItem(context, 'Export to Excel', true),
-      _buildFeatureItem(context, 'Priority Support', true),
+      _buildFeatureItem(context, 'Remove All Ads (Instant Processing)', true),
+      _buildFeatureItem(context, 'Unlimited Contact Storage', true),
+      _buildFeatureItem(context, 'Custom Message Delays (0-60s)', true),
+      _buildFeatureItem(context, 'Exclude Inactive Student Filter', true),
+      _buildFeatureItem(context, 'Create & Manage Custom Templates', true),
+      _buildFeatureItem(context, 'Excel/CSV Data Import & Export', true),
+      _buildFeatureItem(context, 'Advanced Data Synchronization', true),
+      _buildFeatureItem(context, 'Priority Updates & Support', true),
     ];
   }
 
