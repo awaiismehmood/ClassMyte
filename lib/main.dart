@@ -9,6 +9,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:classmyte/core/widgets/offline_indicator.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +19,10 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
     final prefs = await SharedPreferences.getInstance();
 
     runApp(
@@ -96,9 +103,18 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       darkTheme: AppTheme.darkTheme(),
       themeMode: themeMode,
       routerConfig: goRouter,
-      builder: (context, child) => GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: child,
+      builder: (context, child) => Material(
+        child: Column(
+          children: [
+            const OfflineIndicator(),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                child: child,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
