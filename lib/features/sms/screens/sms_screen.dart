@@ -93,7 +93,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
 
   Future<void> _initializeNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_sms');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
     await ref

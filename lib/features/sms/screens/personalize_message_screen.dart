@@ -48,6 +48,15 @@ class _PersonalizeMessageScreenState extends ConsumerState<PersonalizeMessageScr
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<Map<String, String>>(personalizationProvider, (previous, next) {
+      if ((previous == null || previous['prefix'] != next['prefix']) && _prefixController.text.isEmpty) {
+        _prefixController.text = next['prefix'] ?? '';
+      }
+      if ((previous == null || previous['suffix'] != next['suffix']) && _suffixController.text.isEmpty) {
+        _suffixController.text = next['suffix'] ?? '';
+      }
+    });
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final onSurface = Theme.of(context).colorScheme.onSurface;
 

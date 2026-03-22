@@ -69,7 +69,7 @@ class SmsForegroundService : LifecycleService() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("ClassMyte SMS Service")
             .setContentText(content)
-            .setSmallIcon(R.mipmap.ic_launcher) // Fallback to launcher icon if ic_sms missing
+            .setSmallIcon(R.drawable.ic_sms)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel", cancelPendingIntent)
