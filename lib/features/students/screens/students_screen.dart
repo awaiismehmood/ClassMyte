@@ -13,6 +13,8 @@ import 'package:classmyte/features/sms/data/whatsapp_service.dart';
 import 'package:classmyte/core/widgets/communication_dialogs.dart';
 import 'package:classmyte/features/students/widgets/student_detail_sheet.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
+import 'package:classmyte/features/sms/providers/sms_providers.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -46,22 +48,121 @@ class StudentContactsScreen extends ConsumerWidget {
               : null,
             rightActions: isSelectionMode
               ? [
-                  _buildCircleAction(
-                    icon: Icons.check_circle_outline,
-                    color: Colors.green,
-                    onTap: () => _handleBulkStatusUpdate(context, ref, selectedIds.toList(), 'Active'),
+                  GestureDetector(
+                    onTap: () {
+                      if (selectedIds.length == filteredStudents.length) {
+                        ref.read(selectedStudentIdsProvider.notifier).state = {};
+                      } else {
+                        ref.read(selectedStudentIdsProvider.notifier).state =
+                            filteredStudents.map((s) => s['id']!).toSet();
+                      }
+                    },
+                    child: Container(
+                      height: 45,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        selectedIds.length == filteredStudents.length
+                            ? 'Unselect All'
+                            : 'Select All',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  _buildCircleAction(
-                    icon: Icons.remove_circle_outline,
-                    color: Colors.orange,
-                    onTap: () => _handleBulkStatusUpdate(context, ref, selectedIds.toList(), 'Inactive'),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildCircleAction(
-                    icon: Icons.delete_outline,
-                    color: Colors.redAccent,
-                    onTap: () => _handleBulkDelete(context, ref, selectedIds.toList()),
+                  Theme(
+                    data: Theme.of(context).copyWith(
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                    ),
+                    child: PopupMenuButton<String>(
+                      tooltip: 'More options',
+                      offset: const Offset(0, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      color: Theme.of(context).cardColor,
+                      onSelected: (value) {
+                        if (value == 'Active') {
+                          _handleBulkStatusUpdate(context, ref, selectedIds.toList(), 'Active');
+                        } else if (value == 'Inactive') {
+                          _handleBulkStatusUpdate(context, ref, selectedIds.toList(), 'Inactive');
+                        } else if (value == 'Delete') {
+                          _handleBulkDelete(context, ref, selectedIds.toList());
+                        } else if (value == 'Message') {
+                          _handleSendMessageToSelected(context, ref, filteredStudents, selectedIds, isPremium);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'Active',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                              const SizedBox(width: 12),
+                              Text('Mark Active', style: GoogleFonts.outfit(fontSize: 15)),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'Inactive',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.remove_circle_outline, color: Colors.orange, size: 20),
+                              const SizedBox(width: 12),
+                              Text('Mark Inactive', style: GoogleFonts.outfit(fontSize: 15)),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'Delete',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                              const SizedBox(width: 12),
+                              Text('Delete Selected', style: GoogleFonts.outfit(fontSize: 15, color: Colors.redAccent)),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: 'Message',
+                          child: Row(
+                            children: [
+                              Icon(Icons.send_outlined,
+                                color: isPremium ? AppColors.primary : Colors.grey,
+                                size: 20),
+                              const SizedBox(width: 12),
+                              Text('Send Message',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 15,
+                                  color: isPremium ? AppColors.primary : Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                              const Spacer(),
+                              if (!isPremium)
+                                const Icon(Icons.lock_outline, size: 14, color: Colors.amber),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: Container(
+                        width: 45,
+                        height: 45,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(Icons.more_vert, color: AppColors.primary, size: 24),
+                      ),
+                    ),
                   ),
                 ]
               : [
@@ -161,6 +262,42 @@ class StudentContactsScreen extends ConsumerWidget {
     await EditContactService.updateMultipleStatus(ids, status);
     ref.read(selectedStudentIdsProvider.notifier).state = {};
     ref.invalidate(studentDataProvider);
+  }
+
+  void _handleSendMessageToSelected(
+    BuildContext context,
+    WidgetRef ref,
+    List<Map<String, String>> allStudents,
+    Set<String> selectedIds,
+    bool isPremium,
+  ) {
+    if (!isPremium) {
+      CustomDialog.show(
+        context: context,
+        title: 'Premium Feature',
+        subtitle: 'Sending messages to custom-selected students is a premium feature.\n\nUpgrade to unlock this and many more powerful features!',
+        confirmText: 'Go Premium',
+        cancelText: 'Cancel',
+        confirmColor: AppColors.primary,
+        onConfirm: () {
+          Navigator.pop(context);
+          context.push('/subscription');
+        },
+      );
+      return;
+    }
+
+    // Get the actual student maps for the selected IDs
+    final selectedContacts = allStudents
+        .where((s) => selectedIds.contains(s['id']))
+        .toList();
+
+    if (selectedContacts.isEmpty) return;
+
+    // Set the pre-selected contacts and navigate
+    ref.read(preSelectedContactsProvider.notifier).state = selectedContacts;
+    ref.read(selectedStudentIdsProvider.notifier).state = {};
+    context.push('/sms');
   }
 
   Widget _buildCircleAction({required IconData icon, required VoidCallback onTap, Color? color}) {

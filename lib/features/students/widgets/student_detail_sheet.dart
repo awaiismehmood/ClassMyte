@@ -54,7 +54,8 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  void _saveChanges(BuildContext context, WidgetRef ref, StudentEditState state) async {
+  void _saveChanges(
+      BuildContext context, WidgetRef ref, StudentEditState state) async {
     ref.read(studentEditProvider(student).notifier).setLoading(true);
     await EditContactService.updateContact(
       student['id'] ?? '',
@@ -81,7 +82,9 @@ class StudentDetailSheet extends ConsumerWidget {
     );
     if (picked != null) {
       final dateStr = "${picked.toLocal()}".split(' ')[0];
-      ref.read(studentEditProvider(student).notifier).updateField(field, dateStr);
+      ref
+          .read(studentEditProvider(student).notifier)
+          .updateField(field, dateStr);
     }
   }
 
@@ -100,7 +103,10 @@ class StudentDetailSheet extends ConsumerWidget {
               backgroundColor: AppColors.primary.withOpacity(0.1),
               child: Text(
                 state.name.isNotEmpty ? state.name[0].toUpperCase() : '?',
-                style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: GoogleFonts.outfit(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary),
               ),
             ),
             const SizedBox(width: 20),
@@ -111,27 +117,37 @@ class StudentDetailSheet extends ConsumerWidget {
                   Text(
                     state.name,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: onSurface),
+                    style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: onSurface),
                   ),
                   Text(
                     'Class ${state.className}',
-                    style: GoogleFonts.outfit(color: onSurface.withOpacity(0.6), fontSize: 14),
+                    style: GoogleFonts.outfit(
+                        color: onSurface.withOpacity(0.6), fontSize: 14),
                   ),
                 ],
               ),
             ),
             IconButton(
-              icon: Icon(state.isEditable ? Icons.check_circle : Icons.edit_note, color: state.isEditable ? Colors.green : AppColors.primary, size: 28),
+              icon: Icon(
+                  state.isEditable ? Icons.check_circle : Icons.edit_note,
+                  color: state.isEditable ? Colors.green : AppColors.primary,
+                  size: 28),
               onPressed: () {
                 if (state.isEditable) {
                   _saveChanges(context, ref, state);
                 } else {
-                  ref.read(studentEditProvider(student).notifier).toggleEditable();
+                  ref
+                      .read(studentEditProvider(student).notifier)
+                      .toggleEditable();
                 }
               },
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 28),
+              icon: const Icon(Icons.delete_outline,
+                  color: Colors.redAccent, size: 28),
               onPressed: () => _deleteStudent(context, ref),
             ),
           ],
@@ -140,21 +156,35 @@ class StudentDetailSheet extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.02) : AppColors.primary.withOpacity(0.02), 
-            borderRadius: BorderRadius.circular(24), 
-            border: Border.all(color: onSurface.withOpacity(0.05))
-          ),
+              color: isDark
+                  ? Colors.white.withOpacity(0.02)
+                  : AppColors.primary.withOpacity(0.02),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: onSurface.withOpacity(0.05))),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildField(context, ref, 'Name', state.name, 'name', state.isEditable),
-              _buildField(context, ref, 'Class', state.className, 'class', state.isEditable),
-              _buildField(context, ref, 'Phone#', state.phoneNumber, 'phoneNumber', state.isEditable, isPhone: true),
-              _buildField(context, ref, 'Alt#', state.altNumber, 'altNumber', state.isEditable, isPhone: true),
-              _buildField(context, ref, 'Father Name', state.fatherName, 'fatherName', state.isEditable),
-              _buildDateField(context, ref, 'DOB', state.dob, 'dob', state.isEditable, 
-                trailing: Text('Age: ${StudentUtils.calculateAge(state.dob)}', style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold))),
-              _buildDateField(context, ref, 'Admission Date', state.admissionDate, 'admissionDate', state.isEditable),
+              _buildField(
+                  context, ref, 'Name', state.name, 'name', state.isEditable),
+              _buildField(context, ref, 'Class', state.className, 'class',
+                  state.isEditable),
+              _buildField(context, ref, 'Phone#', state.phoneNumber,
+                  'phoneNumber', state.isEditable,
+                  isPhone: true),
+              _buildField(context, ref, 'Alt#', state.altNumber, 'altNumber',
+                  state.isEditable,
+                  isPhone: true),
+              _buildField(context, ref, 'Father Name', state.fatherName,
+                  'fatherName', state.isEditable),
+              _buildDateField(
+                  context, ref, 'DOB', state.dob, 'dob', state.isEditable,
+                  trailing: Text('Age: ${StudentUtils.calculateAge(state.dob)}',
+                      style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold))),
+              _buildDateField(context, ref, 'Admission Date',
+                  state.admissionDate, 'admissionDate', state.isEditable),
               _buildStatusField(context, ref, state.isActive, state.isEditable),
             ],
           ),
@@ -170,7 +200,9 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildField(BuildContext context, WidgetRef ref, String label, String value, String field, bool isEditable, {bool isPhone = false}) {
+  Widget _buildField(BuildContext context, WidgetRef ref, String label,
+      String value, String field, bool isEditable,
+      {bool isPhone = false}) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -185,29 +217,37 @@ class StudentDetailSheet extends ConsumerWidget {
               hintText: 'Enter $label',
               controller: TextEditingController(text: value)
                 ..selection = TextSelection.collapsed(offset: value.length),
-              onChanged: (v) =>
-                  ref.read(studentEditProvider(student).notifier).updateField(field, v),
+              onChanged: (v) => ref
+                  .read(studentEditProvider(student).notifier)
+                  .updateField(field, v),
               keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
             )
           else if (isPhone && value.isNotEmpty && value != '0')
             Row(
               children: [
-                Text(value, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
+                Text(value,
+                    style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: onSurface)),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.phone_outlined, size: 20, color: AppColors.primary),
+                  icon: const Icon(Icons.phone_outlined,
+                      size: 20, color: AppColors.primary),
                   onPressed: () => makeCall(value),
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline, size: 20, color: Colors.green),
+                  icon: const Icon(Icons.chat_bubble_outline,
+                      size: 20, color: Colors.green),
                   onPressed: () {
                     CommunicationDialogs.showMessageOptionDialog(
                       context: context,
                       phoneNumber: value,
                       onSMS: () => sendSMS(value),
-                      onWhatsApp: () => WhatsAppMessaging().sendWhatsAppMessageIndividually(value),
+                      onWhatsApp: () => WhatsAppMessaging()
+                          .sendWhatsAppMessageIndividually(value),
                     );
                   },
                   constraints: const BoxConstraints(),
@@ -216,13 +256,19 @@ class StudentDetailSheet extends ConsumerWidget {
               ],
             )
           else
-            Text(value.isNotEmpty ? value : '-', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface)),
+            Text(value.isNotEmpty ? value : '-',
+                style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: onSurface)),
         ],
       ),
     );
   }
 
-  Widget _buildDateField(BuildContext context, WidgetRef ref, String label, String value, String field, bool isEditable, {Widget? trailing}) {
+  Widget _buildDateField(BuildContext context, WidgetRef ref, String label,
+      String value, String field, bool isEditable,
+      {Widget? trailing}) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -233,8 +279,12 @@ class StudentDetailSheet extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Text(label, style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5), fontWeight: FontWeight.bold)),
-              if (trailing != null) ...[  
+              Text(label,
+                  style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: onSurface.withOpacity(0.5),
+                      fontWeight: FontWeight.bold)),
+              if (trailing != null) ...[
                 const SizedBox(width: 8),
                 trailing,
               ],
@@ -247,13 +297,20 @@ class StudentDetailSheet extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: isEditable ? (isDark ? Colors.white.withOpacity(0.05) : Colors.white) : Colors.transparent,
+                color: isEditable
+                    ? (isDark ? Colors.white.withOpacity(0.05) : Colors.white)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
-                border: isEditable ? Border.all(color: onSurface.withOpacity(0.1)) : null,
+                border: isEditable
+                    ? Border.all(color: onSurface.withOpacity(0.1))
+                    : null,
               ),
               child: Text(
                 value.isNotEmpty ? value : '-',
-                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: isEditable ? AppColors.primary : onSurface),
+                style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isEditable ? AppColors.primary : onSurface),
               ),
             ),
           ),
@@ -262,7 +319,8 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusField(BuildContext context, WidgetRef ref, bool isActive, bool isEditable) {
+  Widget _buildStatusField(
+      BuildContext context, WidgetRef ref, bool isActive, bool isEditable) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -274,21 +332,26 @@ class StudentDetailSheet extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Status', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5), fontWeight: FontWeight.bold)),
-                  Text(isActive ? 'Active' : 'Inactive', 
-                    style: GoogleFonts.outfit(
-                      fontSize: 16, 
-                      fontWeight: FontWeight.w600, 
-                      color: isActive ? Colors.green : Colors.redAccent
-                    )),
+                  Text('Status',
+                      style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: onSurface.withOpacity(0.5),
+                          fontWeight: FontWeight.bold)),
+                  Text(isActive ? 'Active' : 'Inactive',
+                      style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isActive ? Colors.green : Colors.redAccent)),
                 ],
               ),
               const Spacer(),
               if (isEditable)
                 Switch(
                   value: isActive,
-                  onChanged: (v) => ref.read(studentEditProvider(student).notifier).toggleActive(v),
-                  activeColor: Colors.green,
+                  onChanged: (v) => ref
+                      .read(studentEditProvider(student).notifier)
+                      .toggleActive(v),
+                  activeThumbColor: Colors.green,
                 ),
             ],
           ),

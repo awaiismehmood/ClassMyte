@@ -7,6 +7,7 @@ class FilteringService {
     int? selectedYear,
     int? selectedAge,
     bool showBirthdaysOnly = false,
+    String? selectedStatus,
   }) {
     return students.where((student) {
       bool matchesClass = selectedClasses == null ||
@@ -23,7 +24,11 @@ class FilteringService {
 
       bool matchesBirthday = !showBirthdaysOnly || StudentUtils.isBirthdayToday(student['DOB']);
 
-      return matchesClass && matchesYear && matchesAge && matchesBirthday;
+      bool matchesStatus = selectedStatus == null ||
+          selectedStatus == 'All' ||
+          (student['status'] ?? 'Active') == selectedStatus;
+
+      return matchesClass && matchesYear && matchesAge && matchesBirthday && matchesStatus;
     }).toList();
   }
 

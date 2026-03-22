@@ -84,6 +84,29 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
   void _openDropdown() {
     final renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
+    final position = renderBox.localToGlobal(Offset.zero);
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    final availableHeightBelow = screenHeight - position.dy - size.height - 24;
+    final availableHeightAbove = position.dy - MediaQuery.of(context).padding.top - 24;
+    
+    final requiredHeight = widget.items.length * 56.0 + 16;
+    
+    bool showAbove = false;
+    double safeMaxHeight = requiredHeight;
+    
+    if (requiredHeight > availableHeightBelow) {
+      if (availableHeightAbove > availableHeightBelow && availableHeightBelow < 200) {
+        showAbove = true;
+        safeMaxHeight = requiredHeight < availableHeightAbove ? requiredHeight : availableHeightAbove;
+      } else {
+        safeMaxHeight = availableHeightBelow;
+      }
+    }
+    
+    // Safety check just in case safeMaxHeight is too small
+    if (safeMaxHeight < 100) safeMaxHeight = 100.0;
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     _overlayEntry = OverlayEntry(
@@ -95,17 +118,17 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>>
             CompositedTransformFollower(
               link: _layerLink,
               showWhenUnlinked: false,
-              offset: Offset(0, size.height + 6),
+              offset: Offset(0, showAbove ? -safeMaxHeight - 6 : size.height + 6),
               child: Material(
                 color: Colors.transparent,
                 child: FadeTransition(
                   opacity: _animation,
                   child: ScaleTransition(
                     scale: Tween<double>(begin: 0.95, end: 1.0).animate(_animation),
-                    alignment: Alignment.topCenter,
+                    alignment: showAbove ? Alignment.bottomCenter : Alignment.topCenter,
                     child: Container(
                       width: size.width,
-                      constraints: BoxConstraints(maxHeight: widget.items.length * 56.0 + 16),
+                      constraints: BoxConstraints(maxHeight: safeMaxHeight),
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(20),

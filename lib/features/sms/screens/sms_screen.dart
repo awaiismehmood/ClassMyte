@@ -32,7 +32,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   final ValueNotifier<bool> sendingMessage = ValueNotifier(false);
   final ValueNotifier<String> messageStatus = ValueNotifier('');
   final ValueNotifier<int> selectedDelay = ValueNotifier(30);
-  final ValueNotifier<bool> excludeInactive = ValueNotifier(false); // Default to false for free
+  final ValueNotifier<bool> excludeInactive =
+      ValueNotifier(false); // Default to false for free
   final ValueNotifier<bool> includePersonalization = ValueNotifier(true);
 
   @override
@@ -74,6 +75,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
 
   @override
   void dispose() {
+    // Clear pre-selected contacts when leaving so normal mode resumes next time
+    ref.read(preSelectedContactsProvider.notifier).state = null;
     messageController.dispose();
     sendingMessage.dispose();
     messageStatus.dispose();
@@ -121,14 +124,17 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   }
 
   void sendMessage(List<Map<String, String>> contactList) async {
+    final preSelected = ref.read(preSelectedContactsProvider);
+    final isPreSelectedMode = preSelected != null;
     final progress = ref.read(smsProgressProvider);
     if (progress.status == 'sending') {
       _showProcessOngoingSnackbar();
       return;
     }
 
-    if (selectedClasses.value.isEmpty) {
-      CustomSnackBar.showWarning(context, 'Please select at least one recipient');
+    if (!isPreSelectedMode && selectedClasses.value.isEmpty) {
+      CustomSnackBar.showWarning(
+          context, 'Please select at least one recipient');
       return;
     }
     if (messageController.text.isEmpty) {
@@ -139,20 +145,29 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     final permissionGranted = await MessageSender.checkSmsPermission();
     if (permissionGranted) {
       final personalization = ref.read(personalizationProvider);
-      final filterByStatus = (Map<String, String> contact) {
+      bool filterByStatus(Map<String, String> contact) {
         if (!excludeInactive.value) return true;
         return (contact['status'] ?? 'Active').toLowerCase() == 'active';
-      };
+      }
 
-      final selectedContacts = contactList
-          .where((contact) =>
-              (selectedClasses.value.contains("All") ||
-                  selectedClasses.value.contains(contact['class'])) &&
-              filterByStatus(contact))
-          .toList();
+      List<Map<String, String>> selectedContacts;
+      if (isPreSelectedMode) {
+        // In pre-selected mode, send to exactly those contacts (optionally filter inactive)
+        selectedContacts = preSelected.where(filterByStatus).toList();
+      } else {
+        selectedContacts = contactList
+            .where((contact) =>
+                (selectedClasses.value.contains("All") ||
+                    selectedClasses.value.contains(contact['class'])) &&
+                filterByStatus(contact))
+            .toList();
+      }
 
       if (selectedContacts.isEmpty) {
-        CustomSnackBar.showWarning(context, 'No active contacts found for selected classes');
+        CustomSnackBar.showWarning(
+            context, isPreSelectedMode
+                ? 'No active contacts in selection'
+                : 'No active contacts found for selected classes');
         return;
       }
 
@@ -164,10 +179,13 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         if (suffix.isNotEmpty) finalMessage = '$finalMessage\n$suffix';
       }
 
-      List<String> phoneNumbers = selectedContacts.map((c) => c['phoneNumber']!).toList();
+      List<String> phoneNumbers =
+          selectedContacts.map((c) => c['phoneNumber']!).toList();
       List<String> names = selectedContacts.map((c) => c['name']!).toList();
 
-      ref.read(smsProgressProvider.notifier).setLastMessage(finalMessage.trim());
+      ref
+          .read(smsProgressProvider.notifier)
+          .setLastMessage(finalMessage.trim());
 
       await MessageSender.sendMessages(
         phoneNumbers: phoneNumbers,
@@ -182,9 +200,10 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     }
   }
 
-  void _startFreeSendFlow(BuildContext context, List<Map<String, String>> contactList) async {
+  void _startFreeSendFlow(
+      BuildContext context, List<Map<String, String>> contactList) async {
     final adManager = ref.read(adManagerProvider);
-    
+
     if (adManager.isAdLoaded.value) {
       bool adCompleted = await adManager.showRewardedAd();
       if (adCompleted) sendMessage(contactList);
@@ -226,7 +245,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
 
       // Wait for 10 seconds as a "free tier" penalty/processing time
       await Future.delayed(const Duration(seconds: 10));
-      
+
       if (mounted) {
         Navigator.of(context).pop(); // Close loading dialog
         sendMessage(contactList);
@@ -234,15 +253,18 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     }
   }
 
-  void _showPremiumOptionsDialog(BuildContext context, List<Map<String, String>> contactList) {
+  void _showPremiumOptionsDialog(
+      BuildContext context, List<Map<String, String>> contactList) {
     List<String> selectedPremium = [];
-    if (selectedDelay.value != 30) selectedPremium.add('Custom Delay (${selectedDelay.value}s)');
+    if (selectedDelay.value != 30)
+      selectedPremium.add('Custom Delay (${selectedDelay.value}s)');
     if (excludeInactive.value) selectedPremium.add('Inactive Student Filter');
 
     CustomDialog.show(
       context: context,
       title: 'Premium Options Selected',
-      subtitle: 'You have selected features reserved for premium members:\n\n• ${selectedPremium.join('\n• ')}\n\nUpgrade to use these features, or continue with basic settings.',
+      subtitle:
+          'You have selected features reserved for premium members:\n\n• ${selectedPremium.join('\n• ')}\n\nUpgrade to use these features, or continue with basic settings.',
       confirmText: 'Go Premium',
       cancelText: 'Use Basic Features',
       confirmColor: AppColors.primary,
@@ -267,12 +289,46 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final personalization = ref.watch(personalizationProvider);
+    final preSelectedContacts = ref.watch(preSelectedContactsProvider);
+    final isPreSelectedMode = preSelectedContacts != null;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          const CustomHeader(title: 'Bulk Messaging'),
+    return PopScope(
+      canPop: !isPreSelectedMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (isPreSelectedMode) {
+          ref.read(preSelectedContactsProvider.notifier).state = null;
+          context.go('/home');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Column(
+          children: [
+            CustomHeader(
+              title: isPreSelectedMode
+                  ? 'Message ${preSelectedContacts.length} Student${preSelectedContacts.length == 1 ? '' : 's'}'
+                  : 'Bulk Messaging',
+              leftAction: isPreSelectedMode
+                  ? InkWell(
+                      onTap: () {
+                        ref.read(preSelectedContactsProvider.notifier).state = null;
+                        context.go('/home');
+                      },
+                      borderRadius: BorderRadius.circular(15),
+                      child: Container(
+                        width: 45,
+                        height: 45,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(Icons.chevron_left,
+                            color: AppColors.primary, size: 24),
+                      ),
+                    )
+                  : null,
+            ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -305,76 +361,83 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                                               fontWeight: FontWeight.bold)))
                                   : const SizedBox.shrink(),
                             ),
-                            Text('Select Recipients',
-                                style: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Theme.of(context).colorScheme.onSurface)),
-                            const SizedBox(height: 12),
-                            CustomDropdown<String>(
-                              value: null,
-                              hintText: 'Choose Classes',
-                              items: [
-                                const CustomDropdownItem(
-                                    value: 'All',
-                                    label: 'All Students',
-                                    icon: Icons.groups_outlined),
-                                ...contactList
-                                    .map((c) => c['class']!)
-                                    .toSet()
-                                    .map((name) => CustomDropdownItem(
-                                        value: name,
-                                        label: name,
-                                        icon: Icons.class_outlined)),
-                              ],
-                              onChanged: (String? value) {
-                                if (value != null) {
-                                  if (value == 'All') {
-                                    selectedClasses.value = ['All'];
-                                  } else {
-                                    if (!selectedClasses.value.contains(value)) {
-                                      selectedClasses.value =
-                                          List.from(selectedClasses.value)
-                                            ..add(value);
-                                      selectedClasses.value = selectedClasses
-                                          .value
-                                          .where((e) => e != 'All')
-                                          .toList();
+                            if (isPreSelectedMode) ..._buildPreSelectedBanner(context, preSelectedContacts)
+                            else ...[
+                              Text('Select Recipients',
+                                  style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface)),
+                              const SizedBox(height: 12),
+                              CustomDropdown<String>(
+                                value: null,
+                                hintText: 'Choose Classes',
+                                items: [
+                                  const CustomDropdownItem(
+                                      value: 'All',
+                                      label: 'All Students',
+                                      icon: Icons.groups_outlined),
+                                  ...contactList
+                                      .map((c) => c['class']!)
+                                      .toSet()
+                                      .map((name) => CustomDropdownItem(
+                                          value: name,
+                                          label: name,
+                                          icon: Icons.class_outlined)),
+                                ],
+                                onChanged: (String? value) {
+                                  if (value != null) {
+                                    if (value == 'All') {
+                                      selectedClasses.value = ['All'];
+                                    } else {
+                                      if (!selectedClasses.value
+                                          .contains(value)) {
+                                        selectedClasses.value =
+                                            List.from(selectedClasses.value)
+                                              ..add(value);
+                                        selectedClasses.value = selectedClasses
+                                            .value
+                                            .where((e) => e != 'All')
+                                            .toList();
+                                      }
                                     }
                                   }
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            ValueListenableBuilder<List<String>>(
-                              valueListenable: selectedClasses,
-                              builder: (context, classes, _) => Wrap(
-                                spacing: 8.0,
-                                runSpacing: 4.0,
-                                children: classes
-                                    .map((c) => Chip(
-                                          label: Text(c,
-                                              style: GoogleFonts.outfit(
-                                                  color: Colors.white,
-                                                  fontSize: 12)),
-                                          backgroundColor: AppColors.primary,
-                                          deleteIconColor: Colors.white,
-                                          onDeleted: () {
-                                            selectedClasses.value =
-                                                List.from(selectedClasses.value)
-                                                  ..remove(c);
-                                          },
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12)),
-                                        ))
-                                    .toList(),
+                                },
                               ),
-                            ),
+                              const SizedBox(height: 12),
+                              ValueListenableBuilder<List<String>>(
+                                valueListenable: selectedClasses,
+                                builder: (context, classes, _) => Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: classes
+                                      .map((c) => Chip(
+                                            label: Text(c,
+                                                style: GoogleFonts.outfit(
+                                                    color: Colors.white,
+                                                    fontSize: 12)),
+                                            backgroundColor: AppColors.primary,
+                                            deleteIconColor: Colors.white,
+                                            onDeleted: () {
+                                              selectedClasses.value =
+                                                  List.from(selectedClasses.value)
+                                                    ..remove(c);
+                                            },
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12)),
+                                          ))
+                                      .toList(),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 32),
                             _buildDelaySection(context, contactList, isPremium),
                             const SizedBox(height: 32),
-                            _buildOptionsSection(context, contactList, isPremium),
+                            _buildOptionsSection(
+                                context, contactList, isPremium),
                             const SizedBox(height: 32),
                             _buildMessagePreview(context, personalization),
                             const SizedBox(height: 16),
@@ -388,7 +451,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                             ValueListenableBuilder<bool>(
                               valueListenable: sendingMessage,
                               builder: (context, isSending, _) => CustomButton(
-                                text: isSending ? 'Sending...' : 'Send Messages',
+                                text:
+                                    isSending ? 'Sending...' : 'Send Messages',
                                 isLoading: isSending,
                                 onPressed: isSending
                                     ? null
@@ -399,11 +463,15 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                                         }
 
                                         // Free User Logic
-                                        final usingPremium = selectedDelay.value != 30 || excludeInactive.value;
+                                        final usingPremium =
+                                            selectedDelay.value != 30 ||
+                                                excludeInactive.value;
                                         if (usingPremium) {
-                                          _showPremiumOptionsDialog(context, contactList);
+                                          _showPremiumOptionsDialog(
+                                              context, contactList);
                                         } else {
-                                          _startFreeSendFlow(context, contactList);
+                                          _startFreeSendFlow(
+                                              context, contactList);
                                         }
                                       },
                                 color: AppColors.primary,
@@ -423,8 +491,9 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
           if (!isPremium) ref.watch(adManagerProvider).displayBannerAd(),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildDelaySection(BuildContext context,
       List<Map<String, String>> contactList, bool isPremium) {
@@ -473,7 +542,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                   value: d,
                   label: 'Fixed ($d Sec)',
                   icon: Icons.timer_outlined,
-                  trailingIcon: (!isPremium && d != 30) ? Icons.lock_outline : null,
+                  trailingIcon:
+                      (!isPremium && d != 30) ? Icons.lock_outline : null,
                 );
               }).toList(),
               onChanged: (val) {
@@ -501,8 +571,10 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         builder: (context, value, _) {
           if (value.text.isEmpty) return const SizedBox.shrink();
 
-          final prefix = showPersonalization ? (personalization['prefix'] ?? '') : '';
-          final suffix = showPersonalization ? (personalization['suffix'] ?? '') : '';
+          final prefix =
+              showPersonalization ? (personalization['prefix'] ?? '') : '';
+          final suffix =
+              showPersonalization ? (personalization['suffix'] ?? '') : '';
 
           List<String> combinedParts = [];
           if (prefix.isNotEmpty) combinedParts.add(prefix);
@@ -594,7 +666,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                   style: GoogleFonts.outfit(
                       fontSize: 12, color: onSurface.withOpacity(0.6))),
               value: val,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: (v) => excludeInactive.value = v,
             ),
           ),
@@ -611,12 +683,79 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                   style: GoogleFonts.outfit(
                       fontSize: 12, color: onSurface.withOpacity(0.6))),
               value: val,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: (v) => includePersonalization.value = v,
             ),
           ),
         ],
       ),
     );
+  }
+  List<Widget> _buildPreSelectedBanner(BuildContext context, List<Map<String, String>> contacts) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return [
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(isDark ? 0.12 : 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.people_alt_outlined, color: AppColors.primary, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Sending to ${contacts.length} selected student${contacts.length == 1 ? '' : 's'}',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    ref.read(preSelectedContactsProvider.notifier).state = null;
+                  },
+                  child: const Icon(Icons.close, color: AppColors.primary, size: 20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: contacts.map((c) => Chip(
+                label: Text(
+                  c['name'] ?? 'Unknown',
+                  style: GoogleFonts.outfit(fontSize: 11, color: Colors.white),
+                ),
+                backgroundColor: AppColors.primary,
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                side: BorderSide.none,
+              )).toList(),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 24),
+      Text(
+        'Options',
+        style: GoogleFonts.outfit(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          color: onSurface,
+        ),
+      ),
+      const SizedBox(height: 8),
+    ];
   }
 }

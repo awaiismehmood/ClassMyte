@@ -8,6 +8,7 @@ class SearchService {
     int? selectedYear,
     int? selectedAge,
     bool showBirthdaysOnly = false,
+    String? selectedStatus,
   }) {
     // Apply filtering
     List<Map<String, String>> filteredStudents = FilteringService.filterStudents(
@@ -16,6 +17,7 @@ class SearchService {
       selectedYear: selectedYear,
       selectedAge: selectedAge,
       showBirthdaysOnly: showBirthdaysOnly,
+      selectedStatus: selectedStatus,
     );
 
     if (query.isNotEmpty) {
