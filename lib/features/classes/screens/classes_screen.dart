@@ -4,22 +4,41 @@ import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/core/data/edit_contacts.dart';
 import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:classmyte/core/widgets/custom_snackbar.dart';
-import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/features/classes/widgets/edit_class_sheet.dart';
 import 'package:classmyte/features/classes/providers/class_providers.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/features/students/widgets/add_contact_dialog.dart';
+import 'package:classmyte/core/widgets/custom_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ClassScreen extends ConsumerWidget {
+class ClassScreen extends ConsumerStatefulWidget {
   const ClassScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ClassScreen> createState() => _ClassScreenState();
+}
+
+class _ClassScreenState extends ConsumerState<ClassScreen> {
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final studentDataAsync = ref.watch(studentDataProvider);
     final filteredClasses = ref.watch(filteredClassesProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
@@ -48,11 +67,10 @@ class ClassScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: CustomTextField(
-                      labelText: 'Search Category',
-                      hintText: 'Search by category name...',
-                      prefixIcon: Icons.search,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: CustomSearchBar(
+                      hintText: 'Search Class',
+                      controller: _searchController,
                       onChanged: (v) => ref.read(classSearchQueryProvider.notifier).state = v,
                     ),
                   ),

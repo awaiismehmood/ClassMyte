@@ -164,4 +164,4 @@ final smsProgressProvider = StateNotifierProvider<SmsProgressNotifier, SmsProgre
 
 /// Holds a pre-selected list of contacts passed from the Students screen.
 /// When non-null, the SMS screen sends ONLY to these contacts (premium feature).
-final preSelectedContactsProvider = StateProvider<List<Student>?>((ref) => null);
+final preSelectedContactsProvider = StateProvider.autoDispose<List<Student>?>((ref) => null);

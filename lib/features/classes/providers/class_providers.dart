@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 
-final classSearchQueryProvider = StateProvider<String>((ref) => '');
+final classSearchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
-final filteredClassesProvider = Provider<List<String>>((ref) {
+final filteredClassesProvider = Provider.autoDispose<List<String>>((ref) {
   final allStudents = ref.watch(studentDataProvider).value ?? [];
   final query = ref.watch(classSearchQueryProvider).toLowerCase();
   

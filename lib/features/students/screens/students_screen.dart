@@ -6,7 +6,7 @@ import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/students/widgets/add_contact_dialog.dart';
 import 'package:classmyte/features/students/widgets/filter_dialog.dart';
-import 'package:classmyte/core/widgets/custom_text_field.dart';
+import 'package:classmyte/core/widgets/custom_search_bar.dart';
 import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/core/services/functional.dart';
@@ -20,11 +20,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class StudentContactsScreen extends ConsumerWidget {
+class StudentContactsScreen extends ConsumerStatefulWidget {
   const StudentContactsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StudentContactsScreen> createState() =>
+      _StudentContactsScreenState();
+}
+
+class _StudentContactsScreenState extends ConsumerState<StudentContactsScreen> {
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final studentDataAsync = ref.watch(studentDataProvider);
     final List<Student> filteredStudents = ref.watch(filteredStudentsProvider);
     final selectedIds = ref.watch(selectedStudentIdsProvider);
@@ -196,11 +216,10 @@ class StudentContactsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: CustomTextField(
-                      labelText: 'Search',
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: CustomSearchBar(
                       hintText: 'Search by name or phone...',
-                      prefixIcon: Icons.search,
+                      controller: _searchController,
                       onChanged: (v) => ref.read(studentSearchQueryProvider.notifier).state = v,
                     ),
                   ),
