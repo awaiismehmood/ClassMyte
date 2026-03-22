@@ -1,8 +1,9 @@
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/services/filtering.dart';
 
 class SearchService {
-  static List<Map<String, String>> searchStudents(
-    List<Map<String, String>> students,
+  static List<Student> searchStudents(
+    List<Student> students,
     String query, {
     List<String>? selectedClasses,
     int? selectedYear,
@@ -11,7 +12,7 @@ class SearchService {
     String? selectedStatus,
   }) {
     // Apply filtering
-    List<Map<String, String>> filteredStudents = FilteringService.filterStudents(
+    List<Student> filteredStudents = FilteringService.filterStudents(
       students,
       selectedClasses: selectedClasses,
       selectedYear: selectedYear,
@@ -23,8 +24,8 @@ class SearchService {
     if (query.isNotEmpty) {
       final lowercaseQuery = query.toLowerCase();
       return filteredStudents.where((student) {
-        final name = student['name']?.toLowerCase() ?? '';
-        final phone = student['phoneNumber']?.toLowerCase() ?? '';
+        final name = student.name.toLowerCase();
+        final phone = student.phoneNumber.toLowerCase();
         return name.contains(lowercaseQuery) || phone.contains(lowercaseQuery);
       }).toList();
     } else {

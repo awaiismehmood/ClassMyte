@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:classmyte/core/data/data_retrieval.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,8 +9,7 @@ class ExcelExport {
     // Check and request storage permission
     if (await requestStoragePermission()) {
       // Fetch data from Firestore
-      List<Map<String, String>> studentData =
-          await StudentData.getStudentData();
+      final students = await StudentData.studentStream().first;
 
       // Create a new Excel document
       var excel = Excel.createExcel();
@@ -32,15 +31,15 @@ class ExcelExport {
           .appendRow(headers.map((header) => TextCellValue(header)).toList());
 
       // Add data to the sheet as plain text
-      for (var student in studentData) {
+      for (var student in students) {
         List<CellValue?> row = [
-          TextCellValue(student['name'] ?? ''),
-          TextCellValue(student['class'] ?? ''),
-          TextCellValue(student['phoneNumber'] ?? ''), // Store as text
-          TextCellValue(student['fatherName'] ?? ''),
-          TextCellValue(student['DOB'] ?? ''),
-          TextCellValue(student['Admission Date'] ?? ''),
-          TextCellValue(student['altNumber'] ?? ''), // Store as text
+          TextCellValue(student.name),
+          TextCellValue(student.className),
+          TextCellValue(student.phoneNumber),
+          TextCellValue(student.fatherName),
+          TextCellValue(student.dob),
+          TextCellValue(student.admissionDate),
+          TextCellValue(student.altNumber),
         ];
         sheetObject.appendRow(row);
       }

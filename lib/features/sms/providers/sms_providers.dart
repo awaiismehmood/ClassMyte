@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:classmyte/core/providers/providers.dart';
@@ -160,6 +161,7 @@ final smsProgressProvider = StateNotifierProvider<SmsProgressNotifier, SmsProgre
   return SmsProgressNotifier(prefs);
 });
 
+
 /// Holds a pre-selected list of contacts passed from the Students screen.
 /// When non-null, the SMS screen sends ONLY to these contacts (premium feature).
-final preSelectedContactsProvider = StateProvider<List<Map<String, String>>?>((ref) => null);
+final preSelectedContactsProvider = StateProvider<List<Student>?>((ref) => null);

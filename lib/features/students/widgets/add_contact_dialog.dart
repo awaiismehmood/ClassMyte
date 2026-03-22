@@ -1,5 +1,5 @@
 import 'package:classmyte/core/data/add_contacts.dart';
-import 'package:classmyte/core/data/data_retrieval.dart';
+import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_dropdown.dart';
@@ -103,14 +103,16 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
   @override
   Widget build(BuildContext context) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
+    final studentDataAsync = ref.watch(studentDataProvider);
+    final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
 
-    return FutureBuilder<List<Map<String, String>>>(
-      future: StudentData.getStudentData(),
-      builder: (context, snapshot) {
-        List<String> allClasses = [];
-        if (snapshot.hasData) {
-          allClasses = snapshot.data!.map((s) => s['class'] ?? '').toSet().where((c) => c.isNotEmpty).toList();
-        }
+    return studentDataAsync.when(
+      data: (students) {
+        final allClasses = students
+            .map((s) => s.className)
+            .toSet()
+            .where((c) => c.isNotEmpty)
+            .toList();
 
         return Column(
           children: [
@@ -215,37 +217,37 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
               text: _isLoading ? 'Saving...' : 'Save Student',
               isLoading: _isLoading,
               onPressed: () {
-                final isPremium = ref.read(subscriptionProvider).isPremiumUser;
                 if (!isPremium) {
-                  StudentData.getStudentData().then((students) {
-                    if (students.length >= 50) {
-                      CustomDialog.show(
-                        context: context,
-                        title: 'Contact Limit Reached',
-                        subtitle: 'Free users can save up to 50 contacts. Please upgrade to premium for more control!',
-                        confirmText: 'Go Premium',
-                        confirmColor: AppColors.primary,
-                        onConfirm: () {
-                          Navigator.pop(context);
-                          context.push('/subscription');
-                        },
-                      );
-                    } else {
-                      _saveContact();
-                    }
-                  });
+                  if (students.length >= 50) {
+                    CustomDialog.show(
+                      context: context,
+                      title: 'Contact Limit Reached',
+                      subtitle:
+                          'Free users can save up to 50 contacts. Please upgrade to premium for more control!',
+                      confirmText: 'Go Premium',
+                      confirmColor: AppColors.primary,
+                      onConfirm: () {
+                        Navigator.pop(context);
+                        context.push('/subscription');
+                      },
+                    );
+                  } else {
+                    _saveContact();
+                  }
                 } else {
                   _saveContact();
                 }
               },
               // Make it look disabled if limit reached
-              color: (snapshot.hasData && snapshot.data!.length >= 50 && !ref.watch(subscriptionProvider).isPremiumUser) 
-                ? Colors.grey 
-                : AppColors.primary,
+              color: (students.length >= 50 && !isPremium)
+                  ? Colors.grey
+                  : AppColors.primary,
             ),
           ],
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Error: $e')),
     );
   }
 }

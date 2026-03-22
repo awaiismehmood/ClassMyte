@@ -1,4 +1,5 @@
 import 'package:classmyte/core/data/edit_contacts.dart';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:classmyte/core/services/student_utils.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
@@ -25,7 +26,7 @@ class StudentContactsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final studentDataAsync = ref.watch(studentDataProvider);
-    final filteredStudents = ref.watch(filteredStudentsProvider);
+    final List<Student> filteredStudents = ref.watch(filteredStudentsProvider);
     final selectedIds = ref.watch(selectedStudentIdsProvider);
     final isPremium = ref.watch(subscriptionProvider).isPremiumUser;
     final adManager = ref.read(adManagerProvider);
@@ -54,7 +55,7 @@ class StudentContactsScreen extends ConsumerWidget {
                         ref.read(selectedStudentIdsProvider.notifier).state = {};
                       } else {
                         ref.read(selectedStudentIdsProvider.notifier).state =
-                            filteredStudents.map((s) => s['id']!).toSet();
+                            filteredStudents.map((s) => s.id).toSet();
                       }
                     },
                     child: Container(
@@ -97,7 +98,13 @@ class StudentContactsScreen extends ConsumerWidget {
                         } else if (value == 'Delete') {
                           _handleBulkDelete(context, ref, selectedIds.toList());
                         } else if (value == 'Message') {
-                          _handleSendMessageToSelected(context, ref, filteredStudents, selectedIds, isPremium);
+                          _handleSendMessageToContactsSelectedByTheUser(
+                            context,
+                            ref,
+                            filteredStudents,
+                            selectedIds,
+                            isPremium,
+                          );
                         }
                       },
                       itemBuilder: (context) => [
@@ -224,7 +231,7 @@ class StudentContactsScreen extends ConsumerWidget {
                               itemCount: filteredStudents.length,
                               itemBuilder: (context, index) {
                                 final student = filteredStudents[index];
-                                final isSelected = selectedIds.contains(student['id']);
+                                final isSelected = selectedIds.contains(student.id);
                                 return _buildRedesignedStudentCard(context, ref, student, isSelected);
                               },
                             ),
@@ -264,10 +271,10 @@ class StudentContactsScreen extends ConsumerWidget {
     ref.invalidate(studentDataProvider);
   }
 
-  void _handleSendMessageToSelected(
+  void _handleSendMessageToContactsSelectedByTheUser(
     BuildContext context,
     WidgetRef ref,
-    List<Map<String, String>> allStudents,
+    List<Student> allStudents,
     Set<String> selectedIds,
     bool isPremium,
   ) {
@@ -287,15 +294,16 @@ class StudentContactsScreen extends ConsumerWidget {
       return;
     }
 
-    // Get the actual student maps for the selected IDs
-    final selectedContacts = allStudents
-        .where((s) => selectedIds.contains(s['id']))
+    // Get the actual student objects for the selected IDs
+    final selectedStudents = allStudents
+        .where((s) => selectedIds.contains(s.id))
         .toList();
 
-    if (selectedContacts.isEmpty) return;
+    if (selectedStudents.isEmpty) return;
 
     // Set the pre-selected contacts and navigate
-    ref.read(preSelectedContactsProvider.notifier).state = selectedContacts;
+    // Note: We need to update preSelectedContactsProvider to accept List<Student>
+    ref.read(preSelectedContactsProvider.notifier).state = selectedStudents;
     ref.read(selectedStudentIdsProvider.notifier).state = {};
     context.push('/sms');
   }
@@ -328,7 +336,7 @@ class StudentContactsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRedesignedStudentCard(BuildContext context, WidgetRef ref, Map<String, String> student, bool isSelected) {
+  Widget _buildRedesignedStudentCard(BuildContext context, WidgetRef ref, Student student, bool isSelected) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedIds = ref.read(selectedStudentIdsProvider);
     final isSelectionMode = selectedIds.isNotEmpty;
@@ -336,19 +344,19 @@ class StudentContactsScreen extends ConsumerWidget {
     return GestureDetector(
       onLongPress: () {
         final current = ref.read(selectedStudentIdsProvider);
-        if (current.contains(student['id'])) {
-          ref.read(selectedStudentIdsProvider.notifier).state = {...current}..remove(student['id']);
+        if (current.contains(student.id)) {
+          ref.read(selectedStudentIdsProvider.notifier).state = {...current}..remove(student.id);
         } else {
-          ref.read(selectedStudentIdsProvider.notifier).state = {...current, student['id']!};
+          ref.read(selectedStudentIdsProvider.notifier).state = {...current, student.id};
         }
       },
       onTap: () {
         if (isSelectionMode) {
           final current = ref.read(selectedStudentIdsProvider);
-          if (current.contains(student['id'])) {
-            ref.read(selectedStudentIdsProvider.notifier).state = {...current}..remove(student['id']);
+          if (current.contains(student.id)) {
+            ref.read(selectedStudentIdsProvider.notifier).state = {...current}..remove(student.id);
           } else {
-            ref.read(selectedStudentIdsProvider.notifier).state = {...current, student['id']!};
+            ref.read(selectedStudentIdsProvider.notifier).state = {...current, student.id};
           }
         } else {
           StudentDetailSheet.show(context, student);
@@ -393,7 +401,7 @@ class StudentContactsScreen extends ConsumerWidget {
                         ),
                         child: Center(
                           child: Text(
-                            student['name']?[0].toUpperCase() ?? '?',
+                            student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
                             style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary),
                           ),
                         ),
@@ -407,7 +415,7 @@ class StudentContactsScreen extends ConsumerWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  (student['class'] ?? 'General').toUpperCase(),
+                                  student.className.toUpperCase(),
                                   style: GoogleFonts.outfit(
                                     fontSize: 11, 
                                     fontWeight: FontWeight.w900, 
@@ -418,15 +426,15 @@ class StudentContactsScreen extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: (student['status'] == 'Active' ? Colors.green : Colors.redAccent).withOpacity(0.1),
+                                    color: (student.status == 'Active' ? Colors.green : Colors.redAccent).withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    student['status'] ?? 'Active',
+                                    student.status,
                                     style: GoogleFonts.outfit(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: student['status'] == 'Active' ? Colors.green : Colors.redAccent,
+                                      color: student.status == 'Active' ? Colors.green : Colors.redAccent,
                                     ),
                                   ),
                                 ),
@@ -437,7 +445,7 @@ class StudentContactsScreen extends ConsumerWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    student['name'] ?? 'Unknown',
+                                    student.name,
                                     style: GoogleFonts.outfit(
                                       fontSize: 22, 
                                       fontWeight: FontWeight.bold, 
@@ -446,7 +454,7 @@ class StudentContactsScreen extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                if (StudentUtils.isBirthdayToday(student['DOB'])) ...[
+                                if (StudentUtils.isBirthdayToday(student.dob)) ...[
                                   const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.all(4),
@@ -465,7 +473,7 @@ class StudentContactsScreen extends ConsumerWidget {
                                 Icon(Icons.phone_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
                                 const SizedBox(width: 6),
                                 Text(
-                                  student['phoneNumber'] ?? 'No contact',
+                                  student.phoneNumber,
                                   style: GoogleFonts.outfit(
                                     fontSize: 14, 
                                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)
@@ -508,8 +516,8 @@ class StudentContactsScreen extends ConsumerWidget {
                   Expanded(
                     child: InkWell(
                       onTap: isSelectionMode ? null : () {
-                        final primary = student['phoneNumber'] ?? '';
-                        final alt = student['altNumber'] ?? '';
+                        final primary = student.phoneNumber;
+                        final alt = student.altNumber;
                         if (alt.isNotEmpty && alt != '0') {
                           CommunicationDialogs.showNumberSelectionDialog(
                             context: context,
@@ -536,8 +544,8 @@ class StudentContactsScreen extends ConsumerWidget {
                   Expanded(
                     child: InkWell(
                       onTap: isSelectionMode ? null : () {
-                        final primary = student['phoneNumber'] ?? '';
-                        final alt = student['altNumber'] ?? '';
+                        final primary = student.phoneNumber;
+                        final alt = student.altNumber;
                         
                         void showOptions(String num) {
                           CommunicationDialogs.showMessageOptionDialog(

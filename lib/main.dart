@@ -3,7 +3,6 @@ import 'package:classmyte/core/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:classmyte/core/navigation/app_router.dart';
 import 'package:classmyte/core/theme/app_theme.dart';
-import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/theme/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -86,23 +85,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionState = ref.watch(subscriptionProvider);
     final themeMode = ref.watch(themeProvider);
-
-    if (subscriptionState.isLoading) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme(),
-        darkTheme: AppTheme.darkTheme(),
-        themeMode: themeMode,
-        home: const Scaffold(
-          backgroundColor: AppColors.background,
-          body: Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-        ),
-      );
-    }
 
     final goRouter = ref.watch(goRouterProvider);
 

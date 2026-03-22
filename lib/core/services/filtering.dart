@@ -1,8 +1,9 @@
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/services/student_utils.dart';
 
 class FilteringService {
-  static List<Map<String, String>> filterStudents(
-    List<Map<String, String>> students, {
+  static List<Student> filterStudents(
+    List<Student> students, {
     List<String>? selectedClasses,
     int? selectedYear,
     int? selectedAge,
@@ -12,31 +13,23 @@ class FilteringService {
     return students.where((student) {
       bool matchesClass = selectedClasses == null ||
           selectedClasses.isEmpty ||
-          selectedClasses.contains(student['class']);
+          selectedClasses.contains(student.className);
 
       bool matchesYear = selectedYear == null ||
           selectedYear == 0 ||
-          StudentUtils.extractYear(student['Admission Date']) == selectedYear;
+          StudentUtils.extractYear(student.admissionDate) == selectedYear;
 
       bool matchesAge = selectedAge == null ||
           selectedAge == 0 ||
-          StudentUtils.calculateAge(student['DOB']) == selectedAge;
+          StudentUtils.calculateAge(student.dob) == selectedAge;
 
-      bool matchesBirthday = !showBirthdaysOnly || StudentUtils.isBirthdayToday(student['DOB']);
+      bool matchesBirthday = !showBirthdaysOnly || StudentUtils.isBirthdayToday(student.dob);
 
       bool matchesStatus = selectedStatus == null ||
           selectedStatus == 'All' ||
-          (student['status'] ?? 'Active') == selectedStatus;
+          student.status == selectedStatus;
 
       return matchesClass && matchesYear && matchesAge && matchesBirthday && matchesStatus;
     }).toList();
-  }
-
-  // Deprecated usage, will be cleaned up
-  static List<Map<String, String>> filterByClasses(
-    List<Map<String, String>> students,
-    List<String> selectedClasses,
-  ) {
-    return filterStudents(students, selectedClasses: selectedClasses);
   }
 }

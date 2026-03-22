@@ -1,20 +1,21 @@
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:classmyte/core/data/data_retrieval.dart';
 import 'package:classmyte/core/services/searching.dart';
 import '../models/student_edit_state.dart';
 
-class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, Map<String, String>> {
+class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, Student> {
   @override
-  StudentEditState build(Map<String, String> arg) {
+  StudentEditState build(Student arg) {
     return StudentEditState(
-      name: arg['name'] ?? '',
-      fatherName: arg['fatherName'] ?? '',
-      className: arg['class'] ?? '',
-      phoneNumber: arg['phoneNumber'] ?? '',
-      altNumber: arg['altNumber'] ?? '',
-      dob: arg['DOB'] ?? '',
-      admissionDate: arg['Admission Date'] ?? '',
-      isActive: arg['status'] == 'Active',
+      name: arg.name,
+      fatherName: arg.fatherName,
+      className: arg.className,
+      phoneNumber: arg.phoneNumber,
+      altNumber: arg.altNumber,
+      dob: arg.dob,
+      admissionDate: arg.admissionDate,
+      isActive: arg.status == 'Active',
     );
   }
 
@@ -35,9 +36,10 @@ class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, Ma
   void setLoading(bool val) => state = state.copyWith(isLoading: val);
 }
 
-final studentEditProvider = NotifierProvider.family.autoDispose<StudentEditNotifier, StudentEditState, Map<String, String>>(StudentEditNotifier.new);
+final studentEditProvider = NotifierProvider.family.autoDispose<StudentEditNotifier, StudentEditState, Student>(StudentEditNotifier.new);
 
-final studentDataProvider = FutureProvider<List<Map<String, String>>>((ref) async => await StudentData.getStudentData());
+// Convert to StreamProvider for real-time updates
+final studentDataProvider = StreamProvider<List<Student>>((ref) => StudentData.studentStream());
 
 final studentSearchQueryProvider = StateProvider<String>((ref) => '');
 final selectedClassesProvider = StateProvider<List<String>>((ref) => []);
@@ -46,7 +48,7 @@ final selectedAgeProvider = StateProvider<int>((ref) => 0);
 final showBirthdaysOnlyProvider = StateProvider<bool>((ref) => false);
 final selectedStatusFilterProvider = StateProvider<String>((ref) => 'All');
 
-final filteredStudentsProvider = Provider<List<Map<String, String>>>((ref) {
+final filteredStudentsProvider = Provider<List<Student>>((ref) {
   final allStudents = ref.watch(studentDataProvider).value ?? [];
   final query = ref.watch(studentSearchQueryProvider);
   final selectedClasses = ref.watch(selectedClassesProvider);

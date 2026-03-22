@@ -1,4 +1,5 @@
 import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/services/student_utils.dart';
@@ -20,20 +21,20 @@ class FilterSheet extends ConsumerStatefulWidget {
   });
 
   static void show(
-      BuildContext context, List<Map<String, String>> allStudents) {
+      BuildContext context, List<Student> allStudents) {
     final allClasses = allStudents
-        .map((s) => s['class'] ?? '')
+        .map((s) => s.className)
         .toSet()
         .where((c) => c.isNotEmpty)
         .toList();
     final allAdmissionYears = allStudents
-        .map((s) => StudentUtils.extractYear(s['Admission Date']))
+        .map((s) => StudentUtils.extractYear(s.admissionDate))
         .toSet()
         .where((y) => y != 0)
         .toList()
       ..sort((a, b) => b.compareTo(a));
     final allAges = allStudents
-        .map((s) => StudentUtils.calculateAge(s['DOB']))
+        .map((s) => StudentUtils.calculateAge(s.dob))
         .toSet()
         .where((a) => a != 0)
         .toList()

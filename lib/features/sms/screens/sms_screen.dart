@@ -1,4 +1,5 @@
 import 'package:classmyte/core/providers/providers.dart';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
@@ -123,7 +124,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     );
   }
 
-  void sendMessage(List<Map<String, String>> contactList) async {
+  void sendMessage(List<Student> contactList) async {
     final preSelected = ref.read(preSelectedContactsProvider);
     final isPreSelectedMode = preSelected != null;
     final progress = ref.read(smsProgressProvider);
@@ -145,12 +146,12 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     final permissionGranted = await MessageSender.checkSmsPermission();
     if (permissionGranted) {
       final personalization = ref.read(personalizationProvider);
-      bool filterByStatus(Map<String, String> contact) {
+      bool filterByStatus(Student contact) {
         if (!excludeInactive.value) return true;
-        return (contact['status'] ?? 'Active').toLowerCase() == 'active';
+        return contact.status.toLowerCase() == 'active';
       }
 
-      List<Map<String, String>> selectedContacts;
+      List<Student> selectedContacts;
       if (isPreSelectedMode) {
         // In pre-selected mode, send to exactly those contacts (optionally filter inactive)
         selectedContacts = preSelected.where(filterByStatus).toList();
@@ -158,7 +159,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         selectedContacts = contactList
             .where((contact) =>
                 (selectedClasses.value.contains("All") ||
-                    selectedClasses.value.contains(contact['class'])) &&
+                    selectedClasses.value.contains(contact.className)) &&
                 filterByStatus(contact))
             .toList();
       }
@@ -180,8 +181,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
       }
 
       List<String> phoneNumbers =
-          selectedContacts.map((c) => c['phoneNumber']!).toList();
-      List<String> names = selectedContacts.map((c) => c['name']!).toList();
+          selectedContacts.map((c) => c.phoneNumber).toList();
+      List<String> names = selectedContacts.map((c) => c.name).toList();
 
       ref
           .read(smsProgressProvider.notifier)
@@ -201,7 +202,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   }
 
   void _startFreeSendFlow(
-      BuildContext context, List<Map<String, String>> contactList) async {
+      BuildContext context, List<Student> contactList) async {
     final adManager = ref.read(adManagerProvider);
 
     if (adManager.isAdLoaded.value) {
@@ -254,7 +255,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   }
 
   void _showPremiumOptionsDialog(
-      BuildContext context, List<Map<String, String>> contactList) {
+      BuildContext context, List<Student> contactList) {
     List<String> selectedPremium = [];
     if (selectedDelay.value != 30)
       selectedPremium.add('Custom Delay (${selectedDelay.value}s)');
@@ -380,7 +381,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                                       label: 'All Students',
                                       icon: Icons.groups_outlined),
                                   ...contactList
-                                      .map((c) => c['class']!)
+                                      .map((c) => c.className)
                                       .toSet()
                                       .map((name) => CustomDropdownItem(
                                           value: name,
@@ -496,7 +497,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
 }
 
   Widget _buildDelaySection(BuildContext context,
-      List<Map<String, String>> contactList, bool isPremium) {
+      List<Student> contactList, bool isPremium) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
@@ -627,7 +628,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   }
 
   Widget _buildOptionsSection(BuildContext context,
-      List<Map<String, String>> contactList, bool isPremium) {
+      List<Student> contactList, bool isPremium) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
@@ -691,7 +692,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
       ),
     );
   }
-  List<Widget> _buildPreSelectedBanner(BuildContext context, List<Map<String, String>> contacts) {
+  List<Widget> _buildPreSelectedBanner(BuildContext context, List<Student> contacts) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final onSurface = Theme.of(context).colorScheme.onSurface;
     return [
@@ -733,7 +734,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
               runSpacing: 6,
               children: contacts.map((c) => Chip(
                 label: Text(
-                  c['name'] ?? 'Unknown',
+                  c.name,
                   style: GoogleFonts.outfit(fontSize: 11, color: Colors.white),
                 ),
                 backgroundColor: AppColors.primary,

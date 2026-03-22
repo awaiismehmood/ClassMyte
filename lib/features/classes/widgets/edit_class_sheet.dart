@@ -1,4 +1,5 @@
 import 'package:classmyte/core/data/edit_contacts.dart';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
@@ -13,7 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 class EditClassSheet extends ConsumerStatefulWidget {
   final List<String> classes;
   final String existingClass;
-  final List<Map<String, String>> allStudents;
+  final List<Student> allStudents;
 
   const EditClassSheet({
     super.key,
@@ -25,7 +26,7 @@ class EditClassSheet extends ConsumerStatefulWidget {
   static void show(BuildContext context, {
     required List<String> classes,
     required String existingClass,
-    required List<Map<String, String>> allStudents,
+    required List<Student> allStudents,
   }) {
     CustomBottomSheet.show(
       context,
@@ -55,11 +56,9 @@ class _EditClassSheetState extends ConsumerState<EditClassSheet> {
 
   Future<void> _promoteStudents(String fromClass, String toClass) async {
     for (var student in widget.allStudents) {
-      if (student['class'] == fromClass) {
-        String? studentId = student['id'];
-        if (studentId != null) {
-          await EditContactService.updateClass(studentId, toClass);
-        }
+      if (student.className == fromClass) {
+        String studentId = student.id;
+        await EditContactService.updateClass(studentId, toClass);
       }
     }
   }

@@ -1,4 +1,5 @@
 import 'package:classmyte/core/data/edit_contacts.dart';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/communication_dialogs.dart';
 import 'package:classmyte/core/services/functional.dart';
@@ -15,12 +16,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class StudentDetailSheet extends ConsumerWidget {
-  final Map<String, String> student;
+class StudentDetailSheet extends ConsumerStatefulWidget {
+  final Student student;
 
   const StudentDetailSheet({super.key, required this.student});
 
-  static void show(BuildContext context, Map<String, String> student) {
+  static void show(BuildContext context, Student student) {
     CustomBottomSheet.show(
       context,
       title: 'Student Details',
@@ -28,7 +29,34 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  void _deleteStudent(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<StudentDetailSheet> createState() => _StudentDetailSheetState();
+}
+
+class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
+  late Map<String, TextEditingController> _controllers;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = {
+      'name': TextEditingController(text: widget.student.name),
+      'class': TextEditingController(text: widget.student.className),
+      'phoneNumber': TextEditingController(text: widget.student.phoneNumber),
+      'altNumber': TextEditingController(text: widget.student.altNumber),
+      'fatherName': TextEditingController(text: widget.student.fatherName),
+    };
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _deleteStudent(BuildContext context) async {
     CustomDialog.show(
       context: context,
       title: 'Delete Student',
@@ -37,7 +65,7 @@ class StudentDetailSheet extends ConsumerWidget {
       confirmColor: Colors.redAccent,
       onConfirm: () async {
         try {
-          await EditContactService.deleteContact(student['id'] ?? '');
+          await EditContactService.deleteContact(widget.student.id);
           ref.invalidate(studentDataProvider);
           if (context.mounted) {
             Navigator.pop(context); // Close dialog
@@ -54,11 +82,10 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  void _saveChanges(
-      BuildContext context, WidgetRef ref, StudentEditState state) async {
-    ref.read(studentEditProvider(student).notifier).setLoading(true);
+  void _saveChanges(StudentEditState state) async {
+    ref.read(studentEditProvider(widget.student).notifier).setLoading(true);
     await EditContactService.updateContact(
-      student['id'] ?? '',
+      widget.student.id,
       state.name,
       state.className,
       state.phoneNumber,
@@ -68,12 +95,12 @@ class StudentDetailSheet extends ConsumerWidget {
       state.altNumber,
       state.isActive ? 'Active' : 'Inactive',
     );
-    ref.read(studentEditProvider(student).notifier).toggleEditable();
-    ref.read(studentEditProvider(student).notifier).setLoading(false);
+    ref.read(studentEditProvider(widget.student).notifier).toggleEditable();
+    ref.read(studentEditProvider(widget.student).notifier).setLoading(false);
     ref.invalidate(studentDataProvider);
   }
 
-  void _selectDate(BuildContext context, WidgetRef ref, String field) async {
+  void _selectDate(String field) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -83,14 +110,14 @@ class StudentDetailSheet extends ConsumerWidget {
     if (picked != null) {
       final dateStr = "${picked.toLocal()}".split(' ')[0];
       ref
-          .read(studentEditProvider(student).notifier)
+          .read(studentEditProvider(widget.student).notifier)
           .updateField(field, dateStr);
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(studentEditProvider(student));
+  Widget build(BuildContext context) {
+    final state = ref.watch(studentEditProvider(widget.student));
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -137,10 +164,10 @@ class StudentDetailSheet extends ConsumerWidget {
                   size: 28),
               onPressed: () {
                 if (state.isEditable) {
-                  _saveChanges(context, ref, state);
+                  _saveChanges(state);
                 } else {
                   ref
-                      .read(studentEditProvider(student).notifier)
+                      .read(studentEditProvider(widget.student).notifier)
                       .toggleEditable();
                 }
               },
@@ -148,7 +175,7 @@ class StudentDetailSheet extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.delete_outline,
                   color: Colors.redAccent, size: 28),
-              onPressed: () => _deleteStudent(context, ref),
+              onPressed: () => _deleteStudent(context),
             ),
           ],
         ),
@@ -164,28 +191,19 @@ class StudentDetailSheet extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildField(
-                  context, ref, 'Name', state.name, 'name', state.isEditable),
-              _buildField(context, ref, 'Class', state.className, 'class',
-                  state.isEditable),
-              _buildField(context, ref, 'Phone#', state.phoneNumber,
-                  'phoneNumber', state.isEditable,
-                  isPhone: true),
-              _buildField(context, ref, 'Alt#', state.altNumber, 'altNumber',
-                  state.isEditable,
-                  isPhone: true),
-              _buildField(context, ref, 'Father Name', state.fatherName,
-                  'fatherName', state.isEditable),
-              _buildDateField(
-                  context, ref, 'DOB', state.dob, 'dob', state.isEditable,
+              _buildField('Name', state.name, 'name', state.isEditable),
+              _buildField('Class', state.className, 'class', state.isEditable),
+              _buildField('Phone#', state.phoneNumber, 'phoneNumber', state.isEditable, isPhone: true),
+              _buildField('Alt#', state.altNumber, 'altNumber', state.isEditable, isPhone: true),
+              _buildField('Father Name', state.fatherName, 'fatherName', state.isEditable),
+              _buildDateField('DOB', state.dob, 'dob', state.isEditable,
                   trailing: Text('Age: ${StudentUtils.calculateAge(state.dob)}',
                       style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold))),
-              _buildDateField(context, ref, 'Admission Date',
-                  state.admissionDate, 'admissionDate', state.isEditable),
-              _buildStatusField(context, ref, state.isActive, state.isEditable),
+              _buildDateField('Admission Date', state.admissionDate, 'admissionDate', state.isEditable),
+              _buildStatusField(state.isActive, state.isEditable),
             ],
           ),
         ),
@@ -194,17 +212,14 @@ class StudentDetailSheet extends ConsumerWidget {
           CustomButton(
             text: state.isLoading ? 'Saving...' : 'Save Updates',
             isLoading: state.isLoading,
-            onPressed: () => _saveChanges(context, ref, state),
+            onPressed: () => _saveChanges(state),
           ),
       ],
     );
   }
 
-  Widget _buildField(BuildContext context, WidgetRef ref, String label,
-      String value, String field, bool isEditable,
-      {bool isPhone = false}) {
+  Widget _buildField(String label, String value, String field, bool isEditable, {bool isPhone = false}) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -215,11 +230,8 @@ class StudentDetailSheet extends ConsumerWidget {
             CustomTextField(
               labelText: label,
               hintText: 'Enter $label',
-              controller: TextEditingController(text: value)
-                ..selection = TextSelection.collapsed(offset: value.length),
-              onChanged: (v) => ref
-                  .read(studentEditProvider(student).notifier)
-                  .updateField(field, v),
+              controller: _controllers[field],
+              onChanged: (v) => ref.read(studentEditProvider(widget.student).notifier).updateField(field, v),
               keyboardType: isPhone ? TextInputType.phone : TextInputType.text,
             )
           else if (isPhone && value.isNotEmpty && value != '0')
@@ -266,9 +278,7 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildDateField(BuildContext context, WidgetRef ref, String label,
-      String value, String field, bool isEditable,
-      {Widget? trailing}) {
+  Widget _buildDateField(String label, String value, String field, bool isEditable, {Widget? trailing}) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -292,7 +302,7 @@ class StudentDetailSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           GestureDetector(
-            onTap: isEditable ? () => _selectDate(context, ref, field) : null,
+            onTap: isEditable ? () => _selectDate(field) : null,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -319,8 +329,7 @@ class StudentDetailSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusField(
-      BuildContext context, WidgetRef ref, bool isActive, bool isEditable) {
+  Widget _buildStatusField(bool isActive, bool isEditable) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -349,7 +358,7 @@ class StudentDetailSheet extends ConsumerWidget {
                 Switch(
                   value: isActive,
                   onChanged: (v) => ref
-                      .read(studentEditProvider(student).notifier)
+                      .read(studentEditProvider(widget.student).notifier)
                       .toggleActive(v),
                   activeThumbColor: Colors.green,
                 ),

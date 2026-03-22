@@ -1,4 +1,5 @@
 import 'package:classmyte/core/providers/providers.dart';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/features/auth/screens/forgot_password_screen.dart';
 import 'package:classmyte/features/auth/screens/login_screen.dart';
@@ -78,7 +79,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: 'details',
             name: 'student-details',
             builder: (context, state) {
-              final student = state.extra as Map<String, String>;
+              final student = state.extra as Student;
               return StudentDetailsScreen(student: student);
             },
           ),

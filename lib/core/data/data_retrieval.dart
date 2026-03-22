@@ -1,43 +1,26 @@
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class StudentData {
-  static Future<List<Map<String, String>>> getStudentData() async {
-    try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
+  static Stream<List<Student>> studentStream() {
+    User? currentUser = FirebaseAuth.instance.currentUser;
 
-      if (currentUser != null) {
-        String uid = currentUser.uid;
+    if (currentUser != null) {
+      String uid = currentUser.uid;
 
-        CollectionReference<Map<String, dynamic>> collectionRef =
-            FirebaseFirestore.instance.collection('users').doc(uid).collection('contacts');
-
-        QuerySnapshot<Map<String, dynamic>> snapshot = await collectionRef.get();
-
-        List<Map<String, String>> students = snapshot.docs.map((doc) {
-          return {
-            'id': doc.id,
-            'name': doc['Name'] as String,
-            'class': doc['Class'] as String,
-            'phoneNumber': doc['Number'] as String,
-            'fatherName': doc['Father Name'] as String,
-            'DOB': doc['DOB'] as String,
-            'Admission Date': doc['Admission Date'] as String,
-            'altNumber': doc['Alt Number'] as String,
-            'status': doc.data().containsKey('status') ? (doc['status'] as String) : 'Active',
-          };
-        }).toList();
-
-        return students;
-      } else {
-        // ignore: avoid_print
-        print('No authenticated user found. Cannot retrieve data.');
-        return [];
-      }
-    } catch (e) {
-      return [];
+      return FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('contacts')
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs.map((doc) => Student.fromFirestore(doc)).toList();
+      });
+    } else {
+      return Stream.value([]);
     }
   }
-  
+
 }
 

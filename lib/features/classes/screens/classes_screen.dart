@@ -1,4 +1,5 @@
 import 'package:classmyte/core/theme/app_colors.dart';
+import 'package:classmyte/features/students/models/student_model.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/core/data/edit_contacts.dart';
 import 'package:classmyte/core/widgets/custom_dialog.dart';
@@ -65,7 +66,7 @@ class ClassScreen extends ConsumerWidget {
                               child: Row(
                                 children: [
                                   _buildBadge(
-                                      'Total Categories: ${allStudents.map((s) => s['class'] ?? '').toSet().where((c) => c.isNotEmpty).length}', AppColors.primary),
+                                      'Total Categories: ${allStudents.map((s) => s.className).toSet().where((c) => c.isNotEmpty).length}', AppColors.primary),
                                 ],
                               ),
                             ),
@@ -86,7 +87,7 @@ class ClassScreen extends ConsumerWidget {
                                       itemBuilder: (context, index) {
                                         final className = filteredClasses[index];
                                         final studentCount = allStudents
-                                            .where((s) => s['class'] == className)
+                                            .where((s) => s.className == className)
                                             .length;
                                         return _buildClassCard(context, ref, className,
                                             studentCount, filteredClasses, allStudents);
@@ -147,7 +148,7 @@ class ClassScreen extends ConsumerWidget {
       String className,
       int count,
       List<String> allClasses,
-      List<Map<String, String>> allStudents) {
+      List<Student> allStudents) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => EditClassSheet.show(
