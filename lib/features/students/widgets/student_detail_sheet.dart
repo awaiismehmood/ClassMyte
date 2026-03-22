@@ -12,6 +12,9 @@ import 'package:classmyte/features/students/providers/student_providers.dart';
 import 'package:classmyte/features/students/models/student_edit_state.dart';
 import 'package:classmyte/core/services/student_utils.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
+import 'package:classmyte/features/forms/models/form_template_model.dart';
+import 'package:classmyte/features/forms/providers/form_providers.dart';
+import 'package:classmyte/features/forms/data/form_generator_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -98,6 +101,76 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
     ref.read(studentEditProvider(widget.student).notifier).toggleEditable();
     ref.read(studentEditProvider(widget.student).notifier).setLoading(false);
     ref.invalidate(studentDataProvider);
+  }
+
+  void _showFormSelectionDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Consumer(
+          builder: (context, ref, _) {
+            final templatesAsync = ref.watch(formTemplatesProvider);
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Select Form Template',
+                  style: GoogleFonts.outfit(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                templatesAsync.when(
+                  data: (templates) => Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: templates.length,
+                      itemBuilder: (context, index) {
+                        final template = templates[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.description_outlined,
+                                color: AppColors.primary),
+                          ),
+                          title: Text(template.title,
+                              style:
+                                  GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                          subtitle: Text(template.subtitle,
+                              style: GoogleFonts.outfit(fontSize: 12)),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await FormGenerator.generateAndPrintForm(
+                              student: widget.student,
+                              template: template,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, s) => Center(child: Text('Error: $e')),
+                ),
+                const SizedBox(height: 20),
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 
   void _selectDate(String field) async {
@@ -213,6 +286,12 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
             text: state.isLoading ? 'Saving...' : 'Save Updates',
             isLoading: state.isLoading,
             onPressed: () => _saveChanges(state),
+          )
+        else
+          CustomButton(
+            text: 'Generate Form',
+            icon: Icons.print_outlined,
+            onPressed: () => _showFormSelectionDialog(context),
           ),
       ],
     );

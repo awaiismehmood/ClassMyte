@@ -17,6 +17,7 @@ class CustomDialog extends StatelessWidget {
   final String? inputHint;
   final bool isPassword;
   final bool isLoading;
+  final Widget? content;
 
   const CustomDialog({
     super.key,
@@ -32,6 +33,7 @@ class CustomDialog extends StatelessWidget {
     this.inputHint,
     this.isPassword = false,
     this.isLoading = false,
+    this.content,
   });
 
   static void show({
@@ -48,6 +50,7 @@ class CustomDialog extends StatelessWidget {
     String? inputHint,
     bool isPassword = false,
     bool isLoading = false,
+    Widget? content,
   }) {
     showDialog(
       context: context,
@@ -65,6 +68,7 @@ class CustomDialog extends StatelessWidget {
         inputHint: inputHint,
         isPassword: isPassword,
         isLoading: isLoading,
+        content: content,
       ),
     );
   }
@@ -128,6 +132,11 @@ class CustomDialog extends StatelessWidget {
                   controller: controller!,
                   isPassword: isPassword,
                 ),
+              ],
+
+              if (content != null) ...[
+                const SizedBox(height: 16),
+                content!,
               ],
 
               const SizedBox(height: 32),

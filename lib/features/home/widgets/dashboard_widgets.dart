@@ -98,11 +98,10 @@ Widget buildHomeScreen(BuildContext context) {
               ),
               _buildDualColumnCard(
                 context,
-                'History',
-                Icons.history_outlined,
+                'Generate Form',
+                Icons.document_scanner_outlined,
                 Colors.green,
-                onTap: () => CustomSnackBar.showInfo(
-                    context, 'Something cool is cooking! 🥘 Messaging history is coming soon.'),
+                onTap: () => context.push('/generate-form'),
               ),
             ],
           ),

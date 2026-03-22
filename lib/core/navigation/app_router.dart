@@ -15,6 +15,7 @@ import 'package:classmyte/features/sms/screens/sms_screen.dart';
 import 'package:classmyte/features/sms/screens/manage_templates_screen.dart';
 import 'package:classmyte/features/sms/screens/personalize_message_screen.dart';
 import 'package:classmyte/features/sms/screens/message_report_screen.dart';
+import 'package:classmyte/features/forms/screens/form_templates_screen.dart';
 import 'package:classmyte/features/settings/screens/settings_screen.dart';
 import 'package:classmyte/features/settings/screens/contact_us_screen.dart';
 import 'package:classmyte/features/settings/screens/about_screen.dart';
@@ -109,6 +110,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/message-report',
         name: 'message-report',
         builder: (context, state) => const MessageReportScreen(),
+      ),
+      GoRoute(
+        path: '/generate-form',
+        name: 'generate-form',
+        builder: (context, state) => const FormTemplatesScreen(),
       ),
       GoRoute(
         path: '/profile',
