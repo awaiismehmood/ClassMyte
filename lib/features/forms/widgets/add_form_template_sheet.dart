@@ -5,12 +5,16 @@ import 'package:classmyte/core/widgets/custom_button.dart';
 import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/features/forms/models/form_template_model.dart';
 import 'package:classmyte/features/forms/data/form_template_service.dart';
+import 'package:classmyte/features/forms/providers/form_providers.dart';
+import 'package:classmyte/features/premium/providers/subscription_providers.dart';
+import 'package:classmyte/core/widgets/custom_snackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
-class AddFormTemplateSheet extends StatefulWidget {
+class AddFormTemplateSheet extends ConsumerStatefulWidget {
   final FormTemplate? template;
 
   const AddFormTemplateSheet({super.key, this.template});
@@ -24,10 +28,10 @@ class AddFormTemplateSheet extends StatefulWidget {
   }
 
   @override
-  State<AddFormTemplateSheet> createState() => _AddFormTemplateSheetState();
+  ConsumerState<AddFormTemplateSheet> createState() => _AddFormTemplateSheetState();
 }
 
-class _AddFormTemplateSheetState extends State<AddFormTemplateSheet> {
+class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
   late TextEditingController _titleController;
   late TextEditingController _subtitleController;
   late TextEditingController _contentController;
@@ -92,6 +96,15 @@ class _AddFormTemplateSheetState extends State<AddFormTemplateSheet> {
   Future<void> _save() async {
     if (_titleController.text.isEmpty || _contentController.text.isEmpty) return;
 
+    // Check Free Tier Limit (Max 1 form)
+    final isPremium = ref.read(subscriptionProvider).isPremiumUser;
+    final templatesCount = ref.read(formTemplatesProvider).value?.where((t) => !t.isDefault).length ?? 0;
+
+    if (!isPremium && templatesCount >= 1 && widget.template == null) {
+      CustomSnackBar.showError(context, 'Free users can only create 1 custom form. Upgrade to PRO for unlimited forms!');
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final signatures = _signaturesController.text.isEmpty
@@ -131,37 +144,9 @@ class _AddFormTemplateSheetState extends State<AddFormTemplateSheet> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Help Section at the Top
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.bolt, color: AppColors.primary, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Available Placeholders',
-                      style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '[name], [father_name], [class], [phone], [dob], [admission_date], [schoolName]',
-                  style: GoogleFonts.outfit(
-                      fontSize: 12, color: onSurface.withOpacity(0.7), fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
+          _buildHelpSection(onSurface),
+          const SizedBox(height: 20),
+          _buildMagicAIButton(context),
           const SizedBox(height: 24),
           
           // Branding Section
@@ -317,6 +302,75 @@ class _AddFormTemplateSheetState extends State<AddFormTemplateSheet> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: isSelected ? Colors.white : AppColors.primary, size: 20),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHelpSection(Color onSurface) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bolt, color: AppColors.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Available Placeholders',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '[name], [father_name], [class], [phone], [dob], [admission_date], [schoolName]',
+            style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.7), fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMagicAIButton(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade400, Colors.blue.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.purple.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => CustomSnackBar.showInfo(context, 'Magic AI Scan is coming soon in the next update! ✨'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  'Magic Scan with AI',
+                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

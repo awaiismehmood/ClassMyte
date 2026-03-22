@@ -7,6 +7,7 @@ import 'package:classmyte/features/forms/data/form_template_service.dart';
 import 'package:classmyte/features/forms/widgets/add_form_template_sheet.dart';
 import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -201,6 +202,9 @@ class FormTemplatesScreen extends ConsumerWidget {
             _buildInfoRow('[phone]', 'Primary Phone Number'),
             _buildInfoRow('[dob]', 'Date of Birth'),
             _buildInfoRow('[admission_date]', 'Enrollment Date'),
+            _buildInfoRow('[schoolName]', 'Your Academy Name'),
+            const SizedBox(height: 24),
+            _buildAIPromptSection(context),
             const SizedBox(height: 16),
             Text(
               '💡 Tap any form card to see a sample preview with dummy data.',
@@ -212,6 +216,69 @@ class FormTemplatesScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAIPromptSection(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.blue, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'AI Design Prompt',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Upload a photo of your current school form to ChatGPT or Gemini and use our custom prompt to instantly format it for ClassMyte.',
+            style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                const prompt = "I am using an app called ClassMyte that generates student forms. Please analyze the attached image of my school form and convert it into the ClassMyte template format. \n\n"
+                    "Available Placeholders: [name], [father_name], [class], [phone], [dob], [admission_date], [schoolName]\n\n"
+                    "Please provide me with:\n"
+                    "1. Form Title\n"
+                    "2. Subtitle\n"
+                    "3. Main Content (Use the placeholders provided above)\n"
+                    "4. Signatures (Comma-separated list)\n"
+                    "5. Footer\n\n"
+                    "Format the output for direct copy-pasting.";
+                Clipboard.setData(const ClipboardData(text: prompt));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('AI Prompt copied to clipboard!')),
+                );
+              },
+              icon: const Icon(Icons.copy, size: 16),
+              label: Text('Copy AI Prompt', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.blue,
+                side: const BorderSide(color: Colors.blue),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -15,6 +15,8 @@ import 'package:classmyte/core/widgets/custom_text_field.dart';
 import 'package:classmyte/features/forms/models/form_template_model.dart';
 import 'package:classmyte/features/forms/providers/form_providers.dart';
 import 'package:classmyte/features/forms/data/form_generator_service.dart';
+import 'package:classmyte/core/services/usage_service.dart';
+import 'package:classmyte/features/premium/providers/subscription_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -150,11 +152,26 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
                           subtitle: Text(template.subtitle,
                               style: GoogleFonts.outfit(fontSize: 12)),
                           onTap: () async {
+                            final isPremium = ref.read(subscriptionProvider).isPremiumUser;
+                            if (!isPremium) {
+                              final count = await UsageService.getDailyFormCount();
+                              if (count >= 3) {
+                                if (context.mounted) {
+                                  CustomSnackBar.showError(context, 'Daily limit reached (3/day). Upgrade to PRO for unlimited generates!');
+                                }
+                                return;
+                              }
+                            }
+
                             Navigator.pop(context);
                             await FormGenerator.generateAndPrintForm(
                               student: widget.student,
                               template: template,
                             );
+
+                            if (!isPremium) {
+                              await UsageService.incrementFormCount();
+                            }
                           },
                         );
                       },
