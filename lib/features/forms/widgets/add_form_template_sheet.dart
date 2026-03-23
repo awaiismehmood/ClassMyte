@@ -330,7 +330,7 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            '[name], [father_name], [class], [phone], [dob], [admission_date], [schoolName]',
+            '[name], [father_name], [class], [phone], [dob], [admission_date], [schoolName], [gender], [religion], [nationality], [address]',
             style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.7), fontWeight: FontWeight.bold),
           ),
         ],

@@ -63,7 +63,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
     if (!isPremium) {
       final adManager = ref.read(adManagerProvider);
-      adManager.loadAppOpenAd();
+      // adManager.loadAppOpenAd();
       adManager.loadRewardedAd();
       adManager.loadBannerAd(() {});
     }
@@ -78,7 +78,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
           .then((_) {
         final isPremium = ref.read(subscriptionProvider).isPremiumUser;
         if (!isPremium) {
-          ref.read(adManagerProvider).showAppOpenAd();
+          // ref.read(adManagerProvider).showAppOpenAd();
         }
       });
     }

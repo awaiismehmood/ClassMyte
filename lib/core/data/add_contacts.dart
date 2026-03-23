@@ -11,8 +11,12 @@ class AddContactService {
     // ignore: non_constant_identifier_names
     String DOB,
     String admission,
-    String altNumber,
-  ) async {
+    String altNumber, {
+    String gender = 'Not Specified',
+    String religion = '',
+    String nationality = '',
+    String address = '',
+  }) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
@@ -31,6 +35,10 @@ class AddContactService {
               'DOB': DOB,
               'Admission Date': admission,
               'Alt Number': altNumber,
+              'Gender': gender,
+              'Religion': religion,
+              'Nationality': nationality,
+              'Address': address,
               'status': 'Active',
             })
             .then((value) => print('Contact added successfully'))

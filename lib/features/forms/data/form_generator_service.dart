@@ -30,6 +30,10 @@ class FormGenerator {
         .replaceAll('[dob]', student.dob)
         .replaceAll('[admission_date]', student.admissionDate)
         .replaceAll('[alt_phone]', student.altNumber)
+        .replaceAll('[gender]', student.gender)
+        .replaceAll('[religion]', student.religion)
+        .replaceAll('[nationality]', student.nationality)
+        .replaceAll('[address]', student.address)
         .replaceAll('[schoolName]', template.schoolName);
 
     doc.addPage(

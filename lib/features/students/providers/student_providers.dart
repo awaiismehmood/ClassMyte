@@ -15,6 +15,10 @@ class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, St
       altNumber: arg.altNumber,
       dob: arg.dob,
       admissionDate: arg.admissionDate,
+      gender: arg.gender,
+      religion: arg.religion,
+      nationality: arg.nationality,
+      address: arg.address,
       isActive: arg.status == 'Active',
     );
   }
@@ -28,6 +32,10 @@ class StudentEditNotifier extends AutoDisposeFamilyNotifier<StudentEditState, St
       case 'altNumber': state = state.copyWith(altNumber: value); break;
       case 'dob': state = state.copyWith(dob: value); break;
       case 'admissionDate': state = state.copyWith(admissionDate: value); break;
+      case 'gender': state = state.copyWith(gender: value); break;
+      case 'religion': state = state.copyWith(religion: value); break;
+      case 'nationality': state = state.copyWith(nationality: value); break;
+      case 'address': state = state.copyWith(address: value); break;
     }
   }
 

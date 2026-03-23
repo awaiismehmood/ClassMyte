@@ -14,8 +14,12 @@ class EditContactService {
     String DOB,
     String admission,
     String altNumber,
-    String status,
-  ) async {
+    String status, {
+    String gender = 'Not Specified',
+    String religion = '',
+    String nationality = '',
+    String address = '',
+  }) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
 
@@ -35,6 +39,10 @@ class EditContactService {
               'Admission Date': admission,
               'Alt Number': altNumber,
               'status': status,
+              'Gender': gender,
+              'Religion': religion,
+              'Nationality': nationality,
+              'Address': address,
             })
 
             .then((value) => print('Contact updated successfully'))

@@ -17,6 +17,7 @@ import 'package:classmyte/features/forms/providers/form_providers.dart';
 import 'package:classmyte/features/forms/data/form_generator_service.dart';
 import 'package:classmyte/core/services/usage_service.dart';
 import 'package:classmyte/features/premium/providers/subscription_providers.dart';
+import 'package:classmyte/core/widgets/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -41,6 +42,14 @@ class StudentDetailSheet extends ConsumerStatefulWidget {
 class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
   late Map<String, TextEditingController> _controllers;
 
+  final List<String> _genderOptions = [
+    'Male',
+    'Female',
+    'Not Specified',
+    'Other',
+    'Not Applicable'
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +59,9 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
       'phoneNumber': TextEditingController(text: widget.student.phoneNumber),
       'altNumber': TextEditingController(text: widget.student.altNumber),
       'fatherName': TextEditingController(text: widget.student.fatherName),
+      'religion': TextEditingController(text: widget.student.religion),
+      'nationality': TextEditingController(text: widget.student.nationality),
+      'address': TextEditingController(text: widget.student.address),
     };
   }
 
@@ -99,6 +111,10 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
       state.admissionDate,
       state.altNumber,
       state.isActive ? 'Active' : 'Inactive',
+      gender: state.gender,
+      religion: state.religion,
+      nationality: state.nationality,
+      address: state.address,
     );
     ref.read(studentEditProvider(widget.student).notifier).toggleEditable();
     ref.read(studentEditProvider(widget.student).notifier).setLoading(false);
@@ -283,6 +299,10 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
             children: [
               _buildField('Name', state.name, 'name', state.isEditable),
               _buildField('Class', state.className, 'class', state.isEditable),
+              if (state.isEditable)
+                _buildGenderDropdown(state.gender)
+              else
+                _buildField('Gender', state.gender, 'gender', false),
               _buildField('Phone#', state.phoneNumber, 'phoneNumber', state.isEditable, isPhone: true),
               _buildField('Alt#', state.altNumber, 'altNumber', state.isEditable, isPhone: true),
               _buildField('Father Name', state.fatherName, 'fatherName', state.isEditable),
@@ -293,6 +313,9 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold))),
               _buildDateField('Admission Date', state.admissionDate, 'admissionDate', state.isEditable),
+              _buildField('Religion', state.religion, 'religion', state.isEditable),
+              _buildField('Nationality', state.nationality, 'nationality', state.isEditable),
+              _buildField('Permanent Address', state.address, 'address', state.isEditable),
               _buildStatusField(state.isActive, state.isEditable),
             ],
           ),
@@ -419,6 +442,33 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
                     color: isEditable ? AppColors.primary : onSurface),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown(String currentGender) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Gender',
+              style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: onSurface.withOpacity(0.5),
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          CustomDropdown<String>(
+            value: currentGender,
+            items: _genderOptions
+                .map((g) => CustomDropdownItem(value: g, label: g))
+                .toList(),
+            onChanged: (v) => ref
+                .read(studentEditProvider(widget.student).notifier)
+                .updateField('gender', v!),
           ),
         ],
       ),

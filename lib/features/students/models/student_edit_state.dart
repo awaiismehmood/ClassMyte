@@ -6,6 +6,10 @@ class StudentEditState {
   final String altNumber;
   final String dob;
   final String admissionDate;
+  final String gender;
+  final String religion;
+  final String nationality;
+  final String address;
   final bool isActive;
   final bool isEditable;
   final bool isLoading;
@@ -18,6 +22,10 @@ class StudentEditState {
     required this.altNumber,
     required this.dob,
     required this.admissionDate,
+    required this.gender,
+    required this.religion,
+    required this.nationality,
+    required this.address,
     this.isActive = true,
     this.isEditable = false,
     this.isLoading = false,
@@ -31,6 +39,10 @@ class StudentEditState {
     String? altNumber,
     String? dob,
     String? admissionDate,
+    String? gender,
+    String? religion,
+    String? nationality,
+    String? address,
     bool? isActive,
     bool? isEditable,
     bool? isLoading,
@@ -43,6 +55,10 @@ class StudentEditState {
       altNumber: altNumber ?? this.altNumber,
       dob: dob ?? this.dob,
       admissionDate: admissionDate ?? this.admissionDate,
+      gender: gender ?? this.gender,
+      religion: religion ?? this.religion,
+      nationality: nationality ?? this.nationality,
+      address: address ?? this.address,
       isActive: isActive ?? this.isActive,
       isEditable: isEditable ?? this.isEditable,
       isLoading: isLoading ?? this.isLoading,

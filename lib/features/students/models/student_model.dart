@@ -10,6 +10,10 @@ class Student {
   final String dob;
   final String admissionDate;
   final String status;
+  final String gender;
+  final String religion;
+  final String nationality;
+  final String address;
 
   Student({
     required this.id,
@@ -21,6 +25,10 @@ class Student {
     required this.dob,
     required this.admissionDate,
     required this.status,
+    this.gender = 'Not Specified',
+    this.religion = '',
+    this.nationality = '',
+    this.address = '',
   });
 
   factory Student.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -35,6 +43,10 @@ class Student {
       dob: data['DOB'] ?? '',
       admissionDate: data['Admission Date'] ?? '',
       status: data['status'] ?? 'Active',
+      gender: data['Gender'] ?? 'Not Specified',
+      religion: data['Religion'] ?? '',
+      nationality: data['Nationality'] ?? '',
+      address: data['Address'] ?? '',
     );
   }
 
@@ -49,6 +61,10 @@ class Student {
       'DOB': dob,
       'Admission Date': admissionDate,
       'status': status,
+      'Gender': gender,
+      'Religion': religion,
+      'Nationality': nationality,
+      'Address': address,
     };
   }
 
@@ -62,6 +78,10 @@ class Student {
     String? dob,
     String? admissionDate,
     String? status,
+    String? gender,
+    String? religion,
+    String? nationality,
+    String? address,
   }) {
     return Student(
       id: id ?? this.id,
@@ -73,6 +93,10 @@ class Student {
       dob: dob ?? this.dob,
       admissionDate: admissionDate ?? this.admissionDate,
       status: status ?? this.status,
+      gender: gender ?? this.gender,
+      religion: religion ?? this.religion,
+      nationality: nationality ?? this.nationality,
+      address: address ?? this.address,
     );
   }
 }

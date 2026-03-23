@@ -37,9 +37,21 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
   final TextEditingController dobController = TextEditingController();
   final TextEditingController admissionDateController = TextEditingController();
   final TextEditingController classController = TextEditingController();
+  final TextEditingController religionController = TextEditingController();
+  final TextEditingController nationalityController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
 
   String? selectedClass;
+  String selectedGender = 'Not Specified';
   bool _isLoading = false;
+
+  final List<String> _genderOptions = [
+    'Male',
+    'Female',
+    'Not Specified',
+    'Other',
+    'Not Applicable'
+  ];
 
   @override
   void dispose() {
@@ -50,6 +62,9 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
     dobController.dispose();
     admissionDateController.dispose();
     classController.dispose();
+    religionController.dispose();
+    nationalityController.dispose();
+    addressController.dispose();
     super.dispose();
   }
 
@@ -87,6 +102,10 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
         dobController.text,
         admissionDateController.text,
         altNumberController.text,
+        gender: selectedGender,
+        religion: religionController.text,
+        nationality: nationalityController.text,
+        address: addressController.text,
       );
       widget.onRefresh();
       if (mounted) {
@@ -163,12 +182,38 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            CustomTextField(
-              labelText: 'Phone Number',
-              hintText: 'Enter mobile number',
-              prefixIcon: Icons.phone_outlined,
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Gender',
+                          style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: onSurface.withOpacity(0.6))),
+                      const SizedBox(height: 6),
+                      CustomDropdown<String>(
+                        value: selectedGender,
+                        items: _genderOptions.map((g) => CustomDropdownItem(value: g, label: g)).toList(),
+                        onChanged: (v) => setState(() => selectedGender = v!),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CustomTextField(
+                    labelText: 'Phone Number',
+                    hintText: 'Mobile number',
+                    prefixIcon: Icons.phone_outlined,
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             CustomTextField(
@@ -203,6 +248,36 @@ class _AddContactSheetState extends ConsumerState<AddContactSheet> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomTextField(
+                    labelText: 'Religion',
+                    hintText: 'Optional',
+                    prefixIcon: Icons.temple_hindu_outlined,
+                    controller: religionController,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                   child: CustomTextField(
+                    labelText: 'Nationality',
+                    hintText: 'Optional',
+                    prefixIcon: Icons.flag_outlined,
+                    controller: nationalityController,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              labelText: 'Permanent Address',
+              hintText: 'Full address details',
+              prefixIcon: Icons.home_outlined,
+              controller: addressController,
+              maxLines: 2,
             ),
             const SizedBox(height: 16),
             CustomTextField(

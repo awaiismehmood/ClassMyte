@@ -27,7 +27,8 @@ class AdManager {
           onAdLoaded?.call(); // Notify that the ad is loaded
         },
         onAdFailedToLoad: (error) {
-          print("Failed to load rewarded ad: $error");
+          print("Failed to load rewarded ad (Code ${error.code}): ${error.message}");
+          isAdLoaded.value = false;
         },
       ),
     );
@@ -128,7 +129,8 @@ class AdManager {
   // Load an App Open Ad
   void loadAppOpenAd() {
     AppOpenAd.load(
-      adUnitId: 'ca-app-pub-6452085379535380/3959233441',
+      // Updated to match your publisher ID. Please create this unit in AdMob.
+      adUnitId: 'ca-app-pub-1060843075895153/YOUR_APP_OPEN_AD_ID',
       request: const AdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
@@ -136,7 +138,7 @@ class AdManager {
           print("App open ad loaded");
         },
         onAdFailedToLoad: (error) {
-          print("Failed to load app open ad: $error");
+          print("Failed to load app open ad (Code ${error.code}): ${error.message}");
         },
       ),
     );

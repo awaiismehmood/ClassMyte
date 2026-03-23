@@ -82,7 +82,7 @@ class FormTemplatesScreen extends ConsumerWidget {
             offset: const Offset(0, 8),
           ),
         ],
-        border: template.isDefault 
+        border: template.isDefault
             ? Border.all(color: AppColors.primary.withOpacity(0.1), width: 1)
             : null,
       ),
@@ -94,87 +94,92 @@ class FormTemplatesScreen extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(
-          children: [
-            Container(
-              width: 55,
-              height: 55,
-              decoration: BoxDecoration(
-                color: (template.isDefault ? AppColors.primary : Colors.orange)
-                    .withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                template.isDefault ? Icons.article_outlined : Icons.edit_note_rounded,
-                color: template.isDefault ? AppColors.primary : Colors.orange,
-                size: 30,
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    template.title,
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    template.subtitle,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      color: onSurface.withOpacity(0.5),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (template.isDefault)
+            children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                width: 55,
+                height: 55,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color:
+                      (template.isDefault ? AppColors.primary : Colors.orange)
+                          .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Text(
-                  'PRO',
-                  style: GoogleFonts.outfit(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.primary,
+                child: Icon(
+                  template.isDefault
+                      ? Icons.article_outlined
+                      : Icons.edit_note_rounded,
+                  color: template.isDefault ? AppColors.primary : Colors.orange,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      template.title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      template.subtitle,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: onSurface.withOpacity(0.5),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (template.isDefault)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  child: Text(
+                    'PRO',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                )
+              else ...[
+                IconButton(
+                  icon: Icon(Icons.edit_outlined,
+                      size: 20, color: onSurface.withOpacity(0.4)),
+                  onPressed: () =>
+                      AddFormTemplateSheet.show(context, template: template),
                 ),
-              )
-            else ...[
-              IconButton(
-                icon: Icon(Icons.edit_outlined,
-                    size: 20, color: onSurface.withOpacity(0.4)),
-                onPressed: () =>
-                    AddFormTemplateSheet.show(context, template: template),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    size: 20, color: Colors.redAccent),
-                onPressed: () => _showDeleteDialog(context, template),
-              ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline,
+                      size: 20, color: Colors.redAccent),
+                  onPressed: () => _showDeleteDialog(context, template),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _showDeleteDialog(BuildContext context, FormTemplate template) {
     CustomDialog.show(
       context: context,
       title: 'Delete Template',
-      subtitle: 'Are you sure you want to remove this form template? This action cannot be undone.',
+      subtitle:
+          'Are you sure you want to remove this form template? This action cannot be undone.',
       confirmText: 'Yes, Delete',
       confirmColor: Colors.redAccent,
       onConfirm: () async {
@@ -188,7 +193,8 @@ class FormTemplatesScreen extends ConsumerWidget {
     CustomDialog.show(
       context: context,
       title: 'How to use Forms',
-      subtitle: 'Create professional documents with auto-filled student data. Use these placeholders anywhere in your content:',
+      subtitle:
+          'Create professional documents with auto-filled student data. Use these placeholders anywhere in your content:',
       confirmText: 'Got it!',
       confirmColor: AppColors.primary,
       onConfirm: () => Navigator.pop(context),
@@ -248,14 +254,18 @@ class FormTemplatesScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             'Upload a photo of your current school form to ChatGPT or Gemini and use our custom prompt to instantly format it for ClassMyte.',
-            style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+            style: GoogleFonts.outfit(
+                fontSize: 12,
+                color:
+                    Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
-                const prompt = "I am using an app called ClassMyte that generates student forms. Please analyze the attached image of my school form and convert it into the ClassMyte template format. \n\n"
+                const prompt =
+                    "I am using an app called ClassMyte that generates student forms. Please analyze the attached image of my school form and convert it into the ClassMyte template format. \n\n"
                     "Available Placeholders: [name], [father_name], [class], [phone], [dob], [admission_date], [schoolName]\n\n"
                     "Please provide me with:\n"
                     "1. Form Title\n"
@@ -266,15 +276,19 @@ class FormTemplatesScreen extends ConsumerWidget {
                     "Format the output for direct copy-pasting.";
                 Clipboard.setData(const ClipboardData(text: prompt));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('AI Prompt copied to clipboard!')),
+                  const SnackBar(
+                      content: Text('AI Prompt copied to clipboard!')),
                 );
               },
               icon: const Icon(Icons.copy, size: 16),
-              label: Text('Copy AI Prompt', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
+              label: Text('Copy AI Prompt',
+                  style: GoogleFonts.outfit(
+                      fontSize: 12, fontWeight: FontWeight.bold)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.blue,
                 side: const BorderSide(color: Colors.blue),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -294,7 +308,11 @@ class FormTemplatesScreen extends ConsumerWidget {
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(tag, style: GoogleFonts.firaCode(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text(tag,
+                style: GoogleFonts.firaCode(
+                    fontSize: 12,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(desc, style: GoogleFonts.outfit(fontSize: 13))),
