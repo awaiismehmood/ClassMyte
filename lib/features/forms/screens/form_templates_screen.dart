@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
 import 'package:classmyte/features/forms/models/form_template_model.dart';
@@ -38,11 +39,20 @@ class FormTemplatesScreen extends ConsumerWidget {
                 gradient: AppColors.dynamicBackgroundGradient(isDark),
               ),
               child: templatesAsync.when(
-                data: (templates) => ListView.builder(
+                data: (templates) => GridView.builder(
                   padding: const EdgeInsets.all(20),
-                  itemCount: templates.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.8,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: templates.length + 1,
                   itemBuilder: (context, index) {
-                    final template = templates[index];
+                    if (index == 0) {
+                      return _buildAddDashedCard(context);
+                    }
+                    final template = templates[index - 1];
                     return _buildTemplateCard(context, template);
                   },
                 ),
@@ -53,14 +63,62 @@ class FormTemplatesScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => AddFormTemplateSheet.show(context),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          'New Form',
-          style: GoogleFonts.outfit(
-              color: Colors.white, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildAddDashedCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: () => AddFormTemplateSheet.show(context),
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.3),
+            width: 2,
+            style: BorderStyle.none, // We'll use a custom painter if we want real dots, but dashed border package might not be there. Use opacity + border for now.
+          ),
+          color: AppColors.primary.withOpacity(0.05),
+        ),
+        child: Stack(
+          children: [
+            // Dotted border simulation
+            Positioned.fill(
+              child: CustomPaint(
+                painter: DashedRectPainter(
+                  color: AppColors.primary.withOpacity(0.4),
+                  strokeWidth: 2,
+                  gap: 8,
+                ),
+              ),
+            ),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add_rounded,
+                        color: AppColors.primary, size: 32),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Create New',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -71,7 +129,6 @@ class FormTemplatesScreen extends ConsumerWidget {
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
@@ -82,97 +139,190 @@ class FormTemplatesScreen extends ConsumerWidget {
             offset: const Offset(0, 8),
           ),
         ],
-        border: template.isDefault
-            ? Border.all(color: AppColors.primary.withOpacity(0.1), width: 1)
-            : null,
       ),
-      child: InkWell(
-        onTap: () async {
-          await FormGenerator.generateSamplePreview(template);
-        },
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
+        child: InkWell(
+          onTap: () async {
+            await FormGenerator.generateSamplePreview(template);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 55,
-                height: 55,
-                decoration: BoxDecoration(
-                  color:
-                      (template.isDefault ? AppColors.primary : Colors.orange)
-                          .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  template.isDefault
-                      ? Icons.article_outlined
-                      : Icons.edit_note_rounded,
-                  color: template.isDefault ? AppColors.primary : Colors.orange,
-                  size: 30,
+              // Preview area
+              Expanded(
+                flex: 3,
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: onSurface.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: onSurface.withOpacity(0.05)),
+                  ),
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Header + Title based on placement
+                            if (template.titlePlacement == 'above_header') ...[
+                               if (template.titleEnabled) _buildMiniTitle(template, onSurface),
+                               if (template.headerEnabled) _buildMiniHeader(template, onSurface),
+                            ] else ...[
+                               if (template.headerEnabled) _buildMiniHeader(template, onSurface),
+                               if (template.titleEnabled) _buildMiniTitle(template, onSurface),
+                            ],
+                            
+                            const SizedBox(height: 12),
+                            // Fake body
+                            if (template.bodyEnabled)
+                              Column(
+                                crossAxisAlignment: _getMiniAlign(template.bodyAlignment),
+                                children: List.generate(3, (i) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Container(
+                                    height: template.bodyBold ? 5 : 3,
+                                    width: i == 2 ? 40 : double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: onSurface.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(1.5),
+                                      border: template.bodyUnderline ? Border(bottom: BorderSide(color: onSurface.withOpacity(0.2), width: 1)) : null,
+                                    ),
+                                  ),
+                                )),
+                              ),
+                            const Spacer(),
+                            // Fake footer/signatures
+                            if (template.signaturesEnabled)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(height: 2, width: 25, color: onSurface.withOpacity(0.1)),
+                                  Container(height: 2, width: 25, color: onSurface.withOpacity(0.1)),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                      // Badge
+                      if (template.isDefault)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'DEFAULT',
+                              style: GoogleFonts.outfit(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // Info Area
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 4, 12),
+                child: Row(
                   children: [
-                    Text(
-                      template.title,
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: onSurface,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            template.formName,
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            template.title,
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              color: onSurface.withOpacity(0.5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      template.subtitle,
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: onSurface.withOpacity(0.5),
-                        fontWeight: FontWeight.w500,
-                      ),
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, size: 20, color: onSurface.withOpacity(0.4)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      onSelected: (value) async {
+                        switch (value) {
+                          case 'edit':
+                            AddFormTemplateSheet.show(context, template: template);
+                            break;
+                          case 'duplicate':
+                            await FormTemplateService.duplicateTemplate(template);
+                            break;
+                          case 'delete':
+                            _showDeleteDialog(context, template);
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'duplicate',
+                          child: Row(
+                            children: [
+                              Icon(Icons.copy_rounded, size: 18),
+                              SizedBox(width: 8),
+                              Text('Duplicate'),
+                            ],
+                          ),
+                        ),
+                        if (!template.isDefault)
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Delete', style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (template.isDefault)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'PRO',
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                )
-              else ...[
-                IconButton(
-                  icon: Icon(Icons.edit_outlined,
-                      size: 20, color: onSurface.withOpacity(0.4)),
-                  onPressed: () =>
-                      AddFormTemplateSheet.show(context, template: template),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline,
-                      size: 20, color: Colors.redAccent),
-                  onPressed: () => _showDeleteDialog(context, template),
-                ),
-              ],
             ],
           ),
         ),
       ),
     );
   }
+
 
   void _showDeleteDialog(BuildContext context, FormTemplate template) {
     CustomDialog.show(
@@ -320,4 +470,135 @@ class FormTemplatesScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildMiniHeader(FormTemplate template, Color onSurface) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: template.logoAlignment == 'center'
+            ? MainAxisAlignment.center
+            : (template.logoAlignment == 'left'
+                ? MainAxisAlignment.start
+                : MainAxisAlignment.end),
+        children: [
+          if (template.showLogo && template.logoAlignment != 'right')
+            _buildMiniLogo(template),
+          Container(
+            height: 4,
+            width: 40,
+            decoration: BoxDecoration(
+              color: onSurface.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          if (template.showLogo && template.logoAlignment == 'right')
+            _buildMiniLogo(template),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniTitle(FormTemplate template, Color onSurface) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: _getMiniAlign(template.titleAlignment),
+        children: [
+          Container(
+            height: template.titleBold ? 7 : 5,
+            width: 60,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(3),
+              border: template.titleUnderline
+                  ? Border(
+                      bottom: BorderSide(
+                          color: AppColors.primary.withOpacity(0.4), width: 1))
+                  : null,
+            ),
+          ),
+          if (template.subtitle.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Container(
+              height: 3,
+              width: 40,
+              decoration: BoxDecoration(
+                color: onSurface.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniLogo(FormTemplate template) {
+    return Container(
+      width: 15,
+      height: 15,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.3),
+        shape: template.logoShape == 'round'
+            ? BoxShape.circle
+            : BoxShape.rectangle,
+        borderRadius:
+            template.logoShape == 'round' ? null : BorderRadius.circular(2),
+      ),
+    );
+  }
+
+  CrossAxisAlignment _getMiniAlign(String align) {
+    switch (align) {
+      case 'left':
+        return CrossAxisAlignment.start;
+      case 'right':
+        return CrossAxisAlignment.end;
+      default:
+        return CrossAxisAlignment.center;
+    }
+  }
 }
+
+class DashedRectPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+
+  DashedRectPainter({
+    this.color = Colors.grey,
+    this.strokeWidth = 1.0,
+    this.gap = 5.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final Path path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        const Radius.circular(24),
+      ));
+
+    for (PathMetric pathMetric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < pathMetric.length) {
+        canvas.drawPath(
+          pathMetric.extractPath(distance, distance + gap),
+          paint,
+        );
+        distance += gap * 2;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+

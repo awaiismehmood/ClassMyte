@@ -31,4 +31,15 @@ class FormTemplateService {
     final col = _getCollection();
     await col.doc(id).delete();
   }
+
+  static Future<void> duplicateTemplate(FormTemplate template) async {
+    final col = _getCollection();
+    final docRef = col.doc();
+    await docRef.set({
+      ...template.toMap(),
+      'id': docRef.id,
+      'formName': '${template.formName} (Copy)',
+      'isDefault': false,
+    });
+  }
 }

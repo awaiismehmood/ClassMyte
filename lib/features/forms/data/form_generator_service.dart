@@ -43,45 +43,62 @@ class FormGenerator {
           return pw.Padding(
             padding: const pw.EdgeInsets.all(40),
             child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
-                // Header based on Alignment
-                _buildHeader(template, logoImage),
+                // Top Sections
+                if (template.titlePlacement == 'above_header') ...[
+                   if (template.titleEnabled) _buildTitleSection(template),
+                   pw.SizedBox(height: 10),
+                   if (template.headerEnabled) _buildHeader(template, logoImage),
+                ] else ...[
+                   if (template.headerEnabled) _buildHeader(template, logoImage),
+                   pw.SizedBox(height: 10),
+                   if (template.titleEnabled) _buildTitleSection(template),
+                ],
                 
                 pw.SizedBox(height: 16),
                 pw.Divider(thickness: 1),
                 pw.SizedBox(height: 30),
 
                 // Content
-                pw.Text(
-                  processedContent,
-                  style: pw.TextStyle(fontSize: 14, lineSpacing: 8, color: pdf.PdfColors.black),
-                ),
+                if (template.bodyEnabled)
+                  pw.Text(
+                    processedContent,
+                    textAlign: _getAlign(template.bodyAlignment),
+                    style: _getStyle(
+                      bold: template.bodyBold,
+                      italic: template.bodyItalic,
+                      underline: template.bodyUnderline,
+                      fontSize: template.bodyFontSize,
+                      color: pdf.PdfColors.black,
+                    ),
+                  ),
 
                 pw.Spacer(),
 
                 // Dynamic Signatures
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: template.signatures.map((sig) {
-                    return pw.Column(
-                      children: [
-                        pw.Container(
-                          width: 120,
-                          decoration: const pw.BoxDecoration(
-                            border: pw.Border(top: pw.BorderSide(width: 0.5)),
+                if (template.signaturesEnabled)
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: template.signatures.map((sig) {
+                      return pw.Column(
+                        children: [
+                          pw.Container(
+                            width: 120,
+                            decoration: const pw.BoxDecoration(
+                              border: pw.Border(top: pw.BorderSide(width: 0.5)),
+                            ),
                           ),
-                        ),
-                        pw.SizedBox(height: 6),
-                        pw.Text(sig, style: const pw.TextStyle(fontSize: 10)),
-                      ],
-                    );
-                  }).toList(),
-                ),
+                          pw.SizedBox(height: 6),
+                          pw.Text(sig, style: const pw.TextStyle(fontSize: 10)),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 pw.SizedBox(height: 50),
                 
                 // Footer
-                if (template.footer.isNotEmpty) ...[
+                if (template.footerEnabled && template.footer.isNotEmpty) ...[
                   pw.Divider(thickness: 0.5),
                   pw.SizedBox(height: 10),
                   pw.Center(
@@ -105,35 +122,54 @@ class FormGenerator {
     );
   }
 
-  static pw.Widget _buildHeader(FormTemplate template, pw.ImageProvider? logo) {
-    final titleInfo = pw.Column(
-      crossAxisAlignment: template.logoAlignment == 'center' ? pw.CrossAxisAlignment.center : (template.logoAlignment == 'left' ? pw.CrossAxisAlignment.start : pw.CrossAxisAlignment.end),
+  static pw.Widget _buildTitleSection(FormTemplate template) {
+    final alignment = _getAlign(template.titleAlignment);
+    return pw.Column(
+      crossAxisAlignment: _getCrossAlign(template.titleAlignment),
       children: [
         pw.Text(
-          template.schoolName.toUpperCase(),
-          style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-        ),
-        pw.SizedBox(height: 4),
-        pw.Text(
           template.title,
-          style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: pdf.PdfColors.grey700),
+          textAlign: alignment,
+          style: _getStyle(
+            bold: template.titleBold,
+            italic: template.titleItalic,
+            underline: template.titleUnderline,
+            fontSize: template.titleFontSize,
+            color: pdf.PdfColors.black,
+          ),
         ),
         if (template.subtitle.isNotEmpty) ...[
           pw.SizedBox(height: 2),
           pw.Text(
             template.subtitle,
-            style: pw.TextStyle(fontSize: 10, color: pdf.PdfColors.grey600),
+            textAlign: alignment,
+            style: _getStyle(
+              bold: template.subtitleBold,
+              italic: template.subtitleItalic,
+              underline: template.subtitleUnderline,
+              fontSize: template.subtitleFontSize,
+              color: pdf.PdfColors.grey700,
+            ),
           ),
         ],
       ],
     );
+  }
 
-    if (logo == null) return pw.Center(child: titleInfo);
+  static pw.Widget _buildHeader(FormTemplate template, pw.ImageProvider? logo) {
+    final schoolNameWidget = pw.Text(
+          template.schoolName.toUpperCase(),
+          style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+        );
+
+    if (logo == null || !template.showLogo) return pw.Center(child: schoolNameWidget);
 
     final logoWidget = pw.Container(
       width: 70,
       height: 70,
-      child: pw.Image(logo),
+      child: template.logoShape == 'round' 
+        ? pw.ClipOval(child: pw.Image(logo, fit: pw.BoxFit.cover))
+        : pw.Image(logo, fit: pw.BoxFit.cover),
     );
 
     if (template.logoAlignment == 'center') {
@@ -142,7 +178,7 @@ class FormGenerator {
           children: [
             logoWidget,
             pw.SizedBox(height: 10),
-            titleInfo,
+            schoolNameWidget,
           ],
         ),
       );
@@ -151,19 +187,55 @@ class FormGenerator {
         children: [
           logoWidget,
           pw.SizedBox(width: 20),
-          pw.Expanded(child: titleInfo),
+          pw.Expanded(child: schoolNameWidget),
         ],
       );
     } else {
       return pw.Row(
         children: [
-          pw.Expanded(child: titleInfo),
+          pw.Expanded(child: schoolNameWidget),
           pw.SizedBox(width: 20),
           logoWidget,
         ],
       );
     }
   }
+
+  static pw.CrossAxisAlignment _getCrossAlign(String align) {
+    switch (align) {
+      case 'left': return pw.CrossAxisAlignment.start;
+      case 'right': return pw.CrossAxisAlignment.end;
+      default: return pw.CrossAxisAlignment.center;
+    }
+  }
+
+  static pw.TextAlign _getAlign(String align) {
+    switch (align) {
+      case 'center': return pw.TextAlign.center;
+      case 'right': return pw.TextAlign.right;
+      case 'justify': return pw.TextAlign.justify;
+      default: return pw.TextAlign.left;
+    }
+  }
+
+  static pw.TextStyle _getStyle({
+    required bool bold,
+    required bool italic,
+    required bool underline,
+    required double fontSize,
+    required pdf.PdfColor color,
+  }) {
+    return pw.TextStyle(
+      fontSize: fontSize,
+      fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+      fontStyle: italic ? pw.FontStyle.italic : pw.FontStyle.normal,
+      decoration:
+          underline ? pw.TextDecoration.underline : pw.TextDecoration.none,
+      color: color,
+      lineSpacing: 8,
+    );
+  }
+
 
   static Future<void> generateSamplePreview(FormTemplate template) async {
     final sampleStudent = Student(

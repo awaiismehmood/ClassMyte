@@ -21,6 +21,7 @@ import 'package:classmyte/core/widgets/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:classmyte/features/forms/screens/form_templates_screen.dart';
 
 class StudentDetailSheet extends ConsumerStatefulWidget {
   final Student student;
@@ -198,6 +199,28 @@ class _StudentDetailSheetState extends ConsumerState<StudentDetailSheet> {
                   error: (e, s) => Center(child: Text('Error: $e')),
                 ),
                 const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context); // Close selection sheet
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const FormTemplatesScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.add_circle_outline, size: 20),
+                    label: Text(
+                      'Use another / Add new form',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.primary),
+                    ),
+                  ),
+                ),
               ],
             );
           },

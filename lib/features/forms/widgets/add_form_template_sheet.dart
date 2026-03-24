@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/widgets/custom_bottom_sheet.dart';
 import 'package:classmyte/core/widgets/custom_button.dart';
@@ -32,6 +31,7 @@ class AddFormTemplateSheet extends ConsumerStatefulWidget {
 }
 
 class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
+  late TextEditingController _formNameController;
   late TextEditingController _titleController;
   late TextEditingController _subtitleController;
   late TextEditingController _contentController;
@@ -39,14 +39,46 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
   late TextEditingController _schoolNameController;
   late TextEditingController _signaturesController;
   
+  // Customization State
   bool _showLogo = false;
   String _logoAlignment = 'center';
+  String _logoShape = 'round';
   String? _localLogoPath;
+  
+  String _titlePlacement = 'below_header';
+  String _titleAlignment = 'center';
+  String _bodyAlignment = 'left';
+  
+  // Title Styling
+  bool _titleBold = true;
+  bool _titleItalic = false;
+  bool _titleUnderline = false;
+  double _titleFontSize = 18;
+
+  // Subtitle Styling
+  bool _subtitleBold = false;
+  bool _subtitleItalic = true;
+  bool _subtitleUnderline = false;
+  double _subtitleFontSize = 12;
+
+  // Body Styling
+  bool _bodyBold = false;
+  bool _bodyItalic = false;
+  bool _bodyUnderline = false;
+  double _bodyFontSize = 14;
+
+  bool _headerEnabled = true;
+  bool _titleEnabled = true;
+  bool _bodyEnabled = true;
+  bool _footerEnabled = true;
+  bool _signaturesEnabled = true;
+
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _formNameController = TextEditingController(text: widget.template?.formName ?? 'Untitled Form');
     _titleController = TextEditingController(text: widget.template?.title);
     _subtitleController = TextEditingController(text: widget.template?.subtitle);
     _contentController = TextEditingController(text: widget.template?.content);
@@ -56,11 +88,38 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
     
     _showLogo = widget.template?.showLogo ?? false;
     _logoAlignment = widget.template?.logoAlignment ?? 'center';
+    _logoShape = widget.template?.logoShape ?? 'round';
     _localLogoPath = widget.template?.logoUrl;
+    
+    _titlePlacement = widget.template?.titlePlacement ?? 'below_header';
+    _titleAlignment = widget.template?.titleAlignment ?? 'center';
+    _bodyAlignment = widget.template?.bodyAlignment ?? 'left';
+    
+    _titleBold = widget.template?.titleBold ?? true;
+    _titleItalic = widget.template?.titleItalic ?? false;
+    _titleUnderline = widget.template?.titleUnderline ?? false;
+    _titleFontSize = widget.template?.titleFontSize ?? 18;
+
+    _subtitleBold = widget.template?.subtitleBold ?? false;
+    _subtitleItalic = widget.template?.subtitleItalic ?? true;
+    _subtitleUnderline = widget.template?.subtitleUnderline ?? false;
+    _subtitleFontSize = widget.template?.subtitleFontSize ?? 12;
+
+    _bodyBold = widget.template?.bodyBold ?? false;
+    _bodyItalic = widget.template?.bodyItalic ?? false;
+    _bodyUnderline = widget.template?.bodyUnderline ?? false;
+    _bodyFontSize = widget.template?.bodyFontSize ?? 14;
+
+    _headerEnabled = widget.template?.headerEnabled ?? true;
+    _titleEnabled = widget.template?.titleEnabled ?? true;
+    _bodyEnabled = widget.template?.bodyEnabled ?? true;
+    _footerEnabled = widget.template?.footerEnabled ?? true;
+    _signaturesEnabled = widget.template?.signaturesEnabled ?? true;
   }
 
   @override
   void dispose() {
+    _formNameController.dispose();
     _titleController.dispose();
     _subtitleController.dispose();
     _contentController.dispose();
@@ -84,17 +143,16 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
     final user = FirebaseAuth.instance.currentUser;
     if (user?.photoURL != null) {
        setState(() {
-         // Note: photURL is a URL, but our generator expects a local file for now in this request
-         // The user said "file wont save in firestore since i dont have storage setup"
-         // So for now we keep using local path if possible. 
-         // But if they want profile pic, I'll just set it. 
          _localLogoPath = user!.photoURL;
        });
     }
   }
 
   Future<void> _save() async {
-    if (_titleController.text.isEmpty || _contentController.text.isEmpty) return;
+    if (_formNameController.text.isEmpty || _titleController.text.isEmpty || _contentController.text.isEmpty) {
+      CustomSnackBar.showError(context, 'Please fill in Form Name, Title and Content');
+      return;
+    }
 
     // Check Free Tier Limit (Max 1 form)
     final isPremium = ref.read(subscriptionProvider).isPremiumUser;
@@ -113,6 +171,7 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
 
       final template = FormTemplate(
         id: widget.template?.id ?? '',
+        formName: _formNameController.text,
         title: _titleController.text,
         subtitle: _subtitleController.text,
         content: _contentController.text,
@@ -122,6 +181,27 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
         showLogo: _showLogo,
         logoAlignment: _logoAlignment,
         logoUrl: _localLogoPath,
+        logoShape: _logoShape,
+        titlePlacement: _titlePlacement,
+        titleAlignment: _titleAlignment,
+        bodyAlignment: _bodyAlignment,
+        headerEnabled: _headerEnabled,
+        titleEnabled: _titleEnabled,
+        bodyEnabled: _bodyEnabled,
+        footerEnabled: _footerEnabled,
+        signaturesEnabled: _signaturesEnabled,
+        titleBold: _titleBold,
+        titleItalic: _titleItalic,
+        titleUnderline: _titleUnderline,
+        titleFontSize: _titleFontSize,
+        subtitleBold: _subtitleBold,
+        subtitleItalic: _subtitleItalic,
+        subtitleUnderline: _subtitleUnderline,
+        subtitleFontSize: _subtitleFontSize,
+        bodyBold: _bodyBold,
+        bodyItalic: _bodyItalic,
+        bodyUnderline: _bodyUnderline,
+        bodyFontSize: _bodyFontSize,
       );
 
       if (widget.template == null) {
@@ -131,7 +211,7 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      // Show error
+      CustomSnackBar.showError(context, 'Error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -143,53 +223,138 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
 
     return SingleChildScrollView(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHelpSection(onSurface),
           const SizedBox(height: 20),
           _buildMagicAIButton(context),
           const SizedBox(height: 24),
           
-          // Branding Section
           CustomTextField(
-            labelText: 'School/Academy Name',
-            hintText: 'e.g. ClassMyte Academy',
-            controller: _schoolNameController,
+            labelText: 'Form Display Name',
+            hintText: 'e.g. Admission Form V2',
+            controller: _formNameController,
           ),
-          const SizedBox(height: 16),
-          
-          // Logo Options
-          _buildLogoOptions(context, onSurface),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
-          CustomTextField(
-            labelText: 'Form Title',
-            hintText: 'e.g. Admission Confirmation',
-            controller: _titleController,
+          // Header Section
+          _buildToggleableSection(
+            title: 'Form Header',
+            icon: Icons.vertical_align_top_rounded,
+            value: _headerEnabled,
+            onChanged: (v) => setState(() => _headerEnabled = v),
+            content: Column(
+              children: [
+                CustomTextField(
+                  labelText: 'School/Academy Name',
+                  hintText: 'e.g. ClassMyte Academy',
+                  controller: _schoolNameController,
+                ),
+                const SizedBox(height: 16),
+                _buildLogoSettings(onSurface),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            labelText: 'Subtitle (Optional)',
-            hintText: 'e.g. Student Identity Card',
-            controller: _subtitleController,
+
+          // Title Section
+          _buildToggleableSection(
+            title: 'Form Title',
+            icon: Icons.title_rounded,
+            value: _titleEnabled,
+            onChanged: (v) => setState(() => _titleEnabled = v),
+            content: Column(
+              children: [
+                CustomTextField(
+                  labelText: 'Form Title',
+                  hintText: 'e.g. Admission Confirmation',
+                  controller: _titleController,
+                ),
+                _buildStyleToolbar(
+                  bold: _titleBold,
+                  italic: _titleItalic,
+                  underline: _titleUnderline,
+                  fontSize: _titleFontSize,
+                  onBoldChanged: (v) => setState(() => _titleBold = v),
+                  onItalicChanged: (v) => setState(() => _titleItalic = v),
+                  onUnderlineChanged: (v) => setState(() => _titleUnderline = v),
+                  onSizeChanged: (v) => setState(() => _titleFontSize = v),
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  labelText: 'Subtitle (Optional)',
+                  hintText: 'e.g. For Office Use Only',
+                  controller: _subtitleController,
+                ),
+                _buildStyleToolbar(
+                  bold: _subtitleBold,
+                  italic: _subtitleItalic,
+                  underline: _subtitleUnderline,
+                  fontSize: _subtitleFontSize,
+                  onBoldChanged: (v) => setState(() => _subtitleBold = v),
+                  onItalicChanged: (v) => setState(() => _subtitleItalic = v),
+                  onUnderlineChanged: (v) => setState(() => _subtitleUnderline = v),
+                  onSizeChanged: (v) => setState(() => _subtitleFontSize = v),
+                ),
+                const SizedBox(height: 16),
+                _buildTitleStyleSettings(onSurface),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            labelText: 'Main Content',
-            hintText: 'Type: At [schoolName], [name] is... ',
-            controller: _contentController,
-            maxLines: 6,
+
+          // Body Section
+          _buildToggleableSection(
+            title: 'Body Content',
+            icon: Icons.text_fields_rounded,
+            value: _bodyEnabled,
+            onChanged: (v) => setState(() => _bodyEnabled = v),
+            content: Column(
+              children: [
+                CustomTextField(
+                  labelText: 'Main Content',
+                  hintText: 'Type: At [schoolName], [name] is... ',
+                  controller: _contentController,
+                  maxLines: 6,
+                ),
+                _buildStyleToolbar(
+                  bold: _bodyBold,
+                  italic: _bodyItalic,
+                  underline: _bodyUnderline,
+                  fontSize: _bodyFontSize,
+                  onBoldChanged: (v) => setState(() => _bodyBold = v),
+                  onItalicChanged: (v) => setState(() => _bodyItalic = v),
+                  onUnderlineChanged: (v) => setState(() => _bodyUnderline = v),
+                  onSizeChanged: (v) => setState(() => _bodyFontSize = v),
+                ),
+                const SizedBox(height: 16),
+                _buildBodyStyleSettings(onSurface),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            labelText: 'Signatures (Comma separated)',
-            hintText: 'e.g. Student, Parent, Principal',
-            controller: _signaturesController,
+
+          // Signatures Section
+          _buildToggleableSection(
+            title: 'Signatures',
+            icon: Icons.history_edu_rounded,
+            value: _signaturesEnabled,
+            onChanged: (v) => setState(() => _signaturesEnabled = v),
+            content: CustomTextField(
+              labelText: 'Signatures (Comma separated)',
+              hintText: 'e.g. Student, Parent, Principal',
+              controller: _signaturesController,
+            ),
           ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            labelText: 'Footer Disclaimer (Optional)',
-            hintText: 'e.g. Generated via ClassMyte App',
-            controller: _footerController,
+
+          // Footer Section
+          _buildToggleableSection(
+            title: 'Footer',
+            icon: Icons.vertical_align_bottom_rounded,
+            value: _footerEnabled,
+            onChanged: (v) => setState(() => _footerEnabled = v),
+            content: CustomTextField(
+              labelText: 'Footer Disclaimer (Optional)',
+              hintText: 'e.g. Generated via ClassMyte App',
+              controller: _footerController,
+            ),
           ),
           
           const SizedBox(height: 32),
@@ -198,110 +363,281 @@ class _AddFormTemplateSheetState extends ConsumerState<AddFormTemplateSheet> {
             isLoading: _isLoading,
             onPressed: _save,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Widget _buildLogoOptions(BuildContext context, Color onSurface) {
+  Widget _buildStyleToolbar({
+    required bool bold,
+    required bool italic,
+    required bool underline,
+    required double fontSize,
+    required ValueChanged<bool> onBoldChanged,
+    required ValueChanged<bool> onItalicChanged,
+    required ValueChanged<bool> onUnderlineChanged,
+    required ValueChanged<double> onSizeChanged,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          _buildIconButton(Icons.format_bold, bold, () => onBoldChanged(!bold)),
+          const SizedBox(width: 4),
+          _buildIconButton(Icons.format_italic, italic, () => onItalicChanged(!italic)),
+          const SizedBox(width: 4),
+          _buildIconButton(Icons.format_underlined, underline, () => onUnderlineChanged(!underline)),
+          const VerticalDivider(),
+          const Icon(Icons.text_fields, size: 16, color: Colors.grey),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Slider(
+              value: fontSize,
+              min: 8,
+              max: 32,
+              divisions: 24,
+              label: '${fontSize.toInt()}px',
+              activeColor: AppColors.primary,
+              onChanged: onSizeChanged,
+            ),
+          ),
+          Text('${fontSize.toInt()}px', style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, bool isActive, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 18, color: isActive ? Colors.white : AppColors.primary),
+      ),
+    );
+  }
+
+  Widget _buildToggleableSection({
+    required String title,
+    required IconData icon,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required Widget content,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: onSurface.withOpacity(0.05)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: value ? AppColors.primary.withOpacity(0.2) : Colors.transparent),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Icon(icon, color: value ? AppColors.primary : Colors.grey, size: 22),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: value ? AppColors.primary : Colors.grey,
+                  ),
+                ),
+                const Spacer(),
+                Switch(
+                  value: value,
+                  onChanged: onChanged,
+                  activeColor: AppColors.primary,
+                ),
+              ],
+            ),
+          ),
+          if (value)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              child: content,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogoSettings(Color onSurface) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Show Logo?', style: GoogleFonts.outfit(fontSize: 14)),
+            Switch(
+              value: _showLogo,
+              onChanged: (v) => setState(() => _showLogo = v),
+              activeColor: AppColors.primary,
+            ),
+          ],
+        ),
+        if (_showLogo) ...[
+          const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Show Logo?', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-              Switch(
-                value: _showLogo,
-                onChanged: (v) => setState(() => _showLogo = v),
-                activeColor: AppColors.primary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Logo Shape', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5))),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildChoiceBtn('round', Icons.circle_outlined, _logoShape, (v) => setState(() => _logoShape = v)),
+                        const SizedBox(width: 8),
+                        _buildChoiceBtn('square', Icons.crop_square_rounded, _logoShape, (v) => setState(() => _logoShape = v)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Alignment', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5))),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildChoiceBtn('left', Icons.align_horizontal_left, _logoAlignment, (v) => setState(() => _logoAlignment = v)),
+                        const SizedBox(width: 4),
+                        _buildChoiceBtn('center', Icons.align_horizontal_center, _logoAlignment, (v) => setState(() => _logoAlignment = v)),
+                        const SizedBox(width: 4),
+                        _buildChoiceBtn('right', Icons.align_horizontal_right, _logoAlignment, (v) => setState(() => _logoAlignment = v)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          if (_showLogo) ...[
-            const SizedBox(height: 16),
-            Text('Logo Alignment', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.6))),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildAlignBtn('left', Icons.align_horizontal_left),
-                const SizedBox(width: 8),
-                _buildAlignBtn('center', Icons.align_horizontal_center),
-                const SizedBox(width: 8),
-                _buildAlignBtn('right', Icons.align_horizontal_right),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickLogo,
-                    icon: const Icon(Icons.upload, size: 18),
-                    label: Text(_localLogoPath == null ? 'Select Logo' : 'Change Logo'),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickLogo,
+                  icon: const Icon(Icons.upload, size: 18),
+                  label: Text(_localLogoPath == null ? 'Select Logo' : 'Change Logo', style: const TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _useProfilePic,
-                    icon: const Icon(Icons.person_outline, size: 18),
-                    label: const Text('Profile Pic'),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _useProfilePic,
+                  icon: const Icon(Icons.person_outline, size: 18),
+                  label: const Text('Profile Pic', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
-              ],
-            ),
-            if (_localLogoPath != null) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Logo linked: .../${_localLogoPath!.split(Platform.pathSeparator).last}',
-                      style: GoogleFonts.outfit(fontSize: 11, color: Colors.green),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
               ),
             ],
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 
-  Widget _buildAlignBtn(String align, IconData icon) {
-    final isSelected = _logoAlignment == align;
+  Widget _buildTitleStyleSettings(Color onSurface) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Placement', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5))),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildChoiceBtn('above_header', Icons.arrow_upward_rounded, _titlePlacement, (v) => setState(() => _titlePlacement = v)),
+                      const SizedBox(width: 8),
+                      _buildChoiceBtn('below_header', Icons.arrow_downward_rounded, _titlePlacement, (v) => setState(() => _titlePlacement = v)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Alignment', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5))),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildChoiceBtn('left', Icons.align_horizontal_left, _titleAlignment, (v) => setState(() => _titleAlignment = v)),
+                      const SizedBox(width: 4),
+                      _buildChoiceBtn('center', Icons.align_horizontal_center, _titleAlignment, (v) => setState(() => _titleAlignment = v)),
+                      const SizedBox(width: 4),
+                      _buildChoiceBtn('right', Icons.align_horizontal_right, _titleAlignment, (v) => setState(() => _titleAlignment = v)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBodyStyleSettings(Color onSurface) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Text Alignment', style: GoogleFonts.outfit(fontSize: 12, color: onSurface.withOpacity(0.5))),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _buildChoiceBtn('left', Icons.format_align_left_rounded, _bodyAlignment, (v) => setState(() => _bodyAlignment = v)),
+            const SizedBox(width: 8),
+            _buildChoiceBtn('center', Icons.format_align_center_rounded, _bodyAlignment, (v) => setState(() => _bodyAlignment = v)),
+            const SizedBox(width: 8),
+            _buildChoiceBtn('justify', Icons.format_align_justify_rounded, _bodyAlignment, (v) => setState(() => _bodyAlignment = v)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChoiceBtn(String value, IconData icon, String current, Function(String) onSelect) {
+    final isSelected = current == value;
     return Expanded(
       child: InkWell(
-        onTap: () => setState(() => _logoAlignment = align),
+        onTap: () => onSelect(value),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: isSelected ? Colors.white : AppColors.primary, size: 20),
+          child: Icon(icon, color: isSelected ? Colors.white : AppColors.primary, size: 18),
         ),
       ),
     );
