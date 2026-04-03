@@ -12,6 +12,10 @@ import 'package:classmyte/features/premium/providers/subscription_providers.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classmyte/core/widgets/offline_indicator.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:talker_flutter/talker_flutter.dart';
+import 'package:talker_riverpod_logger/talker_riverpod_logger.dart';
+
+final talker = TalkerFlutter.init();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,10 +27,17 @@ void main() async {
       persistenceEnabled: true,
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
+    
+    // Global Error Handling
+    FlutterError.onError = (details) => talker.handle(details.exception, details.stack);
+
     final prefs = await SharedPreferences.getInstance();
 
     runApp(
       ProviderScope(
+        observers: [
+          TalkerRiverpodObserver(talker: talker),
+        ],
         overrides: [
           sharedPrefsProvider.overrideWithValue(prefs),
         ],

@@ -1,10 +1,12 @@
 import 'package:classmyte/core/theme/app_colors.dart';
 import 'package:classmyte/core/theme/theme_provider.dart';
 import 'package:classmyte/core/widgets/custom_header.dart';
+import 'package:classmyte/main.dart'; // import talker
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -58,6 +60,18 @@ class SettingsScreen extends ConsumerWidget {
                       icon: Icons.help_outline,
                       title: 'Help & Support',
                       onTap: () => context.push('/settings/contact-us'),
+                    ),
+                    _buildSettingsTile(
+                      context,
+                      icon: Icons.bug_report_outlined,
+                      title: 'Debug Logs',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => TalkerScreen(talker: talker),
+                          ),
+                        );
+                      },
                     ),
                   ]),
                 ],

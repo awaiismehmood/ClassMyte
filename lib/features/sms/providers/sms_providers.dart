@@ -8,6 +8,10 @@ import 'package:classmyte/features/sms/data/sms_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:classmyte/main.dart'; // import talker
+import 'package:classmyte/core/database/database_provider.dart';
+import 'package:classmyte/core/database/local_database.dart' hide Student;
+import 'package:classmyte/core/providers/device_provider.dart' as dev;
 
 class SmsProgressState {
   final String status; // 'idle', 'sending', 'completed', 'cancelled'
@@ -21,6 +25,9 @@ class SmsProgressState {
   final List<Map<String, String>> failedList;
   final String tag; 
 
+  final String deviceId;
+  final String deviceName;
+
   SmsProgressState({
     this.status = 'idle',
     this.total = 0,
@@ -32,6 +39,8 @@ class SmsProgressState {
     this.lastMessage = '',
     this.failedList = const [],
     this.tag = 'General',
+    this.deviceId = '',
+    this.deviceName = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -45,6 +54,8 @@ class SmsProgressState {
     'lastMessage': lastMessage,
     'failedList': failedList,
     'tag': tag,
+    'deviceId': deviceId,
+    'deviceName': deviceName,
   };
 
   factory SmsProgressState.fromJson(Map<String, dynamic> json) => SmsProgressState(
@@ -57,6 +68,8 @@ class SmsProgressState {
     currentNumber: json['currentNumber'] ?? '',
     lastMessage: json['lastMessage'] ?? '',
     tag: json['tag'] ?? 'General',
+    deviceId: json['deviceId'] ?? '',
+    deviceName: json['deviceName'] ?? '',
     failedList: json['failedList'] != null 
         ? List<Map<String, String>>.from((json['failedList'] as List).map((e) => Map<String, String>.from(e)))
         : [],
@@ -73,6 +86,8 @@ class SmsProgressState {
     String? lastMessage,
     List<Map<String, String>>? failedList,
     String? tag,
+    String? deviceId,
+    String? deviceName,
   }) {
     return SmsProgressState(
       status: status ?? this.status,
@@ -85,6 +100,8 @@ class SmsProgressState {
       lastMessage: lastMessage ?? this.lastMessage,
       failedList: failedList ?? this.failedList,
       tag: tag ?? this.tag,
+      deviceId: deviceId ?? this.deviceId,
+      deviceName: deviceName ?? this.deviceName,
     );
   }
 }
@@ -93,10 +110,15 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
   static const _eventChannel = EventChannel('com.alnoor.sms/progress');
   static const _prefKey = 'sms_progress_state';
   final SharedPreferences _prefs;
+  final LocalDatabase _localDb;
+  final Ref _ref;
   StreamSubscription? _subscription;
+  StreamSubscription? _cloudSubscription;
+  DateTime _lastCloudUpdate = DateTime.now();
 
-  SmsProgressNotifier(this._prefs) : super(SmsProgressState()) {
+  SmsProgressNotifier(this._prefs, this._localDb, this._ref) : super(SmsProgressState()) {
     _loadState();
+    _startCloudListener();
   }
 
   void _loadState() {
@@ -114,8 +136,8 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
             }
           });
         }
-      } catch (e) {
-        print("Error loading SMS state: $e");
+      } catch (e, s) {
+        talker.error("Error loading SMS state", e, s);
       }
     }
   }
@@ -139,9 +161,9 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
     _subscription = _eventChannel.receiveBroadcastStream().listen((event) {
       if (event is Map) {
         final data = Map<String, dynamic>.from(event);
+        final bool isTaskDone = data['status'] == 'completed' || data['status'] == 'cancelled';
         
         if (data['status'] == 'completed' && state.status == 'sending') {
-          // Task just finished! Store to history
           _saveToHistory(state.copyWith(
             sent: data['sent'],
             failed: data['failed'],
@@ -149,6 +171,7 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
           ));
         }
 
+        // Only update local ID info if it matches OR if it's our own local sending process
         state = state.copyWith(
           status: data['status'],
           total: data['total'],
@@ -162,31 +185,154 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
                   (data['failedList'] as List).map((e) => Map<String, String>.from(e)))
               : null,
         );
+
         _saveState();
+        
+        // Update Cloud Process periodically
+        _syncToCloud();
+        
+        if (isTaskDone) {
+          _clearCloudProcess();
+        }
       }
     });
   }
 
-  Future<void> _saveToHistory(SmsProgressState finalProgress) async {
+  void _startCloudListener() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    _cloudSubscription?.cancel();
+    _cloudSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('status')
+        .doc('active_process')
+        .snapshots()
+        .listen((snapshot) async {
+       if (snapshot.exists) {
+         final data = snapshot.data() as Map<String, dynamic>;
+         final remoteDeviceId = data['deviceId'];
+         
+         // Only adopt cloud progress if it's NOT our local device
+         // This provides the "Live Progress View" for Phone B
+         final localDevice = await _ref.read(dev.deviceInfoProvider.future);
+         if (remoteDeviceId != localDevice.id && data['status'] == 'sending') {
+           state = state.copyWith(
+             status: 'sending',
+             total: data['total'],
+             sent: data['sent'],
+             failed: data['failed'],
+             currentIndex: data['index'],
+             currentName: data['currentName'],
+             currentNumber: data['currentNumber'],
+             deviceId: remoteDeviceId,
+             deviceName: data['deviceName'],
+             tag: data['tag'],
+             lastMessage: data['lastMessage'],
+           );
+           _saveState();
+         }
+       } else if (state.deviceId.isNotEmpty) {
+         // Process cleared from cloud, if we were tracking it, idle now
+         final localDevice = await _ref.read(dev.deviceInfoProvider.future);
+         if (state.deviceId != localDevice.id) {
+           state = state.copyWith(status: 'idle', deviceId: '', deviceName: '');
+           _saveState();
+         }
+       }
+    });
+  }
+
+  Future<void> _syncToCloud() async {
+    // Throttling: Only sync every 5 seconds or every 5 messages
+    final now = DateTime.now();
+    if (now.difference(_lastCloudUpdate).inSeconds < 5 && state.currentIndex % 5 != 0) return;
+    
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
+      final localDevice = await _ref.read(dev.deviceInfoProvider.future);
 
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .collection('sms_history')
-          .add({
-            'message': finalProgress.lastMessage,
-            'tag': finalProgress.tag,
-            'timestamp': Timestamp.now(),
-            'totalRecipients': finalProgress.total,
-            'sentCount': finalProgress.sent,
-            'failedCount': finalProgress.failed,
+          .collection('status')
+          .doc('active_process')
+          .set({
+            'status': state.status,
+            'total': state.total,
+            'sent': state.sent,
+            'failed': state.failed,
+            'index': state.currentIndex,
+            'currentName': state.currentName,
+            'currentNumber': state.currentNumber,
+            'deviceId': localDevice.id,
+            'deviceName': localDevice.name,
+            'tag': state.tag,
+            'lastMessage': state.lastMessage,
+            'updatedAt': FieldValue.serverTimestamp(),
           });
-      print("History saved successfully");
+      _lastCloudUpdate = now;
     } catch (e) {
-      print("Error saving history: $e");
+      talker.error("Failed to sync progress to cloud: $e");
+    }
+  }
+
+  Future<void> _clearCloudProcess() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final localDevice = await _ref.read(dev.deviceInfoProvider.future);
+      
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('status')
+          .doc('active_process')
+          .get();
+          
+      if (doc.exists && doc.data()?['deviceId'] == localDevice.id) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      talker.error("Failed to clear cloud process: $e");
+    }
+  }
+
+  Future<void> _saveToHistory(SmsProgressState finalProgress) async {
+    try {
+      // 1. Save locally (always works offline)
+      await _localDb.into(_localDb.smsHistoryTable).insert(
+        SmsHistoryTableCompanion.insert(
+          tag: finalProgress.tag,
+          message: finalProgress.lastMessage,
+          totalRecipients: finalProgress.total,
+          sentCount: finalProgress.sent,
+          failedCount: finalProgress.failed,
+        ),
+      );
+      talker.log("Saved SMS to local history");
+
+      // 2. Save to Firestore (works offline with Firestore persistence, but let's be explicit)
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('sms_history')
+            .add({
+          'message': finalProgress.lastMessage,
+          'tag': finalProgress.tag,
+          'timestamp': Timestamp.now(),
+          'totalRecipients': finalProgress.total,
+          'sentCount': finalProgress.sent,
+          'failedCount': finalProgress.failed,
+        });
+        talker.log("Saved SMS to Firestore history");
+      }
+    } catch (e, s) {
+      talker.error("Error saving history", e, s);
     }
   }
 
@@ -204,7 +350,8 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
 
 final smsProgressProvider = StateNotifierProvider<SmsProgressNotifier, SmsProgressState>((ref) {
   final prefs = ref.watch(sharedPrefsProvider);
-  return SmsProgressNotifier(prefs);
+  final db = ref.watch(localDatabaseProvider);
+  return SmsProgressNotifier(prefs, db, ref);
 });
 
 

@@ -58,10 +58,16 @@ dependencies:
   pdf: 3.12.0
   printing: 5.14.3
   image_picker: ^1.1.2
-
-
+  talker_flutter: ^4.5.3
+  talker_riverpod_logger: ^4.5.3
+  drift: ^2.20.1
+  sqlite3_flutter_libs: ^0.5.24
+  device_info_plus: ^11.1.0
+  uuid: ^4.4.0
 
 dev_dependencies:
+  drift_dev: ^2.20.1
+  build_runner: ^2.4.11
   flutter_test:
     sdk: flutter
   
