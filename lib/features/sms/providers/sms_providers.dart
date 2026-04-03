@@ -354,6 +354,72 @@ final smsProgressProvider = StateNotifierProvider<SmsProgressNotifier, SmsProgre
   return SmsProgressNotifier(prefs, db, ref);
 });
 
+class SmsSessionState {
+  final List<String> selectedClasses;
+  final int selectedDelay;
+  final bool excludeInactive;
+  final bool includePersonalization;
+  final bool inlinePrefix;
+  final bool inlineSuffix;
+  final String tag;
+
+  SmsSessionState({
+    this.selectedClasses = const [],
+    this.selectedDelay = 30,
+    this.excludeInactive = false,
+    this.includePersonalization = false,
+    this.inlinePrefix = false,
+    this.inlineSuffix = false,
+    this.tag = 'General',
+  });
+
+  SmsSessionState copyWith({
+    List<String>? selectedClasses,
+    int? selectedDelay,
+    bool? excludeInactive,
+    bool? includePersonalization,
+    bool? inlinePrefix,
+    bool? inlineSuffix,
+    String? tag,
+  }) {
+    return SmsSessionState(
+      selectedClasses: selectedClasses ?? this.selectedClasses,
+      selectedDelay: selectedDelay ?? this.selectedDelay,
+      excludeInactive: excludeInactive ?? this.excludeInactive,
+      includePersonalization: includePersonalization ?? this.includePersonalization,
+      inlinePrefix: inlinePrefix ?? this.inlinePrefix,
+      inlineSuffix: inlineSuffix ?? this.inlineSuffix,
+      tag: tag ?? this.tag,
+    );
+  }
+}
+
+class SmsSessionNotifier extends StateNotifier<SmsSessionState> {
+  SmsSessionNotifier() : super(SmsSessionState());
+
+  void setClasses(List<String> classes) => state = state.copyWith(selectedClasses: classes);
+  void toggleClass(String className) {
+    final current = List<String>.from(state.selectedClasses);
+    if (current.contains(className)) {
+      current.remove(className);
+    } else {
+      current.add(className);
+    }
+    state = state.copyWith(selectedClasses: current);
+  }
+  
+  void setDelay(int delay) => state = state.copyWith(selectedDelay: delay);
+  void setExcludeInactive(bool val) => state = state.copyWith(excludeInactive: val);
+  void setPersonalization(bool val) => state = state.copyWith(includePersonalization: val);
+  void setInlinePrefix(bool val) => state = state.copyWith(inlinePrefix: val);
+  void setInlineSuffix(bool val) => state = state.copyWith(inlineSuffix: val);
+  void setTag(String tag) => state = state.copyWith(tag: tag);
+  
+  void reset() => state = SmsSessionState();
+}
+
+final smsSessionProvider = StateNotifierProvider<SmsSessionNotifier, SmsSessionState>((ref) => SmsSessionNotifier());
+
 
 /// Holds a pre-selected list of contacts passed from the Students screen.
 /// When non-null, the SMS screen sends ONLY to these contacts (premium feature).

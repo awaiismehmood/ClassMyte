@@ -101,10 +101,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/sms',
         name: 'sms',
-        builder: (context, state) {
-          final type = state.extra as String?;
-          return NewMessageScreen(type: type);
-        },
+        builder: (context, state) => const NewMessageScreen(),
       ),
       GoRoute(
         path: '/manage-templates',
