@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 // Core
 import 'package:classmyte/core/theme/app_colors.dart';
@@ -22,7 +23,8 @@ import 'package:classmyte/features/sms/widgets/sms_remote_lock_card.dart';
 import 'package:classmyte/features/sms/widgets/sms_guide_dialog.dart';
 import 'package:classmyte/features/sms/widgets/sms_preview_card.dart';
 import 'package:classmyte/features/sms/widgets/sms_recipient_selector.dart';
-import 'package:classmyte/features/sms/widgets/sms_options_section.dart';
+import 'package:classmyte/features/sms/widgets/sms_delay_selector.dart';
+import 'package:classmyte/features/sms/widgets/sms_advanced_options.dart';
 
 class NewMessageScreen extends ConsumerStatefulWidget {
   const NewMessageScreen({super.key});
@@ -66,6 +68,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   Widget build(BuildContext context) {
     final studentDataAsync = ref.watch(studentDataProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     final preSelected = ref.watch(preSelectedContactsProvider);
     final isPreSelectedMode = preSelected != null;
 
@@ -105,21 +108,23 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const RemoteProcessLockCard(),
-                          _buildStatusMessage(),
+                          const SizedBox(height: 24),
                           SmsRecipientSelector(availableClasses: availableClasses),
                           const SizedBox(height: 24),
-                          _buildSectionHeader(context, 'Message Content'),
+                          const SmsDelaySelector(),
+                          const SizedBox(height: 24),
+                          _buildSectionHeader('Message Content', onSurface),
                           const SizedBox(height: 12),
-                          _buildMessageInput(context),
+                          _buildMessageBox(onSurface),
                           const SizedBox(height: 24),
                           ValueListenableBuilder<String>(
                             valueListenable: messageStatus,
                             builder: (context, msg, _) => SmsPreviewCard(message: msg),
                           ),
+                          const SizedBox(height: 32),
+                          SmsAdvancedOptions(tags: const ['General', 'Attendance', 'Fees', 'Event', 'Reminder', 'Announcement']),
                           const SizedBox(height: 24),
-                          SmsOptionsSection(tags: const ['General', 'Attendance', 'Fees', 'Event']),
-                          const SizedBox(height: 40),
-                          _buildSendButton(context, students),
+                          _buildSendButton(students),
                           const SizedBox(height: 100),
                         ],
                       ),
@@ -136,19 +141,19 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
+  Widget _buildSectionHeader(String title, Color color) {
     return Text(
       title,
       style: GoogleFonts.outfit(
         fontWeight: FontWeight.bold,
         fontSize: 14,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+        color: color.withOpacity(0.5),
         letterSpacing: 1.1,
       ),
     );
   }
 
-  Widget _buildMessageInput(BuildContext context) {
+  Widget _buildMessageBox(Color onSurface) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -167,7 +172,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         onChanged: (v) => messageStatus.value = v,
         style: GoogleFonts.outfit(fontSize: 16),
         decoration: InputDecoration(
-          hintText: 'Enter your message study here...\nUse [name] for student personalization.',
+          hintText: 'Enter your message here...\nUse [name] for student personalization.',
           hintStyle: GoogleFonts.outfit(color: Colors.grey.withOpacity(0.5)),
           contentPadding: const EdgeInsets.all(20),
           border: InputBorder.none,
@@ -176,14 +181,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     );
   }
 
-  Widget _buildStatusMessage() {
-    return ValueListenableBuilder<String>(
-      valueListenable: messageStatus,
-      builder: (context, status, _) => const SizedBox.shrink(),
-    );
-  }
 
-  Widget _buildSendButton(BuildContext context, List<dynamic> allStudents) {
+  Widget _buildSendButton(List<dynamic> allStudents) {
     final progress = ref.watch(smsProgressProvider);
     final isSending = progress.status == 'sending';
     final isPremium = ref.read(subscriptionProvider).isPremiumUser;
@@ -192,11 +191,11 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
       text: isSending ? 'Campaign in Progress...' : 'Launch Campaign',
       icon: Icons.send_rounded,
       isLoading: isSending,
-      onPressed: isSending ? null : () => _validateAndSend(context, allStudents, isPremium),
+      onPressed: isSending ? null : () => _validateAndSend(allStudents, isPremium),
     );
   }
 
-  Future<void> _validateAndSend(BuildContext context, List<dynamic> allStudents, bool isPremium) async {
+  Future<void> _validateAndSend(List<dynamic> allStudents, bool isPremium) async {
     final session = ref.read(smsSessionProvider);
     final preSelected = ref.read(preSelectedContactsProvider);
     
@@ -221,73 +220,82 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
       return;
     }
 
+    // Check Permissions before proceeding
+    final smsStatus = await Permission.sms.request();
+    if (!smsStatus.isGranted) {
+      if (mounted) CustomSnackBar.showError(context, 'SMS permission is required to send campaigns.');
+      return;
+    }
+
+    if (Theme.of(context).platform == TargetPlatform.android) {
+       final notifStatus = await Permission.notification.request();
+       if (!notifStatus.isGranted) {
+         if (mounted) CustomSnackBar.showError(context, 'Notification permission is required for background tracking.');
+         return;
+       }
+    }
+
     if (!isPremium) {
       final isUsingPremiumFeature = session.selectedDelay != 30 || session.excludeInactive || preSelected != null;
       if (isUsingPremiumFeature) {
-        _showPremiumWarning(context, targetStudents);
+        _showPremiumWarning(targetStudents);
         return;
       }
       final adManager = ref.read(adManagerProvider);
       final success = await adManager.showRewardedAd();
       if (success) {
-        _executeSending(targetStudents);
+        _executeSending(targetStudents, session.selectedDelay);
       } else {
         if (mounted) CustomSnackBar.showError(context, 'Ad failed to show. Please try again.');
       }
     } else {
-      _executeSending(targetStudents);
+      _executeSending(targetStudents, session.selectedDelay);
     }
   }
 
-  void _executeSending(List<dynamic> students) {
-    final session = ref.read(smsSessionProvider);
-    final schoolSettings = ref.read(personalizationProvider);
-    final prefixText = schoolSettings['prefix'] ?? '';
-    final suffixText = schoolSettings['suffix'] ?? '';
-    
-    final List<String> phoneNumbers = [];
-    final List<String> names = [];
-    final List<String> customMessages = [];
-    
-    for (var student in students) {
-      phoneNumbers.add(student.phoneNumber);
-      names.add(student.name);
-      
-      String msg = messageController.text;
-      
-      if (session.includePersonalization) {
-        final prefix = session.inlinePrefix ? '$prefixText ' : '$prefixText\n';
-        final suffix = session.inlineSuffix ? ' $suffixText' : '\n$suffixText';
-        msg = "${prefixText.isNotEmpty ? prefix : ''}$msg${suffixText.isNotEmpty ? suffix : ''}";
-      }
+  void _executeSending(List<dynamic> targetStudents, int delay) {
+     final session = ref.read(smsSessionProvider);
+     final currentMsg = messageController.text;
+     
+     final List<String> phoneNumbers = [];
+     final List<String> names = [];
+     final List<String> customMessages = [];
+     
+     final schoolSettings = ref.read(personalizationProvider);
+     final prefixText = schoolSettings['prefix'] ?? '';
+     final suffixText = schoolSettings['suffix'] ?? '';
 
-      msg = msg.replaceAll('[name]', student.name);
-      msg = msg.replaceAll('[father_name]', student.fatherName);
-      msg = msg.replaceAll('[class]', student.className);
-      msg = msg.replaceAll('[dob]', student.dob ?? '');
-      msg = msg.replaceAll('[id]', student.id);
-      msg = msg.replaceAll('[phone]', student.phoneNumber);
-      
-      customMessages.add(msg);
-    }
+     for (var student in targetStudents) {
+       phoneNumbers.add(student.phoneNumber);
+       names.add(student.name);
+       
+       String msg = currentMsg;
+       if (session.includePersonalization) {
+          final prefix = session.inlinePrefix ? '$prefixText ' : '$prefixText\n';
+          final suffix = session.inlineSuffix ? ' $suffixText' : '\n$suffixText';
+          msg = "${prefixText.isNotEmpty ? prefix : ''}$msg${suffixText.isNotEmpty ? suffix : ''}";
+       }
+       msg = msg.replaceAll('[name]', student.name);
+       msg = msg.replaceAll('[father_name]', student.fatherName);
+       msg = msg.replaceAll('[class]', student.className);
+       customMessages.add(msg);
+     }
 
-    // Setup progress tracker filters
-    ref.read(smsProgressProvider.notifier).setLastMessage(messageController.text);
-    ref.read(smsProgressProvider.notifier).setTag(session.tag);
-    ref.read(smsProgressProvider.notifier).startListening();
-
-    // Trigger Native SMS
-    MessageSender.sendMessages(
-      phoneNumbers: phoneNumbers,
-      names: names,
-      messages: customMessages,
-      delay: session.selectedDelay,
-    );
-    
-    CustomSnackBar.showSuccess(context, 'Campaign started! You can track progress here.');
+     ref.read(smsProgressProvider.notifier).setLastMessage(messageController.text);
+     ref.read(smsProgressProvider.notifier).setTag(session.tag);
+     ref.read(smsProgressProvider.notifier).startListening(delay: delay);
+     
+     MessageSender.sendMessages(
+       phoneNumbers: phoneNumbers,
+       names: names,
+       messages: customMessages,
+       delay: delay,
+     );
+     
+     if (mounted) context.pushReplacement('/message-report');
   }
 
-  void _showPremiumWarning(BuildContext context, List<dynamic> students) {
+  void _showPremiumWarning(List<dynamic> students) {
     CustomDialog.show(
       context: context,
       title: 'Premium Required',
@@ -298,8 +306,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
       onCancel: () {
         ref.read(smsSessionProvider.notifier).setDelay(30);
         ref.read(smsSessionProvider.notifier).setExcludeInactive(false);
-        // If they were in selective mode, they must go back to "All" or a single class
-        _executeSending(students);
+        _executeSending(students, 30);
       },
     );
   }

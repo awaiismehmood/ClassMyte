@@ -14,7 +14,7 @@ import 'package:classmyte/core/database/local_database.dart' hide Student;
 import 'package:classmyte/core/providers/device_provider.dart' as dev;
 
 class SmsProgressState {
-  final String status; // 'idle', 'sending', 'completed', 'cancelled'
+  final String status;
   final int total;
   final int sent;
   final int failed;
@@ -23,10 +23,11 @@ class SmsProgressState {
   final String currentNumber;
   final String lastMessage;
   final List<Map<String, String>> failedList;
-  final String tag; 
-
+  final String tag;
   final String deviceId;
   final String deviceName;
+  final int delayBetweenMsgs;
+  final DateTime? startTime;
 
   SmsProgressState({
     this.status = 'idle',
@@ -41,39 +42,52 @@ class SmsProgressState {
     this.tag = 'General',
     this.deviceId = '',
     this.deviceName = '',
+    this.delayBetweenMsgs = 30,
+    this.startTime,
   });
 
-  Map<String, dynamic> toJson() => {
-    'status': status,
-    'total': total,
-    'sent': sent,
-    'failed': failed,
-    'currentIndex': currentIndex,
-    'currentName': currentName,
-    'currentNumber': currentNumber,
-    'lastMessage': lastMessage,
-    'failedList': failedList,
-    'tag': tag,
-    'deviceId': deviceId,
-    'deviceName': deviceName,
-  };
+  Duration get estimatedRemaining {
+    if (status != 'sending' || total <= currentIndex) return Duration.zero;
+    final remaining = total - currentIndex;
+    return Duration(seconds: remaining * delayBetweenMsgs);
+  }
 
-  factory SmsProgressState.fromJson(Map<String, dynamic> json) => SmsProgressState(
-    status: json['status'] ?? 'idle',
-    total: json['total'] ?? 0,
-    sent: json['sent'] ?? 0,
-    failed: json['failed'] ?? 0,
-    currentIndex: json['currentIndex'] ?? 0,
-    currentName: json['currentName'] ?? '',
-    currentNumber: json['currentNumber'] ?? '',
-    lastMessage: json['lastMessage'] ?? '',
-    tag: json['tag'] ?? 'General',
-    deviceId: json['deviceId'] ?? '',
-    deviceName: json['deviceName'] ?? '',
-    failedList: json['failedList'] != null 
-        ? List<Map<String, String>>.from((json['failedList'] as List).map((e) => Map<String, String>.from(e)))
-        : [],
-  );
+  Map<String, dynamic> toJson() => {
+        'status': status,
+        'total': total,
+        'sent': sent,
+        'failed': failed,
+        'currentIndex': currentIndex,
+        'currentName': currentName,
+        'currentNumber': currentNumber,
+        'lastMessage': lastMessage,
+        'failedList': failedList,
+        'tag': tag,
+        'deviceId': deviceId,
+        'deviceName': deviceName,
+        'delayBetweenMsgs': delayBetweenMsgs,
+        'startTime': startTime?.toIso8601String(),
+      };
+
+  factory SmsProgressState.fromJson(Map<String, dynamic> json) =>
+      SmsProgressState(
+        status: json['status'] ?? 'idle',
+        total: json['total'] ?? 0,
+        sent: json['sent'] ?? 0,
+        failed: json['failed'] ?? 0,
+        currentIndex: json['currentIndex'] ?? 0,
+        currentName: json['currentName'] ?? '',
+        currentNumber: json['currentNumber'] ?? '',
+        lastMessage: json['lastMessage'] ?? '',
+        failedList: json['failedList'] != null
+            ? List<Map<String, String>>.from((json['failedList'] as List).map((e) => Map<String, String>.from(e)))
+            : [],
+        tag: json['tag'] ?? 'General',
+        deviceId: json['deviceId'] ?? '',
+        deviceName: json['deviceName'] ?? '',
+        delayBetweenMsgs: json['delayBetweenMsgs'] ?? 30,
+        startTime: json['startTime'] != null ? DateTime.parse(json['startTime']) : null,
+      );
 
   SmsProgressState copyWith({
     String? status,
@@ -88,6 +102,8 @@ class SmsProgressState {
     String? tag,
     String? deviceId,
     String? deviceName,
+    int? delayBetweenMsgs,
+    DateTime? startTime,
   }) {
     return SmsProgressState(
       status: status ?? this.status,
@@ -102,6 +118,8 @@ class SmsProgressState {
       tag: tag ?? this.tag,
       deviceId: deviceId ?? this.deviceId,
       deviceName: deviceName ?? this.deviceName,
+      delayBetweenMsgs: delayBetweenMsgs ?? this.delayBetweenMsgs,
+      startTime: startTime ?? this.startTime,
     );
   }
 }
@@ -156,8 +174,14 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
     _saveState();
   }
 
-  void startListening() {
+  void startListening({int delay = 30}) {
     _subscription?.cancel();
+    state = state.copyWith(
+      status: 'sending',
+      startTime: DateTime.now(),
+      delayBetweenMsgs: delay,
+    );
+    _saveState();
     _subscription = _eventChannel.receiveBroadcastStream().listen((event) {
       if (event is Map) {
         final data = Map<String, dynamic>.from(event);
@@ -165,13 +189,12 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
         
         if (data['status'] == 'completed' && state.status == 'sending') {
           _saveToHistory(state.copyWith(
-            sent: data['sent'],
-            failed: data['failed'],
-            total: data['total'],
+            sent: data['sent'] ?? state.sent,
+            failed: data['failed'] ?? state.failed,
+            total: data['total'] ?? state.total,
           ));
         }
 
-        // Only update local ID info if it matches OR if it's our own local sending process
         state = state.copyWith(
           status: data['status'],
           total: data['total'],
@@ -187,8 +210,6 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
         );
 
         _saveState();
-        
-        // Update Cloud Process periodically
         _syncToCloud();
         
         if (isTaskDone) {
@@ -196,6 +217,19 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
         }
       }
     });
+  }
+
+  Future<void> cancelSending() async {
+    await MessageSender.cancelMessageSending();
+    state = state.copyWith(status: 'cancelled');
+    _saveState();
+    _clearCloudProcess();
+  }
+
+  void reset() {
+    state = SmsProgressState();
+    _saveState();
+    _clearCloudProcess();
   }
 
   void _startCloudListener() {
@@ -336,10 +370,6 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
     }
   }
 
-  void reset() {
-    state = SmsProgressState();
-    _prefs.remove(_prefKey);
-  }
 
   @override
   void dispose() {

@@ -6,6 +6,7 @@ import 'package:classmyte/features/sms/providers/sms_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:classmyte/core/widgets/custom_dialog.dart';
 import 'package:go_router/go_router.dart';
 
 class MessageReportScreen extends ConsumerWidget {
@@ -162,6 +163,14 @@ class MessageReportScreen extends ConsumerWidget {
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+               _buildMetricColumn('Elapsed', _formatDuration(progress.startTime != null ? DateTime.now().difference(progress.startTime!) : Duration.zero)),
+               _buildMetricColumn('Remaining', _formatDuration(progress.estimatedRemaining)),
+            ],
+          ),
           const SizedBox(height: 16),
           Text(
             '${progress.currentIndex} of ${progress.total} recipients processed',
@@ -170,6 +179,23 @@ class MessageReportScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildMetricColumn(String label, String value) {
+    return Column(
+      children: [
+        Text(label, style: GoogleFonts.outfit(fontSize: 12, color: AppColors.primary.withOpacity(0.6))),
+        const SizedBox(height: 4),
+        Text(value, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
+      ],
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    if (duration == Duration.zero) return '---';
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes}m ${seconds}s';
   }
 
   Widget _buildStatsGrid(BuildContext context, SmsProgressState progress) {
@@ -278,7 +304,19 @@ class MessageReportScreen extends ConsumerWidget {
       return CustomButton(
         text: 'Stop Processing',
         color: Colors.redAccent,
-        onPressed: () => MessageSender.cancelMessageSending(),
+        onPressed: () {
+          CustomDialog.show(
+            context: context,
+            title: 'Stop Campaign?',
+            subtitle: 'Are you sure you want to stop the current SMS broadcast? This action cannot be undone.',
+            confirmText: 'Stop Process',
+            confirmColor: Colors.redAccent,
+            onConfirm: () {
+              Navigator.pop(context); // Close dialog
+              ref.read(smsProgressProvider.notifier).cancelSending();
+            },
+          );
+        },
       );
     }
     

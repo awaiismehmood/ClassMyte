@@ -185,12 +185,8 @@ class SmsForegroundService : LifecycleService() {
     }
 
     private fun getSmsManager(): SmsManager {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            getSystemService(SmsManager::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            SmsManager.getDefault()
-        }
+        @Suppress("DEPRECATION")
+        return SmsManager.getDefault()
     }
 
     private fun emitProgress(index: Int, name: String, number: String) {
