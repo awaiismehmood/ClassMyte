@@ -85,7 +85,7 @@ class SmsForegroundService : LifecycleService() {
                 isServiceRunning = true
                 val phoneNumbers = intent.getStringArrayListExtra("phoneNumbers") ?: emptyList()
                 val names = intent.getStringArrayListExtra("names") ?: emptyList()
-                val message = intent.getStringExtra("message") ?: ""
+                val messages = intent.getStringArrayListExtra("messages") ?: emptyList()
                 val delay = intent.getIntExtra("delay", 15)
 
                 totalCount = phoneNumbers.size
@@ -93,7 +93,7 @@ class SmsForegroundService : LifecycleService() {
                 failedCount.set(0)
                 failedList.clear()
 
-                startSendingSms(phoneNumbers, names, message, delay)
+                startSendingSms(phoneNumbers, names, messages, delay)
             }
             "ACTION_CANCEL_SENDING" -> {
                 cancelSmsSending()
@@ -102,7 +102,7 @@ class SmsForegroundService : LifecycleService() {
         return START_STICKY
     }
 
-    private fun startSendingSms(phoneNumbers: List<String>, names: List<String>, message: String, delay: Int) {
+    private fun startSendingSms(phoneNumbers: List<String>, names: List<String>, messages: List<String>, delay: Int) {
         smsJob = CoroutineScope(Dispatchers.IO).launch {
             val smsManager = getSmsManager()
             
@@ -111,12 +111,13 @@ class SmsForegroundService : LifecycleService() {
 
                 val phoneNumber = phoneNumbers[i]
                 val name = if (i < names.size) names[i] else phoneNumber
+                val currentMessage = if (i < messages.size) messages[i] else ""
                 
                 updateNotification("Sending message to $name (${i + 1}/$totalCount)")
                 emitProgress(i + 1, name, phoneNumber)
 
                 try {
-                    val isSuccess = sendIndividualSms(smsManager, phoneNumber, message)
+                    val isSuccess = sendIndividualSms(smsManager, phoneNumber, currentMessage)
                     if (isSuccess) {
                         sentCount.incrementAndGet()
                     } else {

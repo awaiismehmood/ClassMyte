@@ -25,12 +25,12 @@ class MainActivity : FlutterActivity() {
                 "sendSMS" -> {
                     val phoneNumbers = call.argument<List<String>>("phoneNumbers")
                     val names = call.argument<List<String>>("names") ?: emptyList()
-                    val message = call.argument<String>("message")
+                    val messages = call.argument<List<String>>("messages")
                     val delay = call.argument<Int>("delay") ?: 15 
-                    if (phoneNumbers != null && message != null) {
-                        startForegroundService(phoneNumbers, names, message, delay, result)
+                    if (phoneNumbers != null && messages != null && phoneNumbers.size == messages.size) {
+                        startForegroundService(phoneNumbers, names, messages, delay, result)
                     } else {
-                        result.error("INVALID_ARGUMENTS", "Invalid phone numbers or message", null)
+                        result.error("INVALID_ARGUMENTS", "Mismatch in numbers and messages, or invalid input", null)
                     }
                 }
                 "stopService" -> {
@@ -57,12 +57,12 @@ class MainActivity : FlutterActivity() {
         )
     }
 
-  private fun startForegroundService(phoneNumbers: List<String>, names: List<String>, message: String, delay: Int, result: MethodChannel.Result) {
+  private fun startForegroundService(phoneNumbers: List<String>, names: List<String>, messages: List<String>, delay: Int, result: MethodChannel.Result) {
     val serviceIntent = Intent(this, SmsForegroundService::class.java).apply {
         putStringArrayListExtra("phoneNumbers", ArrayList(phoneNumbers))
         putStringArrayListExtra("names", ArrayList(names))
-        putExtra("message", message)
-        putExtra("delay", delay) // Pass the delay to the service
+        putStringArrayListExtra("messages", ArrayList(messages))
+        putExtra("delay", delay)
         action = "ACTION_START_SENDING"
     }
 

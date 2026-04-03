@@ -15,6 +15,7 @@ import 'package:classmyte/features/sms/screens/sms_screen.dart';
 import 'package:classmyte/features/sms/screens/manage_templates_screen.dart';
 import 'package:classmyte/features/sms/screens/personalize_message_screen.dart';
 import 'package:classmyte/features/sms/screens/message_report_screen.dart';
+import 'package:classmyte/features/sms/screens/message_history_screen.dart';
 import 'package:classmyte/features/forms/screens/form_templates_screen.dart';
 import 'package:classmyte/features/settings/screens/settings_screen.dart';
 import 'package:classmyte/features/settings/screens/contact_us_screen.dart';
@@ -22,6 +23,7 @@ import 'package:classmyte/features/settings/screens/about_screen.dart';
 import 'package:classmyte/features/settings/screens/privacy_policy_screen.dart';
 import 'package:classmyte/features/settings/screens/change_password_screen.dart';
 import 'package:classmyte/features/settings/screens/profile_screen.dart';
+import 'package:classmyte/features/students/screens/attendance_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -92,9 +94,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ClassScreen(),
       ),
       GoRoute(
+        path: '/attendance',
+        name: 'attendance',
+        builder: (context, state) => const AttendanceScreen(),
+      ),
+      GoRoute(
         path: '/sms',
         name: 'sms',
-        builder: (context, state) => const NewMessageScreen(),
+        builder: (context, state) {
+          final type = state.extra as String?;
+          return NewMessageScreen(type: type);
+        },
       ),
       GoRoute(
         path: '/manage-templates',
@@ -110,6 +120,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/message-report',
         name: 'message-report',
         builder: (context, state) => const MessageReportScreen(),
+      ),
+      GoRoute(
+        path: '/message-history',
+        name: 'message-history',
+        builder: (context, state) => const MessageHistoryScreen(),
       ),
       GoRoute(
         path: '/generate-form',

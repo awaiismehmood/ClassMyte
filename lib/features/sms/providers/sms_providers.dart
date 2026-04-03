@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:classmyte/core/providers/providers.dart';
 import 'package:classmyte/features/sms/data/sms_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SmsProgressState {
   final String status; // 'idle', 'sending', 'completed', 'cancelled'
@@ -17,6 +19,7 @@ class SmsProgressState {
   final String currentNumber;
   final String lastMessage;
   final List<Map<String, String>> failedList;
+  final String tag; 
 
   SmsProgressState({
     this.status = 'idle',
@@ -28,6 +31,7 @@ class SmsProgressState {
     this.currentNumber = '',
     this.lastMessage = '',
     this.failedList = const [],
+    this.tag = 'General',
   });
 
   Map<String, dynamic> toJson() => {
@@ -40,6 +44,7 @@ class SmsProgressState {
     'currentNumber': currentNumber,
     'lastMessage': lastMessage,
     'failedList': failedList,
+    'tag': tag,
   };
 
   factory SmsProgressState.fromJson(Map<String, dynamic> json) => SmsProgressState(
@@ -51,6 +56,7 @@ class SmsProgressState {
     currentName: json['currentName'] ?? '',
     currentNumber: json['currentNumber'] ?? '',
     lastMessage: json['lastMessage'] ?? '',
+    tag: json['tag'] ?? 'General',
     failedList: json['failedList'] != null 
         ? List<Map<String, String>>.from((json['failedList'] as List).map((e) => Map<String, String>.from(e)))
         : [],
@@ -66,6 +72,7 @@ class SmsProgressState {
     String? currentNumber,
     String? lastMessage,
     List<Map<String, String>>? failedList,
+    String? tag,
   }) {
     return SmsProgressState(
       status: status ?? this.status,
@@ -77,6 +84,7 @@ class SmsProgressState {
       currentNumber: currentNumber ?? this.currentNumber,
       lastMessage: lastMessage ?? this.lastMessage,
       failedList: failedList ?? this.failedList,
+      tag: tag ?? this.tag,
     );
   }
 }
@@ -121,11 +129,26 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
     _saveState();
   }
 
+  void setTag(String tag) {
+    state = state.copyWith(tag: tag);
+    _saveState();
+  }
+
   void startListening() {
     _subscription?.cancel();
     _subscription = _eventChannel.receiveBroadcastStream().listen((event) {
       if (event is Map) {
         final data = Map<String, dynamic>.from(event);
+        
+        if (data['status'] == 'completed' && state.status == 'sending') {
+          // Task just finished! Store to history
+          _saveToHistory(state.copyWith(
+            sent: data['sent'],
+            failed: data['failed'],
+            total: data['total'],
+          ));
+        }
+
         state = state.copyWith(
           status: data['status'],
           total: data['total'],
@@ -142,6 +165,29 @@ class SmsProgressNotifier extends StateNotifier<SmsProgressState> {
         _saveState();
       }
     });
+  }
+
+  Future<void> _saveToHistory(SmsProgressState finalProgress) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('sms_history')
+          .add({
+            'message': finalProgress.lastMessage,
+            'tag': finalProgress.tag,
+            'timestamp': Timestamp.now(),
+            'totalRecipients': finalProgress.total,
+            'sentCount': finalProgress.sent,
+            'failedCount': finalProgress.failed,
+          });
+      print("History saved successfully");
+    } catch (e) {
+      print("Error saving history: $e");
+    }
   }
 
   void reset() {

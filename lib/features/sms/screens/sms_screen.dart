@@ -18,10 +18,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class NewMessageScreen extends ConsumerStatefulWidget {
-  const NewMessageScreen({super.key});
+  final String? type;
+  const NewMessageScreen({super.key, this.type});
 
   @override
   ConsumerState<NewMessageScreen> createState() => _NewMessageScreenState();
@@ -36,6 +39,9 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   final ValueNotifier<bool> excludeInactive =
       ValueNotifier(false); // Default to false for free
   final ValueNotifier<bool> includePersonalization = ValueNotifier(true);
+  final ValueNotifier<bool> inlinePrefix = ValueNotifier(false);
+  final ValueNotifier<bool> inlineSuffix = ValueNotifier(false);
+  final ValueNotifier<String> selectedTag = ValueNotifier('General');
 
   @override
   void initState() {
@@ -53,6 +59,13 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         _showProcessOngoingSnackbar();
         context.push('/message-report');
       }
+
+      if (widget.type == 'Attendance') {
+        messageController.text = "Hello! [name] was marked as absent from [class] today. Please contact us for more details.";
+        selectedTag.value = 'Attendance';
+      }
+
+      _checkAndShowGuide();
     });
 
     ref.read(smsProgressProvider.notifier).startListening();
@@ -85,6 +98,8 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     selectedDelay.dispose();
     excludeInactive.dispose();
     includePersonalization.dispose();
+    inlinePrefix.dispose();
+    inlineSuffix.dispose();
     super.dispose();
   }
 
@@ -172,26 +187,46 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
         return;
       }
 
-      String finalMessage = messageController.text;
-      if (includePersonalization.value) {
-        final prefix = personalization['prefix'] ?? '';
-        final suffix = personalization['suffix'] ?? '';
-        if (prefix.isNotEmpty) finalMessage = '$prefix\n$finalMessage';
-        if (suffix.isNotEmpty) finalMessage = '$finalMessage\n$suffix';
+      List<String> messages = [];
+      for (var student in selectedContacts) {
+        String msg = messageController.text;
+        
+        // Dynamic Placeholders
+        msg = msg.replaceAll('[name]', student.name);
+        msg = msg.replaceAll('[father_name]', student.fatherName);
+        msg = msg.replaceAll('[class]', student.className);
+        msg = msg.replaceAll('[dob]', student.dob);
+        msg = msg.replaceAll('[id]', student.id);
+        msg = msg.replaceAll('[phone]', student.phoneNumber);
+
+        if (includePersonalization.value) {
+          final prefix = personalization['prefix'] ?? '';
+          final suffix = personalization['suffix'] ?? '';
+
+          if (prefix.isNotEmpty) {
+            msg = inlinePrefix.value ? '$prefix $msg' : '$prefix\n$msg';
+          }
+          if (suffix.isNotEmpty) {
+            msg = inlineSuffix.value ? '$msg $suffix' : '$msg\n$suffix';
+          }
+        }
+        messages.add(msg.trim());
       }
 
       List<String> phoneNumbers =
           selectedContacts.map((c) => c.phoneNumber).toList();
       List<String> names = selectedContacts.map((c) => c.name).toList();
 
+      ref.read(smsProgressProvider.notifier).setTag(selectedTag.value);
+      
       ref
           .read(smsProgressProvider.notifier)
-          .setLastMessage(finalMessage.trim());
+          .setLastMessage(messages.first); // Store first message as preview
 
       await MessageSender.sendMessages(
         phoneNumbers: phoneNumbers,
         names: names,
-        message: finalMessage.trim(),
+        messages: messages,
         delay: selectedDelay.value,
       );
 
@@ -329,6 +364,12 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                       ),
                     )
                   : null,
+              rightActions: [
+                _buildCircleHeaderButton(
+                  icon: Icons.help_outline,
+                  onTap: () => _showMessagingGuide(force: true),
+                ),
+              ],
             ),
           Expanded(
             child: Container(
@@ -671,26 +712,92 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
               onChanged: (v) => excludeInactive.value = v,
             ),
           ),
-          Divider(color: onSurface.withOpacity(0.1), height: 1),
           ValueListenableBuilder<bool>(
             valueListenable: includePersonalization,
-            builder: (context, val, _) => SwitchListTile(
-              title: Text('Apply Personalization',
-                  style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: onSurface)),
-              subtitle: Text('Add Prefix & Suffix from database',
-                  style: GoogleFonts.outfit(
-                      fontSize: 12, color: onSurface.withOpacity(0.6))),
-              value: val,
-              activeThumbColor: AppColors.primary,
-              onChanged: (v) => includePersonalization.value = v,
+            builder: (context, val, _) => Column(
+              children: [
+                SwitchListTile(
+                  title: Text('Apply Personalization',
+                      style: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: onSurface)),
+                  subtitle: Text('Add Prefix & Suffix from database',
+                      style: GoogleFonts.outfit(
+                          fontSize: 12, color: onSurface.withOpacity(0.6))),
+                  value: val,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: (v) => includePersonalization.value = v,
+                ),
+                if (val) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildInlineCheckbox(
+                            'Inline Prefix',
+                            inlinePrefix,
+                            onSurface,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildInlineCheckbox(
+                            'Inline Suffix',
+                            inlineSuffix,
+                            onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+            ),
+          ),
+          Divider(color: onSurface.withOpacity(0.1), height: 1),
+          ValueListenableBuilder<String>(
+            valueListenable: selectedTag,
+            builder: (context, tag, _) => Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text('Message Campaign Tag',
+                      style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: onSurface)),
+                  const SizedBox(height: 12),
+                  CustomDropdown<String>(
+                    value: tag,
+                    items: ['General', 'Attendance', 'Fees', 'Event']
+                        .map((e) => CustomDropdownItem<String>(
+                            value: e,
+                            label: e,
+                            icon: _getTagIcon(e)))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) selectedTag.value = v;
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+  
+  IconData _getTagIcon(String tag) {
+    switch (tag) {
+      case 'Attendance': return Icons.fact_check;
+      case 'Fees': return Icons.payments;
+      case 'Event': return Icons.event;
+      default: return Icons.campaign;
+    }
   }
   List<Widget> _buildPreSelectedBanner(BuildContext context, List<Student> contacts) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -758,5 +865,160 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
       ),
       const SizedBox(height: 8),
     ];
+  }
+
+  Widget _buildCircleHeaderButton({required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(icon, color: AppColors.primary, size: 24),
+      ),
+    );
+  }
+
+  Future<void> _checkAndShowGuide() async {
+    final prefs = await SharedPreferences.getInstance();
+    final showAgain = prefs.getBool('show_sms_guide') ?? true;
+    if (showAgain) {
+      _showMessagingGuide();
+    }
+  }
+
+  void _showMessagingGuide({bool force = false}) {
+    bool dontShowAgain = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.tips_and_updates, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        'Messaging Tips',
+                        style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _buildGuideItem(Icons.alternate_email, 'Personalization Tags', 
+                    'Use [name], [father_name], or [class] in your message. We\'ll automatically replace them for each student.'),
+                const SizedBox(height: 16),
+                _buildGuideItem(Icons.history, 'Batch Sending', 
+                    'Messages are sent one-by-one with a delay to ensure safety and prevent spam flagging.'),
+                const SizedBox(height: 16),
+                _buildGuideItem(Icons.label_important_outline, 'Campaign Tags', 
+                    'Tag your messages (Fees, Attendance, etc.) and track them later in the History section.'),
+                const SizedBox(height: 24),
+                if (!force)
+                  Row(
+                    children: [
+                      SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: Checkbox(
+                          value: dontShowAgain,
+                          activeColor: AppColors.primary,
+                          onChanged: (v) {
+                            setDialogState(() => dontShowAgain = v ?? false);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Don\'t show this again', style: GoogleFonts.outfit(fontSize: 14)),
+                    ],
+                  ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: 'Got it!',
+                    onPressed: () async {
+                      if (!force && dontShowAgain) {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('show_sms_guide', false);
+                      }
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuideItem(IconData icon, String title, String desc) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary.withOpacity(0.7)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+              Text(desc, style: GoogleFonts.outfit(fontSize: 13, color: Colors.grey, height: 1.4)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineCheckbox(String label, ValueNotifier<bool> notifier, Color onSurface) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: notifier,
+      builder: (context, val, _) => InkWell(
+        onTap: () => notifier.value = !val,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 32,
+              width: 32,
+              child: Checkbox(
+                value: val,
+                activeColor: AppColors.primary,
+                onChanged: (v) => notifier.value = v ?? false,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              ),
+            ),
+            Text(label, style: GoogleFonts.outfit(fontSize: 13, color: onSurface)),
+          ],
+        ),
+      ),
+    );
   }
 }

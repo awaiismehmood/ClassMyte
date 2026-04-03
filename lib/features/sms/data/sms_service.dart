@@ -20,7 +20,7 @@ class MessageSender {
   static Future<void> sendMessages({
     required List<String> phoneNumbers,
     required List<String> names,
-    required String message,
+    required List<String> messages,
     required int delay,
   }) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -28,7 +28,7 @@ class MessageSender {
 
     if (phoneNumbers.isNotEmpty) {
       try {
-        await _startForegroundService(phoneNumbers, names, message, delay);
+        await _startForegroundService(phoneNumbers, names, messages, delay);
       } catch (error) {
         print('Failed to start native service: $error');
       }
@@ -51,12 +51,12 @@ class MessageSender {
   }
 
   static Future<void> _startForegroundService(
-      List<String> phoneNumbers, List<String> names, String message, int delay) async {
+      List<String> phoneNumbers, List<String> names, List<String> messages, int delay) async {
     try {
       final result = await platform.invokeMethod('sendSMS', {
         'phoneNumbers': phoneNumbers,
         'names': names,
-        'message': message,
+        'messages': messages,
         'delay': delay,
       });
       print('Service started: $result');

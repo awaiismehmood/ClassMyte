@@ -52,7 +52,7 @@ Widget buildHomeScreen(BuildContext context) {
 
           // Bulk Sending Section
           _buildSectionTitle(context, 'Bulk Sending'),
-          const SizedBox(height: 16),
+          // const SizedBox(height: 16),
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -73,7 +73,8 @@ Widget buildHomeScreen(BuildContext context) {
                 isProcessing ? 'Sending...' : 'Quick Message',
                 isProcessing ? Icons.sync : Icons.bolt_outlined,
                 isProcessing ? AppColors.primary : Colors.yellow.shade800,
-                onTap: () => context.push(isProcessing ? '/message-report' : '/sms'),
+                onTap: () =>
+                    context.push(isProcessing ? '/message-report' : '/sms'),
               ),
               _buildDualColumnCard(
                 context,
@@ -95,6 +96,20 @@ Widget buildHomeScreen(BuildContext context) {
                 Icons.edit_note_outlined,
                 Colors.purple,
                 onTap: () => context.push('/personalize-message'),
+              ),
+              _buildDualColumnCard(
+                context,
+                'Attendance',
+                Icons.fact_check_outlined,
+                Colors.orange,
+                onTap: () => context.push('/attendance'),
+              ),
+              _buildDualColumnCard(
+                context,
+                'History',
+                Icons.history_outlined,
+                Colors.indigo,
+                onTap: () => context.push('/message-history'),
               ),
               _buildDualColumnCard(
                 context,
@@ -141,30 +156,31 @@ Widget _buildHeroCard(BuildContext context, bool isProcessing) {
             ),
             const SizedBox(height: 4),
             Text(
-              isProcessing 
-                ? 'Your campaign is currently running\nin the background.'
-                : 'Create campaign and send bulk\nmessages to your students',
+              isProcessing
+                  ? 'Your campaign is currently running\nin the background.'
+                  : 'Create campaign and send bulk\nmessages to your students',
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.8),
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.push(isProcessing ? '/message-report' : '/sms'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isProcessing ? Colors.white : AppColors.accent,
-                foregroundColor: Colors.black87,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: Text(
-                isProcessing ? 'View Progress' : 'Get Started',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-              ),
-            ),
+            // ElevatedButton(
+            //   onPressed: () =>
+            //       context.push(isProcessing ? '/message-report' : '/sms'),
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: isProcessing ? Colors.white : AppColors.accent,
+            //     foregroundColor: Colors.black87,
+            //     shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(16)),
+            //     padding:
+            //         const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            //   ),
+            //   child: Text(
+            //     isProcessing ? 'View Progress' : 'Get Started',
+            //     style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            //   ),
+            // ),
           ],
         ),
         Positioned(

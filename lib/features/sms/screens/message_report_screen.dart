@@ -302,7 +302,7 @@ class MessageReportScreen extends ConsumerWidget {
                   MessageSender.sendMessages(
                     phoneNumbers: failedPhones,
                     names: failedNames,
-                    message: lastMsg,
+                    messages: List.generate(failedPhones.length, (_) => lastMsg),
                     delay: 15, // Default delay for retry
                   );
                 }

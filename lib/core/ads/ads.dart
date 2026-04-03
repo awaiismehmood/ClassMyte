@@ -27,7 +27,9 @@ class AdManager {
           onAdLoaded?.call(); // Notify that the ad is loaded
         },
         onAdFailedToLoad: (error) {
-          print("Failed to load rewarded ad (Code ${error.code}): ${error.message}");
+          print("[-] Failed to load rewarded ad (Code ${error.code}): ${error.message}");
+          print("[-] Error Domain: ${error.domain}");
+          print("[-] Error ResponseInfo: ${error.responseInfo}");
           isAdLoaded.value = false;
         },
       ),
@@ -106,6 +108,8 @@ class AdManager {
           onAdLoadedCallback();
         },
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print("[-] Failed to load banner ad (Code ${error.code}): ${error.message}");
+          print("[-] Error Domain: ${error.domain}");
           ad.dispose();
           isBannerLoaded = false;
         },
